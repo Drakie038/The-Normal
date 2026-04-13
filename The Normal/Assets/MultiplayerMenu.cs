@@ -1,205 +1,182 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+
 using Unity.Netcode;
+using Unity.Netcode.Transports.UTP;
+
 using Unity.Services.Core;
 using Unity.Services.Authentication;
+
+using Unity.Services.Relay;
+using Unity.Services.Relay.Models;
+
+using Unity.Services.Lobbies;
+using Unity.Services.Lobbies.Models;
+
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
-public class MultiplayerMenu : NetworkBehaviour
+public class MultiplayerMenu : MonoBehaviour
 {
-    [Header("UI Buttons")]
-    [SerializeField] private Button createGameButton;
-    [SerializeField] private Button startGameButton;
+    [Header("UI")]
+    [SerializeField] private Button quickPlayButton;
+    [SerializeField] private Button createServerButton;
     [SerializeField] private Button leaveButton;
 
-    [Header("Cubus")]
-    [SerializeField] private GameObject baseCubePrefab;
-    [SerializeField] private Transform cubeParent;
-    [SerializeField] private float xOffset = 2f;
+    [Header("Player")]
+    [SerializeField] private GameObject playerPrefab;
 
-    // 🔥 FIX: 1 cube per client
-    private Dictionary<ulong, NetworkObject> playerCubes = new Dictionary<ulong, NetworkObject>();
+    [Header("Netcode")]
+    [SerializeField] private NetworkManager networkManager;
 
-    private void Awake()
+    private Lobby currentLobby;
+    private Allocation hostAllocation;
+
+    private async void Start()
     {
-        createGameButton.onClick.AddListener(() => _ = CreateGame());
-        startGameButton.onClick.AddListener(() => _ = StartGame());
+        await UnityServices.InitializeAsync();
+        await AuthenticationService.Instance.SignInAnonymouslyAsync();
+
+        quickPlayButton.onClick.AddListener(() => _ = QuickPlay());
+        createServerButton.onClick.AddListener(() => _ = CreateServer());
         leaveButton.onClick.AddListener(LeaveGame);
 
         leaveButton.gameObject.SetActive(false);
+
+        // 🔥 BELANGRIJK: spawn players automatisch bij connect
+        networkManager.OnClientConnectedCallback += OnClientConnected;
     }
 
-    private void OnEnable()
+    // =====================================================
+    // 🔵 QUICK PLAY
+    // =====================================================
+    private async Task QuickPlay()
     {
-        if (NetworkManager.Singleton != null)
-        {
-            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
-        }
-    }
-
-    private void OnDisable()
-    {
-        if (NetworkManager.Singleton != null)
-        {
-            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
-        }
-    }
-
-    private async Task InitializeUnityServices()
-    {
-        if (!UnityServices.State.Equals(ServicesInitializationState.Initialized))
-        {
-            await UnityServices.InitializeAsync();
-            await AuthenticationService.Instance.SignInAnonymouslyAsync();
-            Debug.Log("Unity Services ready.");
-        }
-    }
-
-    // ==============================
-    // HOST
-    // ==============================
-    private async Task CreateGame()
-    {
-        await InitializeUnityServices();
-
-        if (!NetworkManager.Singleton.IsClient && !NetworkManager.Singleton.IsServer)
-        {
-            NetworkManager.Singleton.StartHost();
-
-            leaveButton.gameObject.SetActive(true);
-
-            // 🔥 voorkom dubbele subscriptions
-            NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
-            NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
-
-            Debug.Log("Host gestart!");
-
-            // Spawn host cube
-            SpawnCube(NetworkManager.Singleton.LocalClientId);
-        }
-    }
-
-    // ==============================
-    // CLIENT
-    // ==============================
-    private async Task StartGame()
-    {
-        await InitializeUnityServices();
-
-        if (!NetworkManager.Singleton.IsClient && !NetworkManager.Singleton.IsServer)
-        {
-            NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
-            NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
-
-            NetworkManager.Singleton.StartClient();
-
-            Debug.Log("Client gestart...");
-        }
-    }
-
-    private void OnClientConnected(ulong clientId)
-    {
-        // Alleen voor jezelf
-        if (clientId == NetworkManager.Singleton.LocalClientId)
-        {
-            leaveButton.gameObject.SetActive(true);
-
-            if (!NetworkManager.Singleton.IsServer)
-            {
-                // client vraagt spawn
-                RequestSpawnCubeServerRpc();
-            }
-        }
-
-        // Host spawnt voor nieuwe clients
-        if (NetworkManager.Singleton.IsServer && clientId != NetworkManager.Singleton.LocalClientId)
-        {
-            SpawnCube(clientId);
-        }
-    }
-
-    // ==============================
-    // SPAWN
-    // ==============================
-    private void SpawnCube(ulong clientId)
-    {
-        // 🔥 BELANGRIJK: check of al bestaat
-        if (playerCubes.ContainsKey(clientId))
-        {
-            Debug.LogWarning($"Client {clientId} heeft al een cube!");
+        if (networkManager.IsClient || networkManager.IsHost)
             return;
+
+        try
+        {
+            Lobby lobby = await LobbyService.Instance.QuickJoinLobbyAsync();
+
+            JoinAllocation allocation =
+                await RelayService.Instance.JoinAllocationAsync(lobby.Data["joinCode"].Value);
+
+            StartClient(allocation);
+
+            leaveButton.gameObject.SetActive(true);
         }
-
-        Vector3 spawnPos = Vector3.right * xOffset * playerCubes.Count;
-
-        NetworkObject cube = Instantiate(baseCubePrefab, spawnPos, Quaternion.identity, cubeParent)
-            .GetComponent<NetworkObject>();
-
-        cube.SpawnWithOwnership(clientId);
-
-        playerCubes.Add(clientId, cube);
-
-        Debug.Log($"Cube gespawned voor client {clientId}");
+        catch
+        {
+            await CreateServer();
+        }
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    private void RequestSpawnCubeServerRpc(ServerRpcParams rpcParams = default)
+    // =====================================================
+    // 🟢 CREATE SERVER
+    // =====================================================
+    private async Task CreateServer()
     {
-        ulong clientId = rpcParams.Receive.SenderClientId;
-        SpawnCube(clientId);
+        if (networkManager.IsClient || networkManager.IsHost)
+            return;
+
+        hostAllocation = await RelayService.Instance.CreateAllocationAsync(4);
+        string joinCode = await RelayService.Instance.GetJoinCodeAsync(hostAllocation.AllocationId);
+
+        Debug.Log("JOIN CODE: " + joinCode);
+
+        var options = new CreateLobbyOptions
+        {
+            IsPrivate = false,
+            Data = new Dictionary<string, DataObject>
+            {
+                {
+                    "joinCode",
+                    new DataObject(DataObject.VisibilityOptions.Public, joinCode)
+                }
+            }
+        };
+
+        currentLobby = await LobbyService.Instance.CreateLobbyAsync("Game", 4, options);
+
+        await Task.Delay(300);
+
+        StartHost(hostAllocation);
+
+        leaveButton.gameObject.SetActive(true);
+
+        // 🔥 host krijgt ook player
+        SpawnPlayer(NetworkManager.Singleton.LocalClientId);
     }
 
-    // ==============================
-    // LEAVE
-    // ==============================
+    // =====================================================
+    // 🔴 LEAVE
+    // =====================================================
     private void LeaveGame()
     {
-        if (NetworkManager.Singleton.IsHost)
-        {
-            Debug.Log("Host stopt...");
-            DespawnAllCubes();
-        }
-
-        // ❗ GEEN RPC MEER
-        NetworkManager.Singleton.Shutdown();
-
+        networkManager.Shutdown();
         leaveButton.gameObject.SetActive(false);
     }
 
-    // ==============================
-    // DISCONNECT CLEANUP (KEY FIX)
-    // ==============================
-    private void OnClientDisconnected(ulong clientId)
+    // =====================================================
+    // 🟢 HOST START
+    // =====================================================
+    private void StartHost(Allocation allocation)
     {
-        if (!NetworkManager.Singleton.IsServer) return;
+        var transport = networkManager.GetComponent<UnityTransport>();
 
-        if (playerCubes.TryGetValue(clientId, out NetworkObject cube))
-        {
-            if (cube != null && cube.IsSpawned)
-            {
-                cube.Despawn(true);
-            }
+        transport.SetRelayServerData(
+            allocation.RelayServer.IpV4,
+            (ushort)allocation.RelayServer.Port,
+            allocation.AllocationIdBytes,
+            allocation.Key,
+            allocation.ConnectionData
+        );
 
-            playerCubes.Remove(clientId);
+        networkManager.StartHost();
 
-            Debug.Log($"Cube van client {clientId} verwijderd.");
-        }
+        Debug.Log("HOST STARTED");
     }
 
-    // ==============================
-    // HOST CLEANUP
-    // ==============================
-    private void DespawnAllCubes()
+    // =====================================================
+    // 🔵 CLIENT START
+    // =====================================================
+    private void StartClient(JoinAllocation allocation)
     {
-        foreach (var cube in playerCubes.Values)
-        {
-            if (cube != null && cube.IsSpawned)
-            {
-                cube.Despawn(true);
-            }
-        }
+        var transport = networkManager.GetComponent<UnityTransport>();
 
-        playerCubes.Clear();
+        transport.SetRelayServerData(
+            allocation.RelayServer.IpV4,
+            (ushort)allocation.RelayServer.Port,
+            allocation.AllocationIdBytes,
+            allocation.Key,
+            allocation.ConnectionData,
+            allocation.HostConnectionData
+        );
+
+        networkManager.StartClient();
+
+        Debug.Log("CLIENT STARTED");
+    }
+
+    // =====================================================
+    // 🧍 SPAWN PLAYER (SERVER ONLY)
+    // =====================================================
+    private void OnClientConnected(ulong clientId)
+    {
+        if (!networkManager.IsServer) return;
+
+        SpawnPlayer(clientId);
+    }
+
+    private void SpawnPlayer(ulong clientId)
+    {
+        GameObject obj = Instantiate(playerPrefab);
+
+        NetworkObject netObj = obj.GetComponent<NetworkObject>();
+
+        netObj.SpawnWithOwnership(clientId);
+
+        Debug.Log($"Player spawned for client {clientId}");
     }
 }

@@ -601,13 +601,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 73d53336c34119a43a6894f4b4049875, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ShowTopMostFoldoutHeaderGroup: 1
-  createGameButton: {fileID: 653176596}
-  startGameButton: {fileID: 1339470517}
+  quickPlayButton: {fileID: 1339470517}
+  createServerButton: {fileID: 653176596}
   leaveButton: {fileID: 1475205488}
-  baseCubePrefab: {fileID: 2469613994109035230, guid: 5c9fc39601aa06944883db37131a81ff, type: 3}
-  cubeParent: {fileID: 1328068061}
-  xOffset: 1
+  playerPrefab: {fileID: 2469613994109035230, guid: 5c9fc39601aa06944883db37131a81ff, type: 3}
+  playerParent: {fileID: 1328068061}
+  networkManager: {fileID: 117914336}
 --- !u!114 &238958202
 MonoBehaviour:
   m_ObjectHideFlags: 0
