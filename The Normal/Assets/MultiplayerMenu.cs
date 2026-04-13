@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using Unity.Netcode;
 using Unity.Services.Core;
@@ -11,20 +11,39 @@ public class MultiplayerMenu : NetworkBehaviour
     [Header("UI Buttons")]
     [SerializeField] private Button createGameButton;
     [SerializeField] private Button startGameButton;
+    [SerializeField] private Button leaveButton;
 
     [Header("Cubus")]
-    [SerializeField] private GameObject baseCubePrefab; // prefab van de cubus (met PlayerCubeController + NetworkObject)
-    [SerializeField] private Transform cubeParent;      // parent voor alle cubussen
-    [SerializeField] private float xOffset = 2f;        // afstand tussen cubussen
+    [SerializeField] private GameObject baseCubePrefab;
+    [SerializeField] private Transform cubeParent;
+    [SerializeField] private float xOffset = 2f;
 
-    // Houd alle NetworkObjects van cubussen bij
-    private List<NetworkObject> spawnedCubes = new List<NetworkObject>();
+    // 🔥 FIX: 1 cube per client
+    private Dictionary<ulong, NetworkObject> playerCubes = new Dictionary<ulong, NetworkObject>();
 
     private void Awake()
     {
-        // Buttons via inspector slepen
         createGameButton.onClick.AddListener(() => _ = CreateGame());
         startGameButton.onClick.AddListener(() => _ = StartGame());
+        leaveButton.onClick.AddListener(LeaveGame);
+
+        leaveButton.gameObject.SetActive(false);
+    }
+
+    private void OnEnable()
+    {
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+        }
     }
 
     private async Task InitializeUnityServices()
@@ -33,12 +52,12 @@ public class MultiplayerMenu : NetworkBehaviour
         {
             await UnityServices.InitializeAsync();
             await AuthenticationService.Instance.SignInAnonymouslyAsync();
-            Debug.Log("Unity Services ready & signed in anonymously.");
+            Debug.Log("Unity Services ready.");
         }
     }
 
     // ==============================
-    // Host maken
+    // HOST
     // ==============================
     private async Task CreateGame()
     {
@@ -47,22 +66,22 @@ public class MultiplayerMenu : NetworkBehaviour
         if (!NetworkManager.Singleton.IsClient && !NetworkManager.Singleton.IsServer)
         {
             NetworkManager.Singleton.StartHost();
-            Debug.Log("Host gestart! Spel is nu online.");
 
-            // Spawn originele cubus voor host
-            SpawnCubeForHost(Vector3.zero);
+            leaveButton.gameObject.SetActive(true);
 
-            // Callback voor client connect
-            NetworkManager.Singleton.OnClientConnectedCallback += ClientConnectedToHost;
-        }
-        else
-        {
-            Debug.LogWarning("Netcode al actief, kan geen host starten.");
+            // 🔥 voorkom dubbele subscriptions
+            NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+            NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+
+            Debug.Log("Host gestart!");
+
+            // Spawn host cube
+            SpawnCube(NetworkManager.Singleton.LocalClientId);
         }
     }
 
     // ==============================
-    // Client joinen
+    // CLIENT
     // ==============================
     private async Task StartGame()
     {
@@ -70,66 +89,117 @@ public class MultiplayerMenu : NetworkBehaviour
 
         if (!NetworkManager.Singleton.IsClient && !NetworkManager.Singleton.IsServer)
         {
+            NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+
             NetworkManager.Singleton.StartClient();
-            Debug.Log("StartClient() aangeroepen, wacht op echte verbinding...");
-        }
-        else
-        {
-            Debug.LogWarning("Netcode al actief, kan geen client starten.");
+
+            Debug.Log("Client gestart...");
         }
     }
 
-    // ==============================
-    // Callback client verbonden
-    // ==============================
     private void OnClientConnected(ulong clientId)
     {
+        // Alleen voor jezelf
         if (clientId == NetworkManager.Singleton.LocalClientId)
         {
-            Debug.Log("Client echt verbonden met host!");
-            // Vraag host om een nieuwe cubus te spawnen voor deze client
-            RequestSpawnCubeServerRpc();
+            leaveButton.gameObject.SetActive(true);
+
+            if (!NetworkManager.Singleton.IsServer)
+            {
+                // client vraagt spawn
+                RequestSpawnCubeServerRpc();
+            }
+        }
+
+        // Host spawnt voor nieuwe clients
+        if (NetworkManager.Singleton.IsServer && clientId != NetworkManager.Singleton.LocalClientId)
+        {
+            SpawnCube(clientId);
         }
     }
 
     // ==============================
-    // Callback host bij client connect
+    // SPAWN
     // ==============================
-    private void ClientConnectedToHost(ulong clientId)
+    private void SpawnCube(ulong clientId)
     {
-        Debug.Log($"Host: client {clientId} verbonden.");
+        // 🔥 BELANGRIJK: check of al bestaat
+        if (playerCubes.ContainsKey(clientId))
+        {
+            Debug.LogWarning($"Client {clientId} heeft al een cube!");
+            return;
+        }
+
+        Vector3 spawnPos = Vector3.right * xOffset * playerCubes.Count;
+
+        NetworkObject cube = Instantiate(baseCubePrefab, spawnPos, Quaternion.identity, cubeParent)
+            .GetComponent<NetworkObject>();
+
+        cube.SpawnWithOwnership(clientId);
+
+        playerCubes.Add(clientId, cube);
+
+        Debug.Log($"Cube gespawned voor client {clientId}");
     }
 
-    // ==============================
-    // ServerRPC: spawn een nieuwe cubus voor de client
-    // ==============================
     [ServerRpc(RequireOwnership = false)]
     private void RequestSpawnCubeServerRpc(ServerRpcParams rpcParams = default)
     {
-        Vector3 spawnPos = Vector3.right * xOffset * spawnedCubes.Count;
-
-        NetworkObject newCube = Instantiate(baseCubePrefab, spawnPos, Quaternion.identity, cubeParent)
-            .GetComponent<NetworkObject>();
-
-        // Geef ownership aan de client die deze cubus moet kunnen bewegen
-        newCube.SpawnWithOwnership(rpcParams.Receive.SenderClientId);
-
-        spawnedCubes.Add(newCube);
-
-        Debug.Log($"Nieuwe cubus gespawned op {spawnPos} voor client {rpcParams.Receive.SenderClientId}");
+        ulong clientId = rpcParams.Receive.SenderClientId;
+        SpawnCube(clientId);
     }
 
     // ==============================
-    // Spawn originele cubus voor host
+    // LEAVE
     // ==============================
-    private void SpawnCubeForHost(Vector3 position)
+    private void LeaveGame()
     {
-        NetworkObject hostCube = Instantiate(baseCubePrefab, position, Quaternion.identity, cubeParent)
-            .GetComponent<NetworkObject>();
+        if (NetworkManager.Singleton.IsHost)
+        {
+            Debug.Log("Host stopt...");
+            DespawnAllCubes();
+        }
 
-        hostCube.Spawn(true); // Host wordt eigenaar
-        spawnedCubes.Add(hostCube);
-        Debug.Log("Originele cubus gespawned voor host en clients.");
+        // ❗ GEEN RPC MEER
+        NetworkManager.Singleton.Shutdown();
+
+        leaveButton.gameObject.SetActive(false);
+    }
+
+    // ==============================
+    // DISCONNECT CLEANUP (KEY FIX)
+    // ==============================
+    private void OnClientDisconnected(ulong clientId)
+    {
+        if (!NetworkManager.Singleton.IsServer) return;
+
+        if (playerCubes.TryGetValue(clientId, out NetworkObject cube))
+        {
+            if (cube != null && cube.IsSpawned)
+            {
+                cube.Despawn(true);
+            }
+
+            playerCubes.Remove(clientId);
+
+            Debug.Log($"Cube van client {clientId} verwijderd.");
+        }
+    }
+
+    // ==============================
+    // HOST CLEANUP
+    // ==============================
+    private void DespawnAllCubes()
+    {
+        foreach (var cube in playerCubes.Values)
+        {
+            if (cube != null && cube.IsSpawned)
+            {
+                cube.Despawn(true);
+            }
+        }
+
+        playerCubes.Clear();
     }
 }
