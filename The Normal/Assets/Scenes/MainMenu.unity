@@ -605,7 +605,6 @@ MonoBehaviour:
   createServerButton: {fileID: 653176596}
   leaveButton: {fileID: 1475205488}
   playerPrefab: {fileID: 2469613994109035230, guid: 5c9fc39601aa06944883db37131a81ff, type: 3}
-  playerParent: {fileID: 1328068061}
   networkManager: {fileID: 117914336}
 --- !u!114 &238958202
 MonoBehaviour:
@@ -889,37 +888,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 816103237}
   m_CullTransparentMesh: 1
---- !u!1 &1328068060
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1328068061}
-  m_Layer: 0
-  m_Name: Players
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1328068061
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1328068060}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1339470515
 GameObject:
   m_ObjectHideFlags: 0
@@ -1478,4 +1446,3 @@ SceneRoots:
   - {fileID: 117914334}
   - {fileID: 238958200}
   - {fileID: 1612634181}
-  - {fileID: 1328068061}

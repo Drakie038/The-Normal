@@ -43,7 +43,7 @@ public class MultiplayerMenu : MonoBehaviour
 
         leaveButton.gameObject.SetActive(false);
 
-        // 🔥 BELANGRIJK: spawn players automatisch bij connect
+        // 🔥 ALL PLAYERS (INCLUDING HOST) SPAWN HERE
         networkManager.OnClientConnectedCallback += OnClientConnected;
     }
 
@@ -105,8 +105,8 @@ public class MultiplayerMenu : MonoBehaviour
 
         leaveButton.gameObject.SetActive(true);
 
-        // 🔥 host krijgt ook player
-        SpawnPlayer(NetworkManager.Singleton.LocalClientId);
+        // ❌ NO SPAWN HERE ANYMORE
+        // Host will also go through OnClientConnectedCallback
     }
 
     // =====================================================
@@ -160,7 +160,7 @@ public class MultiplayerMenu : MonoBehaviour
     }
 
     // =====================================================
-    // 🧍 SPAWN PLAYER (SERVER ONLY)
+    // 🧍 SPAWN SYSTEM (HOST = CLIENT 0 INCLUDED)
     // =====================================================
     private void OnClientConnected(ulong clientId)
     {
