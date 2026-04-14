@@ -34,6 +34,7 @@ public class MultiplayerMenu : MonoBehaviour
     private Allocation hostAllocation;
 
     private bool searching = false;
+    private Coroutine lobbyHeartbeat;
 
     private async void Start()
     {
@@ -49,8 +50,16 @@ public class MultiplayerMenu : MonoBehaviour
         networkManager.OnClientConnectedCallback += OnClientConnected;
     }
 
+    private void Update()
+    {
+        // 🔥 FIX: UI blijft altijd correct syncen met Netcode state
+        bool inGame = networkManager.IsClient || networkManager.IsHost;
+
+        leaveButton.gameObject.SetActive(inGame);
+    }
+
     // =====================================================
-    // 🔵 QUICK PLAY (RETRY SYSTEM - NO HOST Fallback)
+    // QUICK PLAY
     // =====================================================
     private async Task QuickPlay()
     {
@@ -59,44 +68,42 @@ public class MultiplayerMenu : MonoBehaviour
 
         searching = true;
 
-        while (searching && !networkManager.IsClient && !networkManager.IsHost)
+        networkManager.Shutdown();
+        await Task.Delay(300);
+
+        while (searching)
         {
             try
             {
                 Lobby lobby = await LobbyService.Instance.QuickJoinLobbyAsync();
 
+                string code = lobby.Data["joinCode"].Value;
+
                 JoinAllocation allocation =
-                    await RelayService.Instance.JoinAllocationAsync(lobby.Data["joinCode"].Value);
+                    await RelayService.Instance.JoinAllocationAsync(code);
 
                 StartClient(allocation);
-
-                leaveButton.gameObject.SetActive(true);
 
                 searching = false;
                 return;
             }
             catch
             {
-                Debug.Log("Geen server gevonden... opnieuw proberen in 2 sec");
-                await Task.Delay(2000);
+                await Task.Delay(1500);
             }
         }
     }
 
     // =====================================================
-    // 🟢 CREATE SERVER (HANDMATIG HOST)
+    // CREATE SERVER
     // =====================================================
     private async Task CreateServer()
     {
         if (networkManager.IsClient || networkManager.IsHost)
             return;
 
-        searching = false;
-
         hostAllocation = await RelayService.Instance.CreateAllocationAsync(4);
         string joinCode = await RelayService.Instance.GetJoinCodeAsync(hostAllocation.AllocationId);
-
-        Debug.Log("JOIN CODE: " + joinCode);
 
         var options = new CreateLobbyOptions
         {
@@ -112,26 +119,58 @@ public class MultiplayerMenu : MonoBehaviour
 
         currentLobby = await LobbyService.Instance.CreateLobbyAsync("Game", 4, options);
 
-        await Task.Delay(300);
-
         StartHost(hostAllocation);
 
-        leaveButton.gameObject.SetActive(true);
+        StartHeartbeat();
     }
 
     // =====================================================
-    // 🔴 LEAVE
+    // HEARTBEAT (KEEP LOBBY ALIVE)
+    // =====================================================
+    private void StartHeartbeat()
+    {
+        if (lobbyHeartbeat != null)
+            StopCoroutine(lobbyHeartbeat);
+
+        lobbyHeartbeat = StartCoroutine(Heartbeat());
+    }
+
+    private IEnumerator Heartbeat()
+    {
+        while (currentLobby != null)
+        {
+            yield return new WaitForSeconds(5f);
+
+            if (networkManager.IsHost && currentLobby != null)
+            {
+                LobbyService.Instance.UpdateLobbyAsync(
+                    currentLobby.Id,
+                    new UpdateLobbyOptions()
+                );
+            }
+        }
+    }
+
+    // =====================================================
+    // LEAVE GAME
     // =====================================================
     private void LeaveGame()
     {
         searching = false;
 
+        if (lobbyHeartbeat != null)
+        {
+            StopCoroutine(lobbyHeartbeat);
+            lobbyHeartbeat = null;
+        }
+
         networkManager.Shutdown();
+
         leaveButton.gameObject.SetActive(false);
     }
 
     // =====================================================
-    // 🟢 HOST START
+    // HOST START
     // =====================================================
     private void StartHost(Allocation allocation)
     {
@@ -146,12 +185,10 @@ public class MultiplayerMenu : MonoBehaviour
         );
 
         networkManager.StartHost();
-
-        Debug.Log("HOST STARTED");
     }
 
     // =====================================================
-    // 🔵 CLIENT START
+    // CLIENT START
     // =====================================================
     private void StartClient(JoinAllocation allocation)
     {
@@ -167,28 +204,16 @@ public class MultiplayerMenu : MonoBehaviour
         );
 
         networkManager.StartClient();
-
-        Debug.Log("CLIENT STARTED");
     }
 
     // =====================================================
-    // 🧍 SPAWN SYSTEM
+    // SPAWN PLAYER
     // =====================================================
     private void OnClientConnected(ulong clientId)
     {
         if (!networkManager.IsServer) return;
 
-        SpawnPlayer(clientId);
-    }
-
-    private void SpawnPlayer(ulong clientId)
-    {
         GameObject obj = Instantiate(playerPrefab);
-
-        NetworkObject netObj = obj.GetComponent<NetworkObject>();
-
-        netObj.SpawnWithOwnership(clientId);
-
-        Debug.Log($"Player spawned for client {clientId}");
+        obj.GetComponent<NetworkObject>().SpawnWithOwnership(clientId);
     }
 }
