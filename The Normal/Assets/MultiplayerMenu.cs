@@ -33,8 +33,8 @@ public class MultiplayerMenu : MonoBehaviour
     private Lobby currentLobby;
     private Allocation hostAllocation;
 
+    private string lastJoinCode;
     private bool searching = false;
-    private Coroutine lobbyHeartbeat;
 
     private async void Start()
     {
@@ -50,16 +50,8 @@ public class MultiplayerMenu : MonoBehaviour
         networkManager.OnClientConnectedCallback += OnClientConnected;
     }
 
-    private void Update()
-    {
-        // 🔥 FIX: UI blijft altijd correct syncen met Netcode state
-        bool inGame = networkManager.IsClient || networkManager.IsHost;
-
-        leaveButton.gameObject.SetActive(inGame);
-    }
-
     // =====================================================
-    // QUICK PLAY
+    // 🔵 QUICK PLAY (FIXED RELIABLE SEARCH)
     // =====================================================
     private async Task QuickPlay()
     {
@@ -68,34 +60,52 @@ public class MultiplayerMenu : MonoBehaviour
 
         searching = true;
 
-        networkManager.Shutdown();
-        await Task.Delay(300);
-
         while (searching)
         {
             try
             {
-                Lobby lobby = await LobbyService.Instance.QuickJoinLobbyAsync();
+                QueryResponse lobbies = await LobbyService.Instance.QueryLobbiesAsync();
 
-                string code = lobby.Data["joinCode"].Value;
+                foreach (var lobby in lobbies.Results)
+                {
+                    if (!lobby.Data.ContainsKey("joinCode"))
+                        continue;
 
-                JoinAllocation allocation =
-                    await RelayService.Instance.JoinAllocationAsync(code);
+                    string code = lobby.Data["joinCode"].Value;
 
-                StartClient(allocation);
+                    try
+                    {
+                        JoinAllocation allocation =
+                            await RelayService.Instance.JoinAllocationAsync(code);
 
-                searching = false;
-                return;
+                        lastJoinCode = code;
+
+                        StartClient(allocation);
+
+                        leaveButton.gameObject.SetActive(true);
+
+                        searching = false;
+                        return;
+                    }
+                    catch
+                    {
+                        // ❌ Relay dead → skip this lobby
+                        continue;
+                    }
+                }
+
+                Debug.Log("No valid servers found... retrying");
+                await Task.Delay(2000);
             }
             catch
             {
-                await Task.Delay(1500);
+                await Task.Delay(2000);
             }
         }
     }
 
     // =====================================================
-    // CREATE SERVER
+    // 🟢 CREATE SERVER
     // =====================================================
     private async Task CreateServer()
     {
@@ -104,6 +114,10 @@ public class MultiplayerMenu : MonoBehaviour
 
         hostAllocation = await RelayService.Instance.CreateAllocationAsync(4);
         string joinCode = await RelayService.Instance.GetJoinCodeAsync(hostAllocation.AllocationId);
+
+        lastJoinCode = joinCode;
+
+        Debug.Log("JOIN CODE: " + joinCode);
 
         var options = new CreateLobbyOptions
         {
@@ -119,50 +133,19 @@ public class MultiplayerMenu : MonoBehaviour
 
         currentLobby = await LobbyService.Instance.CreateLobbyAsync("Game", 4, options);
 
+        await Task.Delay(300);
+
         StartHost(hostAllocation);
 
-        StartHeartbeat();
+        leaveButton.gameObject.SetActive(true);
     }
 
     // =====================================================
-    // HEARTBEAT (KEEP LOBBY ALIVE)
-    // =====================================================
-    private void StartHeartbeat()
-    {
-        if (lobbyHeartbeat != null)
-            StopCoroutine(lobbyHeartbeat);
-
-        lobbyHeartbeat = StartCoroutine(Heartbeat());
-    }
-
-    private IEnumerator Heartbeat()
-    {
-        while (currentLobby != null)
-        {
-            yield return new WaitForSeconds(5f);
-
-            if (networkManager.IsHost && currentLobby != null)
-            {
-                LobbyService.Instance.UpdateLobbyAsync(
-                    currentLobby.Id,
-                    new UpdateLobbyOptions()
-                );
-            }
-        }
-    }
-
-    // =====================================================
-    // LEAVE GAME
+    // 🔴 LEAVE
     // =====================================================
     private void LeaveGame()
     {
         searching = false;
-
-        if (lobbyHeartbeat != null)
-        {
-            StopCoroutine(lobbyHeartbeat);
-            lobbyHeartbeat = null;
-        }
 
         networkManager.Shutdown();
 
@@ -170,7 +153,7 @@ public class MultiplayerMenu : MonoBehaviour
     }
 
     // =====================================================
-    // HOST START
+    // 🟢 HOST START
     // =====================================================
     private void StartHost(Allocation allocation)
     {
@@ -188,7 +171,7 @@ public class MultiplayerMenu : MonoBehaviour
     }
 
     // =====================================================
-    // CLIENT START
+    // 🔵 CLIENT START
     // =====================================================
     private void StartClient(JoinAllocation allocation)
     {
@@ -207,7 +190,7 @@ public class MultiplayerMenu : MonoBehaviour
     }
 
     // =====================================================
-    // SPAWN PLAYER
+    // 🧍 SPAWN SYSTEM
     // =====================================================
     private void OnClientConnected(ulong clientId)
     {
