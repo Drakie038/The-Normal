@@ -33,8 +33,8 @@ public class MultiplayerMenu : MonoBehaviour
     private Lobby currentLobby;
     private Allocation hostAllocation;
 
-    private string lastJoinCode;
     private bool searching = false;
+    private string lastJoinCode;
 
     private async void Start()
     {
@@ -51,7 +51,7 @@ public class MultiplayerMenu : MonoBehaviour
     }
 
     // =====================================================
-    // 🔵 QUICK PLAY (FIXED RELIABLE SEARCH)
+    // 🔵 QUICK PLAY (RANDOM MATCHMAKING FIXED)
     // =====================================================
     private async Task QuickPlay()
     {
@@ -64,38 +64,47 @@ public class MultiplayerMenu : MonoBehaviour
         {
             try
             {
-                QueryResponse lobbies = await LobbyService.Instance.QueryLobbiesAsync();
+                QueryResponse response = await LobbyService.Instance.QueryLobbiesAsync();
 
-                foreach (var lobby in lobbies.Results)
+                if (response.Results.Count == 0)
                 {
-                    if (!lobby.Data.ContainsKey("joinCode"))
-                        continue;
-
-                    string code = lobby.Data["joinCode"].Value;
-
-                    try
-                    {
-                        JoinAllocation allocation =
-                            await RelayService.Instance.JoinAllocationAsync(code);
-
-                        lastJoinCode = code;
-
-                        StartClient(allocation);
-
-                        leaveButton.gameObject.SetActive(true);
-
-                        searching = false;
-                        return;
-                    }
-                    catch
-                    {
-                        // ❌ Relay dead → skip this lobby
-                        continue;
-                    }
+                    Debug.Log("No lobbies found, retrying...");
+                    await Task.Delay(2000);
+                    continue;
                 }
 
-                Debug.Log("No valid servers found... retrying");
-                await Task.Delay(2000);
+                // 🔥 RANDOM LOBBY (niet QuickJoin!)
+                int index = Random.Range(0, response.Results.Count);
+                Lobby lobby = response.Results[index];
+
+                if (!lobby.Data.ContainsKey("joinCode"))
+                {
+                    await Task.Delay(500);
+                    continue;
+                }
+
+                string code = lobby.Data["joinCode"].Value;
+
+                try
+                {
+                    JoinAllocation allocation =
+                        await RelayService.Instance.JoinAllocationAsync(code);
+
+                    lastJoinCode = code;
+
+                    StartClient(allocation);
+
+                    leaveButton.gameObject.SetActive(true);
+
+                    searching = false;
+                    return;
+                }
+                catch
+                {
+                    // ❌ Relay kapot → probeer andere random lobby
+                    await Task.Delay(500);
+                    continue;
+                }
             }
             catch
             {
@@ -105,7 +114,7 @@ public class MultiplayerMenu : MonoBehaviour
     }
 
     // =====================================================
-    // 🟢 CREATE SERVER
+    // 🟢 CREATE SERVER (HOST)
     // =====================================================
     private async Task CreateServer()
     {
@@ -141,7 +150,7 @@ public class MultiplayerMenu : MonoBehaviour
     }
 
     // =====================================================
-    // 🔴 LEAVE
+    // 🔴 LEAVE GAME
     // =====================================================
     private void LeaveGame()
     {
@@ -190,7 +199,7 @@ public class MultiplayerMenu : MonoBehaviour
     }
 
     // =====================================================
-    // 🧍 SPAWN SYSTEM
+    // 🧍 PLAYER SPAWN
     // =====================================================
     private void OnClientConnected(ulong clientId)
     {
