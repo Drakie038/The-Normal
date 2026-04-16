@@ -258,7 +258,6 @@ public class MultiplayerMenu : MonoBehaviour
 
         SetStatus("Server: " + serverName);
 
-        // ✅ FIX: initial playercount update
         await UpdatePlayerCount();
     }
 
@@ -301,6 +300,7 @@ public class MultiplayerMenu : MonoBehaviour
         leaveButton.gameObject.SetActive(false);
 
         inMatch = false;
+
         currentServerName = "";
 
         quickPlayButton.gameObject.SetActive(true);
@@ -309,8 +309,9 @@ public class MultiplayerMenu : MonoBehaviour
         if (serverNameInput != null)
             serverNameInput.gameObject.SetActive(true);
 
-        SetStatus("Browsing servers...");
         SetServerListVisible(true);
+
+        SetStatus("Browsing servers...");
     }
 
     // =====================================================
@@ -363,14 +364,45 @@ public class MultiplayerMenu : MonoBehaviour
 
     private async void OnClientDisconnected(ulong clientId)
     {
-        if (!networkManager.IsServer) return;
+        if (!networkManager.IsServer)
+        {
+            // CLIENT SIDE: HOST LEFT
+            ShowDebug("Host Leaved");
+
+            leaveButton.gameObject.SetActive(false);
+
+            inMatch = false;
+            searching = false;
+
+            quickPlayButton.gameObject.SetActive(true);
+            createServerButton.gameObject.SetActive(true);
+
+            if (serverNameInput != null)
+                serverNameInput.gameObject.SetActive(true);
+
+            SetServerListVisible(true);
+
+            currentLobby = null;
+            hostAllocation = null;
+            currentLobbyId = "";
+            currentServerName = "";
+
+            ClearButtons();
+
+            SetStatus("Browsing servers..."); // ✅ FIX ADDED
+
+            await Task.Delay(2000);
+            HideDebug();
+
+            return;
+        }
 
         await Task.Delay(200);
         await UpdatePlayerCount();
     }
 
     // =====================================================
-    // ✅ FIXED PLAYER COUNT (ONLY REAL CHANGE)
+    // PLAYER COUNT
     // =====================================================
     private async Task UpdatePlayerCount()
     {
@@ -398,7 +430,7 @@ public class MultiplayerMenu : MonoBehaviour
     }
 
     // =====================================================
-    // SERVER LIST (UNCHANGED)
+    // SERVER LIST + HELPERS (UNCHANGED)
     // =====================================================
     private IEnumerator ServerListUpdater()
     {
@@ -469,9 +501,6 @@ public class MultiplayerMenu : MonoBehaviour
         isRefreshing = false;
     }
 
-    // =====================================================
-    // BUTTONS (UNCHANGED)
-    // =====================================================
     private float buttonSpacing = 80f;
 
     private GameObject CreateServerButton(string serverName, string joinCode, int playerCount)
@@ -511,14 +540,10 @@ public class MultiplayerMenu : MonoBehaviour
         SetServerListVisible(false);
         ClearButtons();
 
-        // (OPTIONAL FIX) sync join to host
         await Task.Delay(200);
         await UpdatePlayerCount();
     }
 
-    // =====================================================
-    // HELPERS (UNCHANGED)
-    // =====================================================
     private void ClearButtons()
     {
         foreach (var b in spawnedButtons)
