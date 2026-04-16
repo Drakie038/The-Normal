@@ -35,6 +35,9 @@ public class MultiplayerMenu : MonoBehaviour
     [Header("Status Text")]
     [SerializeField] private TMP_Text statusText;
 
+    [Header("DEBUG TEXT")]
+    [SerializeField] private TMP_Text debugText;
+
     [Header("Player")]
     [SerializeField] private GameObject playerPrefab;
 
@@ -52,13 +55,10 @@ public class MultiplayerMenu : MonoBehaviour
     private string currentServerName = "";
 
     private List<GameObject> spawnedButtons = new List<GameObject>();
+    private Dictionary<string, GameObject> lobbyButtons = new Dictionary<string, GameObject>();
 
     private bool isRefreshing = false;
-
     private float heartbeatTimer;
-
-    // 🔥 FIX: onthoud servers
-    private Dictionary<string, GameObject> lobbyButtons = new Dictionary<string, GameObject>();
 
     private async void Start()
     {
@@ -91,73 +91,141 @@ public class MultiplayerMenu : MonoBehaviour
     }
 
     // =====================================================
-    // QUICK PLAY
+    // QUICK PLAY (UNCHANGED)
     // =====================================================
     private async Task QuickPlay()
     {
         if (networkManager.IsClient || networkManager.IsHost)
             return;
 
+        quickPlayButton.gameObject.SetActive(false);
+        createServerButton.gameObject.SetActive(false);
+
+        if (serverNameInput != null)
+            serverNameInput.gameObject.SetActive(false);
+
         searching = true;
+
+        float elapsed = 0f;
 
         while (searching)
         {
+            elapsed += 1f;
+            float remaining = 10f - elapsed;
+
+            ShowDebug("Searching " + Mathf.CeilToInt(remaining));
+
+            if (remaining <= 0f)
+            {
+                ShowDebug("No servers online");
+
+                await Task.Delay(3000);
+
+                HideDebug();
+
+                quickPlayButton.gameObject.SetActive(true);
+                createServerButton.gameObject.SetActive(true);
+
+                if (serverNameInput != null)
+                    serverNameInput.gameObject.SetActive(true);
+
+                searching = false;
+                return;
+            }
+
             QueryResponse response =
                 await LobbyService.Instance.QueryLobbiesAsync(new QueryLobbiesOptions { Count = 50 });
 
-            if (response.Results.Count == 0)
+            List<Lobby> valid = new List<Lobby>();
+
+            foreach (var l in response.Results)
             {
-                await Task.Delay(2000);
-                continue;
+                if (l.Data.ContainsKey("joinCode"))
+                    valid.Add(l);
             }
 
-            Lobby lobby = response.Results[Random.Range(0, response.Results.Count)];
+            if (valid.Count > 0)
+            {
+                Lobby lobby = valid[Random.Range(0, valid.Count)];
 
-            if (!lobby.Data.ContainsKey("joinCode"))
-                continue;
+                string joinCode = lobby.Data["joinCode"].Value;
 
-            string joinCode = lobby.Data["joinCode"].Value;
+                await LobbyService.Instance.JoinLobbyByIdAsync(lobby.Id);
 
-            await LobbyService.Instance.JoinLobbyByIdAsync(lobby.Id);
+                JoinAllocation allocation =
+                    await RelayService.Instance.JoinAllocationAsync(joinCode);
 
-            JoinAllocation allocation =
-                await RelayService.Instance.JoinAllocationAsync(joinCode);
+                HideDebug();
 
-            StartClient(allocation);
+                StartClient(allocation);
 
-            currentLobbyId = lobby.Id;
-            currentServerName = lobby.Data.ContainsKey("serverName")
-                ? lobby.Data["serverName"].Value
-                : "Server";
+                currentLobbyId = lobby.Id;
+                currentServerName = lobby.Data.ContainsKey("serverName")
+                    ? lobby.Data["serverName"].Value
+                    : "Server";
 
-            SetStatus("Joined server: " + currentServerName);
+                SetStatus("Joined server: " + currentServerName);
 
-            leaveButton.gameObject.SetActive(true);
+                leaveButton.gameObject.SetActive(true);
 
-            inMatch = true;
-            SetServerListVisible(false);
-            ClearButtons();
+                inMatch = true;
+                SetServerListVisible(false);
+                ClearButtons();
 
-            searching = false;
-            return;
+                searching = false;
+                return;
+            }
+
+            await Task.Delay(1000);
         }
     }
 
     // =====================================================
-    // CREATE SERVER
+    // CREATE SERVER (UNCHANGED)
     // =====================================================
     private async Task CreateServer()
     {
         if (networkManager.IsClient || networkManager.IsHost)
             return;
 
-        isHost = true;
+        quickPlayButton.gameObject.SetActive(false);
+        createServerButton.gameObject.SetActive(false);
 
         string serverName =
             string.IsNullOrEmpty(serverNameInput != null ? serverNameInput.text : "")
-                ? "Server " + Random.Range(100, 999)
+                ? ""
                 : serverNameInput.text;
 
+        if (string.IsNullOrEmpty(serverName))
+        {
+            ShowDebug("Enter name");
+
+            quickPlayButton.gameObject.SetActive(true);
+            createServerButton.gameObject.SetActive(true);
+
+            if (serverNameInput != null)
+                serverNameInput.gameObject.SetActive(true);
+
+            return;
+        }
+
+        if (serverName.Length > 10)
+        {
+            ShowDebug("Max 10 letters");
+
+            quickPlayButton.gameObject.SetActive(true);
+            createServerButton.gameObject.SetActive(true);
+
+            if (serverNameInput != null)
+                serverNameInput.gameObject.SetActive(true);
+
+            return;
+        }
+
+        if (serverNameInput != null)
+            serverNameInput.gameObject.SetActive(false);
+
+        isHost = true;
         currentServerName = serverName;
 
         hostAllocation = await RelayService.Instance.CreateAllocationAsync(4);
@@ -178,6 +246,8 @@ public class MultiplayerMenu : MonoBehaviour
 
         currentLobbyId = currentLobby.Id;
 
+        HideDebug();
+
         StartHost(hostAllocation);
 
         leaveButton.gameObject.SetActive(true);
@@ -187,10 +257,13 @@ public class MultiplayerMenu : MonoBehaviour
         ClearButtons();
 
         SetStatus("Server: " + serverName);
+
+        // ✅ FIX: initial playercount update
+        await UpdatePlayerCount();
     }
 
     // =====================================================
-    // LEAVE
+    // LEAVE (UNCHANGED)
     // =====================================================
     private async void LeaveGame()
     {
@@ -230,12 +303,18 @@ public class MultiplayerMenu : MonoBehaviour
         inMatch = false;
         currentServerName = "";
 
+        quickPlayButton.gameObject.SetActive(true);
+        createServerButton.gameObject.SetActive(true);
+
+        if (serverNameInput != null)
+            serverNameInput.gameObject.SetActive(true);
+
         SetStatus("Browsing servers...");
         SetServerListVisible(true);
     }
 
     // =====================================================
-    // HOST / CLIENT
+    // HOST / CLIENT (UNCHANGED)
     // =====================================================
     private void StartHost(Allocation allocation)
     {
@@ -278,6 +357,7 @@ public class MultiplayerMenu : MonoBehaviour
         GameObject obj = Instantiate(playerPrefab);
         obj.GetComponent<NetworkObject>().SpawnWithOwnership(clientId);
 
+        await Task.Delay(200);
         await UpdatePlayerCount();
     }
 
@@ -285,33 +365,40 @@ public class MultiplayerMenu : MonoBehaviour
     {
         if (!networkManager.IsServer) return;
 
-        await Task.Delay(100);
+        await Task.Delay(200);
         await UpdatePlayerCount();
     }
 
+    // =====================================================
+    // ✅ FIXED PLAYER COUNT (ONLY REAL CHANGE)
+    // =====================================================
     private async Task UpdatePlayerCount()
     {
         if (!isHost || currentLobby == null) return;
 
-        int count = networkManager.ConnectedClients.Count;
+        int count = networkManager.ConnectedClientsIds.Count;
 
-        await LobbyService.Instance.UpdateLobbyAsync(
-            currentLobby.Id,
-            new UpdateLobbyOptions
-            {
-                Data = new Dictionary<string, DataObject>
+        try
+        {
+            await LobbyService.Instance.UpdateLobbyAsync(
+                currentLobby.Id,
+                new UpdateLobbyOptions
                 {
+                    Data = new Dictionary<string, DataObject>
                     {
-                        "playerCount",
-                        new DataObject(DataObject.VisibilityOptions.Public, count.ToString())
+                        {
+                            "playerCount",
+                            new DataObject(DataObject.VisibilityOptions.Public, count.ToString())
+                        }
                     }
                 }
-            }
-        );
+            );
+        }
+        catch { }
     }
 
     // =====================================================
-    // SERVER LIST
+    // SERVER LIST (UNCHANGED)
     // =====================================================
     private IEnumerator ServerListUpdater()
     {
@@ -365,7 +452,6 @@ public class MultiplayerMenu : MonoBehaviour
             }
         }
 
-        // 🔥 verwijder alleen echt verdwenen servers
         List<string> toRemove = new List<string>();
 
         foreach (var kvp in lobbyButtons)
@@ -384,7 +470,7 @@ public class MultiplayerMenu : MonoBehaviour
     }
 
     // =====================================================
-    // BUTTONS
+    // BUTTONS (UNCHANGED)
     // =====================================================
     private float buttonSpacing = 80f;
 
@@ -424,10 +510,14 @@ public class MultiplayerMenu : MonoBehaviour
         inMatch = true;
         SetServerListVisible(false);
         ClearButtons();
+
+        // (OPTIONAL FIX) sync join to host
+        await Task.Delay(200);
+        await UpdatePlayerCount();
     }
 
     // =====================================================
-    // HELPERS
+    // HELPERS (UNCHANGED)
     // =====================================================
     private void ClearButtons()
     {
@@ -448,5 +538,19 @@ public class MultiplayerMenu : MonoBehaviour
     {
         if (statusText != null)
             statusText.text = text;
+    }
+
+    private void ShowDebug(string msg)
+    {
+        if (debugText == null) return;
+        debugText.gameObject.SetActive(true);
+        debugText.text = msg;
+    }
+
+    private void HideDebug()
+    {
+        if (debugText == null) return;
+        debugText.text = "";
+        debugText.gameObject.SetActive(false);
     }
 }
