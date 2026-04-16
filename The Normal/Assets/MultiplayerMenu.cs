@@ -57,7 +57,8 @@ public class MultiplayerMenu : MonoBehaviour
 
     private float heartbeatTimer;
 
-    private Dictionary<string, string> lastLobbyUpdate = new Dictionary<string, string>();
+    // 🔥 FIX: onthoud servers
+    private Dictionary<string, GameObject> lobbyButtons = new Dictionary<string, GameObject>();
 
     private async void Start()
     {
@@ -231,12 +232,10 @@ public class MultiplayerMenu : MonoBehaviour
 
         SetStatus("Browsing servers...");
         SetServerListVisible(true);
-
-        StartCoroutine(ServerListUpdater());
     }
 
     // =====================================================
-    // HOST / CLIENT (UNCHANGED)
+    // HOST / CLIENT
     // =====================================================
     private void StartHost(Allocation allocation)
     {
@@ -270,7 +269,7 @@ public class MultiplayerMenu : MonoBehaviour
     }
 
     // =====================================================
-    // PLAYER EVENTS (UNCHANGED)
+    // PLAYER EVENTS
     // =====================================================
     private async void OnClientConnected(ulong clientId)
     {
@@ -312,7 +311,7 @@ public class MultiplayerMenu : MonoBehaviour
     }
 
     // =====================================================
-    // SERVER LIST (UNCHANGED)
+    // SERVER LIST
     // =====================================================
     private IEnumerator ServerListUpdater()
     {
@@ -332,12 +331,15 @@ public class MultiplayerMenu : MonoBehaviour
         QueryResponse response =
             await LobbyService.Instance.QueryLobbiesAsync(new QueryLobbiesOptions { Count = 50 });
 
-        ClearButtons();
+        HashSet<string> activeLobbies = new HashSet<string>();
 
         foreach (var lobby in response.Results)
         {
             if (!lobby.Data.ContainsKey("joinCode"))
                 continue;
+
+            string lobbyId = lobby.Id;
+            activeLobbies.Add(lobbyId);
 
             string serverName = lobby.Data.ContainsKey("serverName")
                 ? lobby.Data["serverName"].Value
@@ -350,23 +352,47 @@ public class MultiplayerMenu : MonoBehaviour
             if (lobby.Data.ContainsKey("playerCount"))
                 int.TryParse(lobby.Data["playerCount"].Value, out playerCount);
 
-            CreateServerButton(serverName, joinCode, playerCount);
+            if (!lobbyButtons.ContainsKey(lobbyId))
+            {
+                GameObject btn = CreateServerButton(serverName, joinCode, playerCount);
+                lobbyButtons[lobbyId] = btn;
+            }
+            else
+            {
+                TMP_Text text = lobbyButtons[lobbyId].GetComponentInChildren<TMP_Text>();
+                if (text != null)
+                    text.text = $"Server: {serverName} | Players: {playerCount}";
+            }
+        }
+
+        // 🔥 verwijder alleen echt verdwenen servers
+        List<string> toRemove = new List<string>();
+
+        foreach (var kvp in lobbyButtons)
+        {
+            if (!activeLobbies.Contains(kvp.Key))
+                toRemove.Add(kvp.Key);
+        }
+
+        foreach (string id in toRemove)
+        {
+            Destroy(lobbyButtons[id]);
+            lobbyButtons.Remove(id);
         }
 
         isRefreshing = false;
     }
 
     // =====================================================
-    // ✅ FIX: STACK BUTTONS VERTICALLY
+    // BUTTONS
     // =====================================================
     private float buttonSpacing = 80f;
 
-    private void CreateServerButton(string serverName, string joinCode, int playerCount)
+    private GameObject CreateServerButton(string serverName, string joinCode, int playerCount)
     {
         GameObject obj = Instantiate(serverButtonPrefab, serverListParent);
         spawnedButtons.Add(obj);
 
-        // 🔥 FORCE VERTICAL STACK
         RectTransform rt = obj.GetComponent<RectTransform>();
         rt.anchoredPosition = new Vector2(0, -spawnedButtons.Count * buttonSpacing);
 
@@ -377,6 +403,8 @@ public class MultiplayerMenu : MonoBehaviour
         Button btn = obj.GetComponent<Button>();
         btn.onClick.RemoveAllListeners();
         btn.onClick.AddListener(() => _ = JoinServer(joinCode));
+
+        return obj;
     }
 
     private async Task JoinServer(string joinCode)
@@ -407,6 +435,7 @@ public class MultiplayerMenu : MonoBehaviour
             Destroy(b);
 
         spawnedButtons.Clear();
+        lobbyButtons.Clear();
     }
 
     private void SetServerListVisible(bool visible)
