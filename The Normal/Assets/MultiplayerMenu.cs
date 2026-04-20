@@ -20,7 +20,7 @@ using System.Collections.Generic;
 
 public class MultiplayerMenu : MonoBehaviour
 {
-    [Header("UI")]
+    [Header("UI - Existing")]
     [SerializeField] private Button quickPlayButton;
     [SerializeField] private Button createServerButton;
     [SerializeField] private Button leaveButton;
@@ -43,6 +43,30 @@ public class MultiplayerMenu : MonoBehaviour
 
     [Header("Netcode")]
     [SerializeField] private NetworkManager networkManager;
+
+    [Header("MENU SETUP")]
+    [SerializeField] private Button startButton;
+    [SerializeField] private Button multiplayerButton;
+    [SerializeField] private Button singleplayerButton;
+
+    [Header("GROUPS")]
+    [SerializeField] private GameObject groupSinglePlayer;
+    [SerializeField] private GameObject groupMultiplayer;
+
+    [Header("Singleplayer")]
+    [SerializeField] private Button startGameButton;
+
+    [Header("Multiplayer Extra Buttons")]
+    [SerializeField] private Button browserRoomsButton;
+
+    [Header("ADDITIONAL MENU BUTTONS")]
+    [SerializeField] private Button quickJoinButton;
+    [SerializeField] private Button menuCreateServerButton;
+
+    [Header("BACK BUTTON")]
+    [SerializeField] private Button backButton;
+
+    private Stack<System.Action> backStack = new Stack<System.Action>();
 
     private Lobby currentLobby;
     private Allocation hostAllocation;
@@ -75,6 +99,192 @@ public class MultiplayerMenu : MonoBehaviour
         networkManager.OnClientDisconnectCallback += OnClientDisconnected;
 
         StartCoroutine(ServerListUpdater());
+
+        SetupMenu();
+    }
+
+    private void SetupMenu()
+    {
+        startButton.gameObject.SetActive(true);
+        backButton.gameObject.SetActive(false);
+
+        multiplayerButton.gameObject.SetActive(false);
+        singleplayerButton.gameObject.SetActive(false);
+
+        groupSinglePlayer.SetActive(false);
+        groupMultiplayer.SetActive(false);
+
+        quickJoinButton.gameObject.SetActive(false);
+        browserRoomsButton.gameObject.SetActive(false);
+        menuCreateServerButton.gameObject.SetActive(false);
+        createServerButton.gameObject.SetActive(false);
+
+        if (serverNameInput != null)
+            serverNameInput.gameObject.SetActive(false);
+
+        if (debugText != null)
+            debugText.gameObject.SetActive(false);
+
+        serverListParent.gameObject.SetActive(false);
+
+        // START
+        startButton.onClick.AddListener(() =>
+        {
+            startButton.gameObject.SetActive(false);
+
+            multiplayerButton.gameObject.SetActive(true);
+            singleplayerButton.gameObject.SetActive(true);
+
+            backButton.gameObject.SetActive(true);
+
+            backStack.Push(() =>
+            {
+                startButton.gameObject.SetActive(true);
+                multiplayerButton.gameObject.SetActive(false);
+                singleplayerButton.gameObject.SetActive(false);
+                backButton.gameObject.SetActive(false);
+            });
+        });
+
+        // MULTIPLAYER
+        multiplayerButton.onClick.AddListener(() =>
+        {
+            groupMultiplayer.SetActive(true);
+            multiplayerButton.gameObject.SetActive(false);
+            singleplayerButton.gameObject.SetActive(false);
+
+            quickJoinButton.gameObject.SetActive(true);
+            browserRoomsButton.gameObject.SetActive(true);
+            menuCreateServerButton.gameObject.SetActive(true);
+
+            backStack.Push(() =>
+            {
+                groupMultiplayer.SetActive(false);
+                multiplayerButton.gameObject.SetActive(true);
+                singleplayerButton.gameObject.SetActive(true);
+
+                quickJoinButton.gameObject.SetActive(false);
+                browserRoomsButton.gameObject.SetActive(false);
+                menuCreateServerButton.gameObject.SetActive(false);
+            });
+        });
+
+        // QUICK JOIN
+        if (quickJoinButton != null)
+        {
+            quickJoinButton.onClick.AddListener(() =>
+            {
+                _ = QuickPlay();
+            });
+        }
+
+        // CREATE MENU
+        if (menuCreateServerButton != null)
+        {
+            menuCreateServerButton.onClick.AddListener(() =>
+            {
+                quickJoinButton.gameObject.SetActive(false);
+                browserRoomsButton.gameObject.SetActive(false);
+
+                createServerButton.gameObject.SetActive(true);
+
+                if (serverNameInput != null)
+                    serverNameInput.gameObject.SetActive(true);
+
+                if (debugText != null)
+                    debugText.gameObject.SetActive(true);
+
+                serverListParent.gameObject.SetActive(false);
+
+                backStack.Push(() =>
+                {
+                    createServerButton.gameObject.SetActive(false);
+
+                    if (serverNameInput != null)
+                        serverNameInput.gameObject.SetActive(false);
+
+                    if (debugText != null)
+                        debugText.gameObject.SetActive(false);
+
+                    quickJoinButton.gameObject.SetActive(true);
+                    browserRoomsButton.gameObject.SetActive(true);
+                    menuCreateServerButton.gameObject.SetActive(true);
+                });
+            });
+        }
+
+        // BROWSER ROOMS
+        if (browserRoomsButton != null)
+        {
+            browserRoomsButton.onClick.AddListener(() =>
+            {
+                serverListParent.gameObject.SetActive(true);
+
+                quickJoinButton.gameObject.SetActive(false);
+                browserRoomsButton.gameObject.SetActive(false);
+                menuCreateServerButton.gameObject.SetActive(false);
+
+                if (serverNameInput != null)
+                    serverNameInput.gameObject.SetActive(false);
+
+                if (debugText != null)
+                    debugText.gameObject.SetActive(false);
+
+                backStack.Push(() =>
+                {
+                    serverListParent.gameObject.SetActive(false);
+
+                    quickJoinButton.gameObject.SetActive(true);
+                    browserRoomsButton.gameObject.SetActive(true);
+                    menuCreateServerButton.gameObject.SetActive(true);
+                });
+            });
+        }
+
+        // SINGLEPLAYER
+        if (singleplayerButton != null)
+        {
+            singleplayerButton.onClick.AddListener(() =>
+            {
+                groupSinglePlayer.SetActive(true);
+                groupMultiplayer.SetActive(false);
+
+                multiplayerButton.gameObject.SetActive(false);
+                singleplayerButton.gameObject.SetActive(false);
+
+                backStack.Push(() =>
+                {
+                    groupSinglePlayer.SetActive(false);
+
+                    multiplayerButton.gameObject.SetActive(true);
+                    singleplayerButton.gameObject.SetActive(true);
+                });
+            });
+
+
+        }
+
+        // BACK BUTTON
+        if (backButton != null)
+        {
+            backButton.onClick.AddListener(() =>
+            {
+                if (backStack.Count > 0)
+                {
+                    var action = backStack.Pop();
+                    action.Invoke();
+                }
+            });
+        }
+
+
+        if (startGameButton != null)
+        {
+            startGameButton.onClick.AddListener(() =>
+            {
+                groupSinglePlayer.SetActive(false);
+            });
+        }
     }
 
     private void Update()
@@ -90,99 +300,104 @@ public class MultiplayerMenu : MonoBehaviour
         }
     }
 
-    // =====================================================
-    // QUICK PLAY (UNCHANGED)
-    // =====================================================
     private async Task QuickPlay()
     {
         if (networkManager.IsClient || networkManager.IsHost)
             return;
 
-        quickPlayButton.gameObject.SetActive(false);
-        createServerButton.gameObject.SetActive(false);
-
-        if (serverNameInput != null)
-            serverNameInput.gameObject.SetActive(false);
+        quickJoinButton.gameObject.SetActive(false);
+        browserRoomsButton.gameObject.SetActive(false);
+        menuCreateServerButton.gameObject.SetActive(false);
+        backButton.gameObject.SetActive(false);
 
         searching = true;
 
-        float elapsed = 0f;
+        float startTime = Time.realtimeSinceStartup;
 
         while (searching)
         {
-            elapsed += 1f;
-            float remaining = 10f - elapsed;
-
-            ShowDebug("Searching " + Mathf.CeilToInt(remaining));
-
-            if (remaining <= 0f)
+            try
             {
-                ShowDebug("No servers online");
+                float elapsed = Time.realtimeSinceStartup - startTime;
+                float remaining = 10f - elapsed;
 
-                await Task.Delay(3000);
+                ShowDebug("Searching " + Mathf.CeilToInt(remaining));
 
-                HideDebug();
+                if (remaining <= 0f)
+                {
+                    ShowDebug("No servers online");
 
-                quickPlayButton.gameObject.SetActive(true);
-                createServerButton.gameObject.SetActive(true);
+                    await Task.Delay(3000);
 
-                if (serverNameInput != null)
-                    serverNameInput.gameObject.SetActive(true);
+                    HideDebug();
 
-                searching = false;
-                return;
+                    quickJoinButton.gameObject.SetActive(true);
+                    browserRoomsButton.gameObject.SetActive(true);
+                    menuCreateServerButton.gameObject.SetActive(true);
+                    backButton.gameObject.SetActive(true);
+
+                    searching = false;
+                    return;
+                }
+
+                QueryResponse response =
+                    await LobbyService.Instance.QueryLobbiesAsync(
+                        new QueryLobbiesOptions { Count = 50 }
+                    );
+
+                List<Lobby> valid = new List<Lobby>();
+
+                foreach (var l in response.Results)
+                {
+                    if (l.Data != null && l.Data.ContainsKey("joinCode"))
+                        valid.Add(l);
+                }
+
+                if (valid.Count > 0)
+                {
+                    Lobby lobby = valid[Random.Range(0, valid.Count)];
+
+                    string joinCode = lobby.Data["joinCode"].Value;
+
+                    await LobbyService.Instance.JoinLobbyByIdAsync(lobby.Id);
+
+                    JoinAllocation allocation =
+                        await RelayService.Instance.JoinAllocationAsync(joinCode);
+
+                    HideDebug();
+
+                    StartClient(allocation);
+
+                    currentLobbyId = lobby.Id;
+
+                    currentServerName = lobby.Data.ContainsKey("serverName")
+                        ? lobby.Data["serverName"].Value
+                        : "Server";
+
+                    SetStatus("Joined server: " + currentServerName);
+
+                    leaveButton.gameObject.SetActive(true);
+
+                    inMatch = true;
+                    SetServerListVisible(false);
+                    ClearButtons();
+
+                    searching = false;
+                    return;
+                }
+
+                await Task.Delay(1000);
             }
-
-            QueryResponse response =
-                await LobbyService.Instance.QueryLobbiesAsync(new QueryLobbiesOptions { Count = 50 });
-
-            List<Lobby> valid = new List<Lobby>();
-
-            foreach (var l in response.Results)
+            catch (System.Exception e)
             {
-                if (l.Data.ContainsKey("joinCode"))
-                    valid.Add(l);
+                // 🔥 BELANGRIJK: voorkomt dat timer “stopt” door silent crash
+                Debug.LogWarning("QuickPlay error (ignored): " + e.Message);
+
+                await Task.Delay(500);
             }
-
-            if (valid.Count > 0)
-            {
-                Lobby lobby = valid[Random.Range(0, valid.Count)];
-
-                string joinCode = lobby.Data["joinCode"].Value;
-
-                await LobbyService.Instance.JoinLobbyByIdAsync(lobby.Id);
-
-                JoinAllocation allocation =
-                    await RelayService.Instance.JoinAllocationAsync(joinCode);
-
-                HideDebug();
-
-                StartClient(allocation);
-
-                currentLobbyId = lobby.Id;
-                currentServerName = lobby.Data.ContainsKey("serverName")
-                    ? lobby.Data["serverName"].Value
-                    : "Server";
-
-                SetStatus("Joined server: " + currentServerName);
-
-                leaveButton.gameObject.SetActive(true);
-
-                inMatch = true;
-                SetServerListVisible(false);
-                ClearButtons();
-
-                searching = false;
-                return;
-            }
-
-            await Task.Delay(1000);
         }
     }
 
-    // =====================================================
-    // CREATE SERVER (UNCHANGED)
-    // =====================================================
     private async Task CreateServer()
     {
         if (networkManager.IsClient || networkManager.IsHost)
@@ -190,6 +405,7 @@ public class MultiplayerMenu : MonoBehaviour
 
         quickPlayButton.gameObject.SetActive(false);
         createServerButton.gameObject.SetActive(false);
+        menuCreateServerButton.gameObject.SetActive(false);
 
         string serverName =
             string.IsNullOrEmpty(serverNameInput != null ? serverNameInput.text : "")
@@ -200,7 +416,6 @@ public class MultiplayerMenu : MonoBehaviour
         {
             ShowDebug("Enter name");
 
-            quickPlayButton.gameObject.SetActive(true);
             createServerButton.gameObject.SetActive(true);
 
             if (serverNameInput != null)
@@ -213,7 +428,6 @@ public class MultiplayerMenu : MonoBehaviour
         {
             ShowDebug("Max 10 letters");
 
-            quickPlayButton.gameObject.SetActive(true);
             createServerButton.gameObject.SetActive(true);
 
             if (serverNameInput != null)
@@ -224,6 +438,10 @@ public class MultiplayerMenu : MonoBehaviour
 
         if (serverNameInput != null)
             serverNameInput.gameObject.SetActive(false);
+            backButton.gameObject.SetActive(false);
+
+        if (debugText != null)
+            debugText.gameObject.SetActive(false);
 
         isHost = true;
         currentServerName = serverName;
@@ -251,6 +469,7 @@ public class MultiplayerMenu : MonoBehaviour
         StartHost(hostAllocation);
 
         leaveButton.gameObject.SetActive(true);
+        menuCreateServerButton.gameObject.SetActive(false);
 
         inMatch = true;
         SetServerListVisible(false);
@@ -261,9 +480,6 @@ public class MultiplayerMenu : MonoBehaviour
         await UpdatePlayerCount();
     }
 
-    // =====================================================
-    // LEAVE (UNCHANGED)
-    // =====================================================
     private async void LeaveGame()
     {
         searching = false;
@@ -314,9 +530,6 @@ public class MultiplayerMenu : MonoBehaviour
         SetStatus("Browsing servers...");
     }
 
-    // =====================================================
-    // HOST / CLIENT (UNCHANGED)
-    // =====================================================
     private void StartHost(Allocation allocation)
     {
         var transport = networkManager.GetComponent<UnityTransport>();
@@ -348,9 +561,6 @@ public class MultiplayerMenu : MonoBehaviour
         networkManager.StartClient();
     }
 
-    // =====================================================
-    // PLAYER EVENTS
-    // =====================================================
     private async void OnClientConnected(ulong clientId)
     {
         if (!networkManager.IsServer) return;
@@ -366,7 +576,6 @@ public class MultiplayerMenu : MonoBehaviour
     {
         if (!networkManager.IsServer)
         {
-            // CLIENT SIDE: HOST LEFT
             ShowDebug("Host Leaved");
 
             leaveButton.gameObject.SetActive(false);
@@ -389,7 +598,7 @@ public class MultiplayerMenu : MonoBehaviour
 
             ClearButtons();
 
-            SetStatus("Browsing servers..."); // ✅ FIX ADDED
+            SetStatus("Browsing servers...");
 
             await Task.Delay(2000);
             HideDebug();
@@ -401,9 +610,6 @@ public class MultiplayerMenu : MonoBehaviour
         await UpdatePlayerCount();
     }
 
-    // =====================================================
-    // PLAYER COUNT
-    // =====================================================
     private async Task UpdatePlayerCount()
     {
         if (!isHost || currentLobby == null) return;
@@ -418,10 +624,7 @@ public class MultiplayerMenu : MonoBehaviour
                 {
                     Data = new Dictionary<string, DataObject>
                     {
-                        {
-                            "playerCount",
-                            new DataObject(DataObject.VisibilityOptions.Public, count.ToString())
-                        }
+                        { "playerCount", new DataObject(DataObject.VisibilityOptions.Public, count.ToString()) }
                     }
                 }
             );
@@ -429,9 +632,6 @@ public class MultiplayerMenu : MonoBehaviour
         catch { }
     }
 
-    // =====================================================
-    // SERVER LIST + HELPERS (UNCHANGED)
-    // =====================================================
     private IEnumerator ServerListUpdater()
     {
         while (true)
