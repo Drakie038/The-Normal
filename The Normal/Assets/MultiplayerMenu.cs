@@ -149,9 +149,11 @@ public class MultiplayerMenu : MonoBehaviour
         // MULTIPLAYER
         multiplayerButton.onClick.AddListener(() =>
         {
-            groupMultiplayer.SetActive(true);
+            groupMultiplayer.gameObject.SetActive(true);
             multiplayerButton.gameObject.SetActive(false);
             singleplayerButton.gameObject.SetActive(false);
+            statusText.gameObject.SetActive(false);
+            
 
             quickJoinButton.gameObject.SetActive(true);
             browserRoomsButton.gameObject.SetActive(true);
@@ -159,7 +161,6 @@ public class MultiplayerMenu : MonoBehaviour
 
             backStack.Push(() =>
             {
-                groupMultiplayer.SetActive(false);
                 multiplayerButton.gameObject.SetActive(true);
                 singleplayerButton.gameObject.SetActive(true);
 
@@ -185,6 +186,7 @@ public class MultiplayerMenu : MonoBehaviour
             {
                 quickJoinButton.gameObject.SetActive(false);
                 browserRoomsButton.gameObject.SetActive(false);
+                menuCreateServerButton.gameObject.SetActive(false);
 
                 createServerButton.gameObject.SetActive(true);
 
@@ -223,6 +225,9 @@ public class MultiplayerMenu : MonoBehaviour
                 quickJoinButton.gameObject.SetActive(false);
                 browserRoomsButton.gameObject.SetActive(false);
                 menuCreateServerButton.gameObject.SetActive(false);
+
+                // 🔥 FIX
+                createServerButton.gameObject.SetActive(false);
 
                 if (serverNameInput != null)
                     serverNameInput.gameObject.SetActive(false);
@@ -283,6 +288,7 @@ public class MultiplayerMenu : MonoBehaviour
             startGameButton.onClick.AddListener(() =>
             {
                 groupSinglePlayer.SetActive(false);
+                backButton.gameObject.SetActive(false);
             });
         }
     }
@@ -377,6 +383,7 @@ public class MultiplayerMenu : MonoBehaviour
                     SetStatus("Joined server: " + currentServerName);
 
                     leaveButton.gameObject.SetActive(true);
+                    statusText.gameObject.SetActive(true);
 
                     inMatch = true;
                     SetServerListVisible(false);
@@ -469,6 +476,7 @@ public class MultiplayerMenu : MonoBehaviour
         StartHost(hostAllocation);
 
         leaveButton.gameObject.SetActive(true);
+        statusText.gameObject.SetActive(true);
         menuCreateServerButton.gameObject.SetActive(false);
 
         inMatch = true;
@@ -520,14 +528,12 @@ public class MultiplayerMenu : MonoBehaviour
         currentServerName = "";
 
         quickPlayButton.gameObject.SetActive(true);
-        createServerButton.gameObject.SetActive(true);
+        menuCreateServerButton.gameObject.SetActive(true);
+        browserRoomsButton.gameObject.SetActive(true);
+        backButton.gameObject.SetActive(true);
+        statusText.gameObject.SetActive(false);
+        createServerButton.gameObject.SetActive(false);
 
-        if (serverNameInput != null)
-            serverNameInput.gameObject.SetActive(true);
-
-        SetServerListVisible(true);
-
-        SetStatus("Browsing servers...");
     }
 
     private void StartHost(Allocation allocation)
@@ -576,20 +582,14 @@ public class MultiplayerMenu : MonoBehaviour
     {
         if (!networkManager.IsServer)
         {
-            ShowDebug("Host Leaved");
-
             leaveButton.gameObject.SetActive(false);
 
             inMatch = false;
             searching = false;
 
             quickPlayButton.gameObject.SetActive(true);
-            createServerButton.gameObject.SetActive(true);
-
-            if (serverNameInput != null)
-                serverNameInput.gameObject.SetActive(true);
-
-            SetServerListVisible(true);
+            menuCreateServerButton.gameObject.SetActive(true);
+            browserRoomsButton.gameObject.SetActive(true);
 
             currentLobby = null;
             hostAllocation = null;
@@ -597,8 +597,6 @@ public class MultiplayerMenu : MonoBehaviour
             currentServerName = "";
 
             ClearButtons();
-
-            SetStatus("Browsing servers...");
 
             await Task.Delay(2000);
             HideDebug();
@@ -735,7 +733,7 @@ public class MultiplayerMenu : MonoBehaviour
         SetStatus("Joined server");
 
         leaveButton.gameObject.SetActive(true);
-
+        statusText.gameObject.SetActive(true);
         inMatch = true;
         SetServerListVisible(false);
         ClearButtons();
