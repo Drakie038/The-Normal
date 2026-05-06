@@ -492,48 +492,45 @@ public class MultiplayerMenu : MonoBehaviour
     {
         searching = false;
 
-        if (!string.IsNullOrEmpty(currentLobbyId))
+        // 🔥 EERST lobby cleanup
+        if (isHost)
         {
-            try
-            {
-                await LobbyService.Instance.RemovePlayerAsync(
-                    currentLobbyId,
-                    AuthenticationService.Instance.PlayerId
-                );
-            }
-            catch { }
-        }
-
-        if (isHost && currentLobby != null)
-        {
-            try
-            {
-                await LobbyService.Instance.DeleteLobbyAsync(currentLobby.Id);
-            }
-            catch { }
-
             isHost = false;
+
+            if (!string.IsNullOrEmpty(currentLobbyId))
+            {
+                try
+                {
+                    await LobbyService.Instance.DeleteLobbyAsync(currentLobbyId);
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogWarning("Failed to delete lobby: " + e.Message);
+                }
+            }
+
+            currentLobby = null;
+        }
+        else
+        {
+            if (!string.IsNullOrEmpty(currentLobbyId))
+            {
+                try
+                {
+                    await LobbyService.Instance.RemovePlayerAsync(
+                        currentLobbyId,
+                        AuthenticationService.Instance.PlayerId
+                    );
+                }
+                catch { }
+            }
         }
 
-        networkManager.Shutdown();
+        // 🔥 DAARNA pas shutdown
+        if (networkManager.IsClient || networkManager.IsHost)
+            networkManager.Shutdown();
 
-        currentLobby = null;
-        hostAllocation = null;
-        currentLobbyId = "";
-
-        leaveButton.gameObject.SetActive(false);
-
-        inMatch = false;
-
-        currentServerName = "";
-
-        quickPlayButton.gameObject.SetActive(true);
-        menuCreateServerButton.gameObject.SetActive(true);
-        browserRoomsButton.gameObject.SetActive(true);
-        backButton.gameObject.SetActive(true);
-        statusText.gameObject.SetActive(false);
-        createServerButton.gameObject.SetActive(false);
-
+        ResetAllState();
     }
 
     private void StartHost(Allocation allocation)
@@ -582,25 +579,11 @@ public class MultiplayerMenu : MonoBehaviour
     {
         if (!networkManager.IsServer)
         {
-            leaveButton.gameObject.SetActive(false);
+            networkManager.Shutdown(); // 🔥 BELANGRIJK
 
-            inMatch = false;
-            searching = false;
+            await Task.Delay(200);
 
-            quickPlayButton.gameObject.SetActive(true);
-            menuCreateServerButton.gameObject.SetActive(true);
-            browserRoomsButton.gameObject.SetActive(true);
-
-            currentLobby = null;
-            hostAllocation = null;
-            currentLobbyId = "";
-            currentServerName = "";
-
-            ClearButtons();
-
-            await Task.Delay(2000);
-            HideDebug();
-
+            ResetAllState();
             return;
         }
 
@@ -775,5 +758,34 @@ public class MultiplayerMenu : MonoBehaviour
         if (debugText == null) return;
         debugText.text = "";
         debugText.gameObject.SetActive(false);
+    }
+
+    private void ResetAllState()
+    {
+        searching = false;
+        inMatch = false;
+        isHost = false;
+
+        currentLobby = null;
+        hostAllocation = null;
+        currentLobbyId = "";
+        currentServerName = "";
+
+        ClearButtons();
+        SetServerListVisible(true);
+
+        leaveButton.gameObject.SetActive(false);
+        statusText.gameObject.SetActive(false);
+
+        quickPlayButton.gameObject.SetActive(true);
+        createServerButton.gameObject.SetActive(false);
+        menuCreateServerButton.gameObject.SetActive(true);
+
+        browserRoomsButton.gameObject.SetActive(true);
+        backButton.gameObject.SetActive(true);
+
+        serverListParent.gameObject.SetActive(false);
+
+        HideDebug();
     }
 }
