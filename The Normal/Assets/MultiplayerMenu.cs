@@ -90,6 +90,9 @@ public class MultiplayerMenu : MonoBehaviour
     private int sessionId = 0;
     private bool forceCancelled = false;
 
+    private bool isSingleplayer = false;
+    private GameObject singleplayerPlayer;
+
     private async void Start()
     {
         await UnityServices.InitializeAsync();
@@ -306,8 +309,7 @@ public class MultiplayerMenu : MonoBehaviour
         {
             startGameButton.onClick.AddListener(() =>
             {
-                groupSinglePlayer.SetActive(false);
-                backButton.gameObject.SetActive(false);
+                StartSingleplayer();
             });
         }
     }
@@ -572,6 +574,15 @@ public class MultiplayerMenu : MonoBehaviour
 
     private async void LeaveGame()
     {
+
+        if (isSingleplayer)
+        {
+            isSingleplayer = false;
+
+            if (singleplayerPlayer != null)
+                Destroy(singleplayerPlayer);
+        }
+
         forceCancelled = true;
         searching = false;
 
@@ -855,6 +866,17 @@ public class MultiplayerMenu : MonoBehaviour
 
     private void ResetAllState()
     {
+
+        isSingleplayer = false;
+
+        if (singleplayerPlayer != null)
+        {
+            Destroy(singleplayerPlayer);
+            singleplayerPlayer = null;
+            startGameButton.gameObject.SetActive(true);
+            groupSinglePlayer.SetActive(true);
+        }
+
         searching = false;
         forceCancelled = true;
 
@@ -953,5 +975,27 @@ public class MultiplayerMenu : MonoBehaviour
         menuCreateServerButton.gameObject.SetActive(true);
 
         backButton.gameObject.SetActive(true);
+    }
+
+    private void StartSingleplayer()
+    {
+        isSingleplayer = true;
+
+        // UI weg
+        groupSinglePlayer.SetActive(false);
+        startButton.gameObject.SetActive(false);
+        multiplayerButton.gameObject.SetActive(false);
+        singleplayerButton.gameObject.SetActive(false);
+        backButton.gameObject.SetActive(false);
+
+        // spawn player lokaal
+        singleplayerPlayer = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
+
+        inMatch = true;
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
+        SetStatus("Singleplayer mode");
     }
 }
