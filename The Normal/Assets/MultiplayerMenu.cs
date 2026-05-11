@@ -24,6 +24,7 @@ public class MultiplayerMenu : MonoBehaviour
     [SerializeField] private Button quickPlayButton;
     [SerializeField] private Button createServerButton;
     [SerializeField] private Button leaveButton;
+    [SerializeField] private Button ResumeButton;
 
     [Header("Server UI")]
     [SerializeField] private Transform serverListParent;
@@ -52,6 +53,7 @@ public class MultiplayerMenu : MonoBehaviour
     [Header("GROUPS")]
     [SerializeField] private GameObject groupSinglePlayer;
     [SerializeField] private GameObject groupMultiplayer;
+    [SerializeField] private GameObject SettingsGroup;
 
     [Header("Singleplayer")]
     [SerializeField] private Button startGameButton;
@@ -62,6 +64,7 @@ public class MultiplayerMenu : MonoBehaviour
     [Header("ADDITIONAL MENU BUTTONS")]
     [SerializeField] private Button quickJoinButton;
     [SerializeField] private Button menuCreateServerButton;
+    [SerializeField] private Button StopSearchingButton;
 
     [Header("BACK BUTTON")]
     [SerializeField] private Button backButton;
@@ -84,6 +87,9 @@ public class MultiplayerMenu : MonoBehaviour
     private bool isRefreshing = false;
     private float heartbeatTimer;
 
+    private int sessionId = 0;
+    private bool forceCancelled = false;
+
     private async void Start()
     {
         await UnityServices.InitializeAsync();
@@ -91,9 +97,18 @@ public class MultiplayerMenu : MonoBehaviour
 
         quickPlayButton.onClick.AddListener(() => _ = QuickPlay());
         createServerButton.onClick.AddListener(() => _ = CreateServer());
+
         leaveButton.onClick.AddListener(LeaveGame);
+        ResumeButton.onClick.AddListener(CloseSettingsMenu);
+
+        StopSearchingButton.onClick.AddListener(StopSearching);
 
         leaveButton.gameObject.SetActive(false);
+        ResumeButton.gameObject.SetActive(false);
+        StopSearchingButton.gameObject.SetActive(false);
+
+        if (SettingsGroup != null)
+            SettingsGroup.SetActive(false);
 
         networkManager.OnClientConnectedCallback += OnClientConnected;
         networkManager.OnClientDisconnectCallback += OnClientDisconnected;
@@ -222,6 +237,10 @@ public class MultiplayerMenu : MonoBehaviour
             {
                 serverListParent.gameObject.SetActive(true);
 
+                // 🔥 FORCE CLEAN REFRESH
+                ClearButtons();
+                _ = UpdateServerList();
+
                 quickJoinButton.gameObject.SetActive(false);
                 browserRoomsButton.gameObject.SetActive(false);
                 menuCreateServerButton.gameObject.SetActive(false);
@@ -295,14 +314,30 @@ public class MultiplayerMenu : MonoBehaviour
 
     private void Update()
     {
-        if (!isHost || currentLobby == null) return;
-
-        heartbeatTimer += Time.deltaTime;
-
-        if (heartbeatTimer >= 15f)
+        // HOST HEARTBEAT
+        if (isHost && currentLobby != null)
         {
-            heartbeatTimer = 0f;
-            _ = LobbyService.Instance.SendHeartbeatPingAsync(currentLobby.Id);
+            heartbeatTimer += Time.deltaTime;
+
+            if (heartbeatTimer >= 15f)
+            {
+                heartbeatTimer = 0f;
+                _ = LobbyService.Instance.SendHeartbeatPingAsync(currentLobby.Id);
+            }
+        }
+
+        // ESC MENU
+        if (inMatch && Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (SettingsGroup != null)
+            {
+                bool active = SettingsGroup.activeSelf;
+
+                if (active)
+                    CloseSettingsMenu();
+                else
+                    OpenSettingsMenu();
+            }
         }
     }
 
@@ -311,17 +346,28 @@ public class MultiplayerMenu : MonoBehaviour
         if (networkManager.IsClient || networkManager.IsHost)
             return;
 
+        int mySession = ++sessionId; // unieke sessie voor deze run
+        forceCancelled = false;
+        searching = true;
+
         quickJoinButton.gameObject.SetActive(false);
         browserRoomsButton.gameObject.SetActive(false);
         menuCreateServerButton.gameObject.SetActive(false);
         backButton.gameObject.SetActive(false);
 
-        searching = true;
+        StopSearchingButton.gameObject.SetActive(true);
 
         float startTime = Time.realtimeSinceStartup;
 
         while (searching)
         {
+            // ❌ HARD CANCEL CHECK
+            if (forceCancelled || mySession != sessionId)
+            {
+                StopSearchingButton.gameObject.SetActive(false);
+                return;
+            }
+
             try
             {
                 float elapsed = Time.realtimeSinceStartup - startTime;
@@ -331,9 +377,14 @@ public class MultiplayerMenu : MonoBehaviour
 
                 if (remaining <= 0f)
                 {
-                    ShowDebug("No servers online");
+                    if (forceCancelled || mySession != sessionId)
+                        return;
 
+                    ShowDebug("No servers online");
                     await Task.Delay(3000);
+
+                    if (forceCancelled || mySession != sessionId)
+                        return;
 
                     HideDebug();
 
@@ -341,6 +392,8 @@ public class MultiplayerMenu : MonoBehaviour
                     browserRoomsButton.gameObject.SetActive(true);
                     menuCreateServerButton.gameObject.SetActive(true);
                     backButton.gameObject.SetActive(true);
+
+                    StopSearchingButton.gameObject.SetActive(false);
 
                     searching = false;
                     return;
@@ -350,6 +403,10 @@ public class MultiplayerMenu : MonoBehaviour
                     await LobbyService.Instance.QueryLobbiesAsync(
                         new QueryLobbiesOptions { Count = 50 }
                     );
+
+                // ❌ CHECK NA AWAIT
+                if (forceCancelled || mySession != sessionId)
+                    return;
 
                 List<Lobby> valid = new List<Lobby>();
 
@@ -361,14 +418,34 @@ public class MultiplayerMenu : MonoBehaviour
 
                 if (valid.Count > 0)
                 {
-                    Lobby lobby = valid[Random.Range(0, valid.Count)];
+                    // ❌ FINAL CHECK VOOR JOIN
+                    if (forceCancelled || mySession != sessionId)
+                        return;
 
+                    Lobby lobby = valid[Random.Range(0, valid.Count)];
                     string joinCode = lobby.Data["joinCode"].Value;
 
                     await LobbyService.Instance.JoinLobbyByIdAsync(lobby.Id);
 
+                    if (forceCancelled || mySession != sessionId)
+                    {
+                        try
+                        {
+                            await LobbyService.Instance.RemovePlayerAsync(
+                                lobby.Id,
+                                AuthenticationService.Instance.PlayerId
+                            );
+                        }
+                        catch { }
+
+                        return;
+                    }
+
                     JoinAllocation allocation =
                         await RelayService.Instance.JoinAllocationAsync(joinCode);
+
+                    if (forceCancelled || mySession != sessionId)
+                        return;
 
                     HideDebug();
 
@@ -382,12 +459,14 @@ public class MultiplayerMenu : MonoBehaviour
 
                     SetStatus("Joined server: " + currentServerName);
 
-                    leaveButton.gameObject.SetActive(true);
                     statusText.gameObject.SetActive(true);
 
                     inMatch = true;
+
                     SetServerListVisible(false);
                     ClearButtons();
+
+                    StopSearchingButton.gameObject.SetActive(false);
 
                     searching = false;
                     return;
@@ -397,12 +476,16 @@ public class MultiplayerMenu : MonoBehaviour
             }
             catch (System.Exception e)
             {
-                // 🔥 BELANGRIJK: voorkomt dat timer “stopt” door silent crash
+                if (forceCancelled || mySession != sessionId)
+                    return;
+
                 Debug.LogWarning("QuickPlay error (ignored): " + e.Message);
 
                 await Task.Delay(500);
             }
         }
+
+        StopSearchingButton.gameObject.SetActive(false);
     }
 
     private async Task CreateServer()
@@ -475,7 +558,6 @@ public class MultiplayerMenu : MonoBehaviour
 
         StartHost(hostAllocation);
 
-        leaveButton.gameObject.SetActive(true);
         statusText.gameObject.SetActive(true);
         menuCreateServerButton.gameObject.SetActive(false);
 
@@ -490,9 +572,16 @@ public class MultiplayerMenu : MonoBehaviour
 
     private async void LeaveGame()
     {
+        forceCancelled = true;
         searching = false;
 
-        // 🔥 EERST lobby cleanup
+        sessionId++; // ❗ kill alle lopende QuickPlay calls
+
+        CloseSettingsMenu();
+
+        searching = false;
+
+        // HOST
         if (isHost)
         {
             isHost = false;
@@ -513,6 +602,7 @@ public class MultiplayerMenu : MonoBehaviour
         }
         else
         {
+            // CLIENT
             if (!string.IsNullOrEmpty(currentLobbyId))
             {
                 try
@@ -526,7 +616,7 @@ public class MultiplayerMenu : MonoBehaviour
             }
         }
 
-        // 🔥 DAARNA pas shutdown
+        // SHUTDOWN
         if (networkManager.IsClient || networkManager.IsHost)
             networkManager.Shutdown();
 
@@ -624,59 +714,59 @@ public class MultiplayerMenu : MonoBehaviour
 
     private async Task UpdateServerList()
     {
-        if (inMatch || isRefreshing) return;
+        if (inMatch)
+            return;
+
+        if (isRefreshing)
+            return;
 
         isRefreshing = true;
 
-        QueryResponse response =
-            await LobbyService.Instance.QueryLobbiesAsync(new QueryLobbiesOptions { Count = 50 });
-
-        HashSet<string> activeLobbies = new HashSet<string>();
-
-        foreach (var lobby in response.Results)
+        try
         {
-            if (!lobby.Data.ContainsKey("joinCode"))
-                continue;
+            QueryResponse response =
+                await LobbyService.Instance.QueryLobbiesAsync(
+                    new QueryLobbiesOptions { Count = 50 }
+                );
 
-            string lobbyId = lobby.Id;
-            activeLobbies.Add(lobbyId);
-
-            string serverName = lobby.Data.ContainsKey("serverName")
-                ? lobby.Data["serverName"].Value
-                : "Server";
-
-            string joinCode = lobby.Data["joinCode"].Value;
-
-            int playerCount = 1;
-
-            if (lobby.Data.ContainsKey("playerCount"))
-                int.TryParse(lobby.Data["playerCount"].Value, out playerCount);
-
-            if (!lobbyButtons.ContainsKey(lobbyId))
+            // 🔥 HARD RESET UI (fixes ghost buttons)
+            foreach (var obj in spawnedButtons)
             {
+                if (obj != null)
+                    Destroy(obj);
+            }
+
+            spawnedButtons.Clear();
+            lobbyButtons.Clear();
+
+            HashSet<string> activeLobbies = new HashSet<string>();
+
+            foreach (var lobby in response.Results)
+            {
+                if (!lobby.Data.ContainsKey("joinCode"))
+                    continue;
+
+                string lobbyId = lobby.Id;
+                activeLobbies.Add(lobbyId);
+
+                string serverName = lobby.Data.ContainsKey("serverName")
+                    ? lobby.Data["serverName"].Value
+                    : "Server";
+
+                string joinCode = lobby.Data["joinCode"].Value;
+
+                int playerCount = 1;
+
+                if (lobby.Data.ContainsKey("playerCount"))
+                    int.TryParse(lobby.Data["playerCount"].Value, out playerCount);
+
                 GameObject btn = CreateServerButton(serverName, joinCode, playerCount);
                 lobbyButtons[lobbyId] = btn;
             }
-            else
-            {
-                TMP_Text text = lobbyButtons[lobbyId].GetComponentInChildren<TMP_Text>();
-                if (text != null)
-                    text.text = $"Server: {serverName} | Players: {playerCount}";
-            }
         }
-
-        List<string> toRemove = new List<string>();
-
-        foreach (var kvp in lobbyButtons)
+        catch (System.Exception e)
         {
-            if (!activeLobbies.Contains(kvp.Key))
-                toRemove.Add(kvp.Key);
-        }
-
-        foreach (string id in toRemove)
-        {
-            Destroy(lobbyButtons[id]);
-            lobbyButtons.Remove(id);
+            Debug.LogWarning("Server list error: " + e.Message);
         }
 
         isRefreshing = false;
@@ -715,7 +805,6 @@ public class MultiplayerMenu : MonoBehaviour
 
         SetStatus("Joined server");
 
-        leaveButton.gameObject.SetActive(true);
         statusText.gameObject.SetActive(true);
         inMatch = true;
         SetServerListVisible(false);
@@ -727,8 +816,11 @@ public class MultiplayerMenu : MonoBehaviour
 
     private void ClearButtons()
     {
-        foreach (var b in spawnedButtons)
-            Destroy(b);
+        for (int i = 0; i < spawnedButtons.Count; i++)
+        {
+            if (spawnedButtons[i] != null)
+                Destroy(spawnedButtons[i]);
+        }
 
         spawnedButtons.Clear();
         lobbyButtons.Clear();
@@ -763,6 +855,18 @@ public class MultiplayerMenu : MonoBehaviour
     private void ResetAllState()
     {
         searching = false;
+        forceCancelled = true;
+
+        sessionId++; // ❗ invalideert ALLE lopende async processen
+
+        inMatch = false;
+        isHost = false;
+
+        currentLobby = null;
+        hostAllocation = null;
+        currentLobbyId = "";
+        currentServerName = "";
+        searching = false;
         inMatch = false;
         isHost = false;
 
@@ -772,9 +876,18 @@ public class MultiplayerMenu : MonoBehaviour
         currentServerName = "";
 
         ClearButtons();
+
         SetServerListVisible(true);
 
+        // SETTINGS MENU UIT
+        if (SettingsGroup != null)
+            SettingsGroup.SetActive(false);
+
         leaveButton.gameObject.SetActive(false);
+        ResumeButton.gameObject.SetActive(false);
+
+        StopSearchingButton.gameObject.SetActive(false);
+
         statusText.gameObject.SetActive(false);
 
         quickPlayButton.gameObject.SetActive(true);
@@ -782,10 +895,62 @@ public class MultiplayerMenu : MonoBehaviour
         menuCreateServerButton.gameObject.SetActive(true);
 
         browserRoomsButton.gameObject.SetActive(true);
+
         backButton.gameObject.SetActive(true);
 
         serverListParent.gameObject.SetActive(false);
 
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
         HideDebug();
+
+        StopAllCoroutines();
+        StartCoroutine(ServerListUpdater());
+    }
+
+    private void OpenSettingsMenu()
+    {
+        if (!inMatch)
+            return;
+
+        if (SettingsGroup != null)
+            SettingsGroup.SetActive(true);
+
+        leaveButton.gameObject.SetActive(true);
+        ResumeButton.gameObject.SetActive(true);
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    private void CloseSettingsMenu()
+    {
+        if (SettingsGroup != null)
+            SettingsGroup.SetActive(false);
+
+        leaveButton.gameObject.SetActive(false);
+        ResumeButton.gameObject.SetActive(false);
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
+    private void StopSearching()
+    {
+        searching = false;
+        forceCancelled = true;
+
+        sessionId++; // breekt QuickPlay volledig af
+
+        HideDebug();
+
+        StopSearchingButton.gameObject.SetActive(false);
+
+        quickJoinButton.gameObject.SetActive(true);
+        browserRoomsButton.gameObject.SetActive(true);
+        menuCreateServerButton.gameObject.SetActive(true);
+
+        backButton.gameObject.SetActive(true);
     }
 }
