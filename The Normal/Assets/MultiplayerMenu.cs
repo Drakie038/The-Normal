@@ -806,6 +806,7 @@ public class MultiplayerMenu : MonoBehaviour
         SetStatus("Joined server");
 
         statusText.gameObject.SetActive(true);
+        backButton.gameObject.SetActive(false);
         inMatch = true;
         SetServerListVisible(false);
         ClearButtons();
