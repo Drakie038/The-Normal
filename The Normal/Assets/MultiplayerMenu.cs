@@ -95,11 +95,32 @@ public class MultiplayerMenu : MonoBehaviour
     private bool isSingleplayer = false;
     private GameObject singleplayerPlayer;
 
-    private async void Start()
+    private bool isResettingOrLeaving = false;
+
+    private void OnEnable()
     {
-        await UnityServices.InitializeAsync();
+        if (networkManager != null)
+        {
+            networkManager.OnClientDisconnectCallback += HandleClientDisconnect;
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (networkManager != null)
+        {
+            networkManager.OnClientDisconnectCallback -= HandleClientDisconnect;
+        }
+    }
+
+    private void Start()
+    {
+        networkManager.OnClientConnectedCallback += OnClientConnected;
+
+        UnityServices.InitializeAsync();
         cameraMovement = FindObjectOfType<CameraMovement>();
-        await AuthenticationService.Instance.SignInAnonymouslyAsync();
+
+        AuthenticationService.Instance.SignInAnonymouslyAsync();
 
         quickPlayButton.onClick.AddListener(() => _ = QuickPlay());
         createServerButton.onClick.AddListener(() => _ = CreateServer());
@@ -108,16 +129,6 @@ public class MultiplayerMenu : MonoBehaviour
         ResumeButton.onClick.AddListener(CloseSettingsMenu);
 
         StopSearchingButton.onClick.AddListener(StopSearching);
-
-        leaveButton.gameObject.SetActive(false);
-        ResumeButton.gameObject.SetActive(false);
-        StopSearchingButton.gameObject.SetActive(false);
-
-        if (SettingsGroup != null)
-            SettingsGroup.SetActive(false);
-
-        networkManager.OnClientConnectedCallback += OnClientConnected;
-        networkManager.OnClientDisconnectCallback += OnClientDisconnected;
 
         StartCoroutine(ServerListUpdater());
 
@@ -139,6 +150,8 @@ public class MultiplayerMenu : MonoBehaviour
         browserRoomsButton.gameObject.SetActive(false);
         menuCreateServerButton.gameObject.SetActive(false);
         createServerButton.gameObject.SetActive(false);
+
+        StopSearchingButton.gameObject.SetActive(false);
 
         if (serverNameInput != null)
             serverNameInput.gameObject.SetActive(false);
@@ -319,6 +332,18 @@ public class MultiplayerMenu : MonoBehaviour
 
     private void Update()
     {
+        if (networkManager != null &&
+            (networkManager.IsClient || networkManager.IsHost) &&
+            Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (SettingsGroup == null) return;
+
+            if (SettingsGroup.activeSelf)
+                CloseSettingsMenu();
+            else
+                OpenSettingsMenu();
+        }
+
         // HOST HEARTBEAT
         if (isHost && currentLobby != null)
         {
@@ -328,20 +353,6 @@ public class MultiplayerMenu : MonoBehaviour
             {
                 heartbeatTimer = 0f;
                 _ = LobbyService.Instance.SendHeartbeatPingAsync(currentLobby.Id);
-            }
-        }
-
-        // ESC MENU
-        if (inMatch && Input.GetKeyDown(KeyCode.Escape))
-        {
-            if (SettingsGroup != null)
-            {
-                bool active = SettingsGroup.activeSelf;
-
-                if (active)
-                    CloseSettingsMenu();
-                else
-                    OpenSettingsMenu();
             }
         }
     }
@@ -453,7 +464,6 @@ public class MultiplayerMenu : MonoBehaviour
                         return;
 
                     HideDebug();
-
                     StartClient(allocation);
 
                     currentLobbyId = lobby.Id;
@@ -466,10 +476,7 @@ public class MultiplayerMenu : MonoBehaviour
 
                     statusText.gameObject.SetActive(true);
 
-                    inMatch = true;
-
-                    SetServerListVisible(false);
-                    ClearButtons();
+                    SetInMatchUI(true);
 
                     StopSearchingButton.gameObject.SetActive(false);
 
@@ -566,9 +573,7 @@ public class MultiplayerMenu : MonoBehaviour
         statusText.gameObject.SetActive(true);
         menuCreateServerButton.gameObject.SetActive(false);
 
-        inMatch = true;
-        SetServerListVisible(false);
-        ClearButtons();
+        SetInMatchUI(true);
 
         SetStatus("Server: " + serverName);
 
@@ -577,71 +582,46 @@ public class MultiplayerMenu : MonoBehaviour
 
     private async void LeaveGame()
     {
-        // 🎥 RESET CAMERA NAAR MENU
-        if (cameraMovement != null)
-        {
-            cameraMovement.ResetCameraToMenu();
-        }
-
-        if (isSingleplayer)
-        {
-            isSingleplayer = false;
-
-            if (singleplayerPlayer != null)
-                Destroy(singleplayerPlayer);
-        }
-
         forceCancelled = true;
         searching = false;
 
         sessionId++;
+        SetInMatchUI(false);
 
         CloseSettingsMenu();
+        isResettingOrLeaving = true;
 
-        searching = false;
-
-        // HOST
-        if (isHost)
+        // STOP NETCODE EERST
+        if (networkManager != null)
         {
-            isHost = false;
-
-            if (!string.IsNullOrEmpty(currentLobbyId))
+            try
             {
-                try
-                {
-                    await LobbyService.Instance.DeleteLobbyAsync(currentLobbyId);
-                }
-                catch (System.Exception e)
-                {
-                    Debug.LogWarning("Failed to delete lobby: " + e.Message);
-                }
+                networkManager.Shutdown();
             }
-
-            currentLobby = null;
+            catch { }
         }
-        else
+
+        // LOBBY CLEANUP
+        try
         {
-            // CLIENT
             if (!string.IsNullOrEmpty(currentLobbyId))
             {
-                try
-                {
+                if (isHost)
+                    await LobbyService.Instance.DeleteLobbyAsync(currentLobbyId);
+                else
                     await LobbyService.Instance.RemovePlayerAsync(
                         currentLobbyId,
                         AuthenticationService.Instance.PlayerId
                     );
-                }
-                catch { }
             }
         }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning("Leave failed: " + e.Message);
+        }
 
-        // SHUTDOWN NETCODE
-        if (networkManager.IsClient || networkManager.IsHost)
-            networkManager.Shutdown();
-
-        ResetAllState();
+        ForceFullReset();
     }
-
     private void StartHost(Allocation allocation)
     {
         var transport = networkManager.GetComponent<UnityTransport>();
@@ -675,58 +655,88 @@ public class MultiplayerMenu : MonoBehaviour
 
     private async void OnClientConnected(ulong clientId)
     {
-        if (!networkManager.IsServer) return;
+        if (!NetworkManager.Singleton.IsServer)
+            return;
 
         GameObject obj = Instantiate(playerPrefab);
         obj.GetComponent<NetworkObject>().SpawnWithOwnership(clientId);
 
-        await Task.Delay(200);
-        await UpdatePlayerCount();
+        await Task.Delay(100);
+
+        _ = UpdatePlayerCount();
     }
 
-    private async void OnClientDisconnected(ulong clientId)
+    private void HandleClientDisconnect(ulong clientId)
     {
-        if (!networkManager.IsServer)
+        if (isResettingOrLeaving)
+            return;
+
+        // CLIENT → HOST IS WEG
+        if (NetworkManager.Singleton != null &&
+            NetworkManager.Singleton.IsClient &&
+            !NetworkManager.Singleton.IsServer)
         {
-            networkManager.Shutdown(); // 🔥 BELANGRIJK
+            Debug.Log("Host disconnected → FULL RESET");
 
-            await Task.Delay(200);
+            isResettingOrLeaving = true;
 
-            ResetAllState();
+            ForceFullReset();
             return;
         }
 
-        await Task.Delay(200);
-        await UpdatePlayerCount();
+        // HOST → PLAYER LEAVES
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer)
+        {
+            CleanupPlayer(clientId);
+
+            _ = UpdatePlayerCount();
+        }
     }
 
     private async Task UpdatePlayerCount()
     {
-        if (!isHost || currentLobby == null) return;
+        if (currentLobby == null)
+            return;
 
-        int count = networkManager.ConnectedClientsIds.Count;
+        if (NetworkManager.Singleton == null)
+            return;
 
         try
         {
+            int count = NetworkManager.Singleton.ConnectedClientsIds.Count;
+
             await LobbyService.Instance.UpdateLobbyAsync(
                 currentLobby.Id,
                 new UpdateLobbyOptions
                 {
                     Data = new Dictionary<string, DataObject>
                     {
-                        { "playerCount", new DataObject(DataObject.VisibilityOptions.Public, count.ToString()) }
+                    {
+                        "playerCount",
+                        new DataObject(
+                            DataObject.VisibilityOptions.Public,
+                            count.ToString()
+                        )
+                    }
                     }
                 }
             );
         }
-        catch { }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning("PlayerCount update failed: " + e.Message);
+        }
     }
 
     private IEnumerator ServerListUpdater()
     {
         while (true)
         {
-            _ = UpdateServerList();
+            if (!inMatch)
+            {
+                _ = UpdateServerList();
+            }
+
             yield return new WaitForSeconds(2f);
         }
     }
@@ -822,7 +832,9 @@ public class MultiplayerMenu : MonoBehaviour
 
         StartClient(allocation);
 
-        SetStatus("Joined server");
+        SetStatus("Joined server: " + joinCode);
+
+        SetInMatchUI(true);
 
         statusText.gameObject.SetActive(true);
         backButton.gameObject.SetActive(false);
@@ -1010,5 +1022,166 @@ public class MultiplayerMenu : MonoBehaviour
         Cursor.visible = false;
 
         SetStatus("Singleplayer mode");
+    }
+
+    private void ForceFullReset()
+    {
+        Debug.Log("FORCE FULL RESET");
+
+        isResettingOrLeaving = true;
+
+        // 🔥 STOP EVERYTHING PROPERLY
+        FullNetworkReset();
+
+        forceCancelled = true;
+        searching = false;
+        inMatch = false;
+        isHost = false;
+
+        currentLobby = null;
+        currentLobbyId = "";
+        hostAllocation = null;
+
+        sessionId++;
+
+        CleanupAllPlayers();
+
+        if (cameraMovement != null)
+            cameraMovement.ResetCameraToMenu();
+
+        ClearButtons();
+
+        ShowMainMenu();
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
+        StopAllCoroutines();
+        StartCoroutine(ServerListUpdater());
+
+        StartCoroutine(ResetUnlock());
+    }
+
+    private void CleanupPlayer(ulong clientId)
+    {
+        var players = FindObjectsOfType<PlayerCubeController>();
+
+        foreach (var p in players)
+        {
+            var netObj = p.GetComponent<NetworkObject>();
+
+            if (netObj != null && netObj.OwnerClientId == clientId)
+            {
+                Destroy(p.gameObject);
+                return;
+            }
+        }
+    }
+
+    private void BeginReset()
+    {
+        ForceFullReset();
+    }
+
+    private IEnumerator ResetUnlock()
+    {
+        yield return new WaitForSeconds(1f);
+        isResettingOrLeaving = false;
+    }
+
+    private void CleanupAllPlayers()
+    {
+        var players = FindObjectsOfType<PlayerCubeController>();
+
+        foreach (var p in players)
+        {
+            if (p != null)
+                Destroy(p.gameObject);
+        }
+    }
+
+    private void SetInMatchUI(bool state)
+    {
+        inMatch = state;
+        searching = false;
+        forceCancelled = true;
+
+        // MENU UI
+        startButton?.gameObject.SetActive(!state);
+        multiplayerButton?.gameObject.SetActive(!state);
+        singleplayerButton?.gameObject.SetActive(!state);
+        backButton?.gameObject.SetActive(!state);
+
+        // MULTIPLAYER MENU
+        quickPlayButton?.gameObject.SetActive(!state);
+        browserRoomsButton?.gameObject.SetActive(!state);
+        menuCreateServerButton?.gameObject.SetActive(!state);
+
+        createServerButton?.gameObject.SetActive(false);
+        StopSearchingButton?.gameObject.SetActive(false);
+
+        // SERVER LIST
+        serverListParent?.gameObject.SetActive(!state);
+        ClearButtons();
+
+        // SETTINGS
+        SettingsGroup?.SetActive(false);
+        leaveButton?.gameObject.SetActive(false);
+        ResumeButton?.gameObject.SetActive(false);
+
+        // TEXT
+        if (statusText != null)
+            statusText.gameObject.SetActive(state);
+
+        if (debugText != null)
+            debugText.gameObject.SetActive(false);
+
+        // CURSOR
+        Cursor.lockState = state ? CursorLockMode.Locked : CursorLockMode.None;
+        Cursor.visible = !state;
+    }
+
+    private void ShowMainMenu()
+    {
+        startButton.gameObject.SetActive(true);
+
+        multiplayerButton.gameObject.SetActive(false);
+        singleplayerButton.gameObject.SetActive(false);
+        backButton.gameObject.SetActive(false);
+
+        quickPlayButton.gameObject.SetActive(false);
+        browserRoomsButton.gameObject.SetActive(false);
+        menuCreateServerButton.gameObject.SetActive(false);
+        createServerButton.gameObject.SetActive(false);
+
+        StopSearchingButton.gameObject.SetActive(false);
+
+        serverListParent.gameObject.SetActive(false);
+
+        SettingsGroup?.SetActive(false);
+        leaveButton?.gameObject.SetActive(false);
+        ResumeButton?.gameObject.SetActive(false);
+
+        if (statusText != null)
+            statusText.gameObject.SetActive(false);
+
+        if (debugText != null)
+            debugText.gameObject.SetActive(false);
+    }
+
+    private void FullNetworkReset()
+    {
+        if (networkManager != null)
+        {
+            networkManager.OnClientConnectedCallback -= OnClientConnected;
+            networkManager.OnClientDisconnectCallback -= HandleClientDisconnect;
+
+            networkManager.Shutdown();
+        }
+
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.Shutdown();
+        }
     }
 }

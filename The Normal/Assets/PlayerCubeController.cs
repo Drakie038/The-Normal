@@ -1,10 +1,10 @@
 ﻿using UnityEngine;
 using Unity.Netcode;
+using System.Collections;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerCubeController : NetworkBehaviour
 {
-    [Header("Movement")]
     public float moveSpeed = 5f;
     public float gravity = -9.81f;
 
@@ -13,7 +13,8 @@ public class PlayerCubeController : NetworkBehaviour
 
     private Vector2 moveInput;
 
-    private Transform cameraTarget;
+    private bool canMove = false;
+    private float spawnLockTime = 1.5f;
 
     private void Awake()
     {
@@ -24,22 +25,26 @@ public class PlayerCubeController : NetworkBehaviour
     {
         if (!IsOwner) return;
 
-        // 🎥 camera koppelen
         Transform t = transform.Find("CameraTarget");
-        cameraTarget = (t != null) ? t : transform;
 
         CameraMovement cam = FindObjectOfType<CameraMovement>();
         if (cam != null)
-        {
-            cam.SetTarget(cameraTarget);
-        }
+            cam.SetTarget(t != null ? t : transform);
+
+        StartCoroutine(EnableMovementAfterDelay());
+    }
+
+    private IEnumerator EnableMovementAfterDelay()
+    {
+        canMove = false;
+        yield return new WaitForSeconds(spawnLockTime);
+        canMove = true;
     }
 
     private void Update()
     {
-        if (!IsOwner) return;
+        if (!IsOwner || !canMove) return;
 
-        // 📥 input alleen client
         moveInput = new Vector2(
             Input.GetAxisRaw("Horizontal"),
             Input.GetAxisRaw("Vertical")
@@ -48,9 +53,8 @@ public class PlayerCubeController : NetworkBehaviour
 
     private void FixedUpdate()
     {
-        if (!IsOwner) return;
+        if (!IsOwner || !canMove) return;
 
-        // 🚀 stuur input naar server
         MoveServerRpc(moveInput);
     }
 
@@ -63,11 +67,31 @@ public class PlayerCubeController : NetworkBehaviour
 
         controller.Move(move * moveSpeed * Time.fixedDeltaTime);
 
-        // 🌍 gravity
         if (controller.isGrounded && velocity.y < 0)
             velocity.y = -2f;
 
         velocity.y += gravity * Time.fixedDeltaTime;
         controller.Move(velocity * Time.fixedDeltaTime);
+    }
+
+    [ServerRpc]
+    public void SendLookInputServerRpc(float mouseX)
+    {
+        transform.Rotate(Vector3.up * mouseX);
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        if (IsOwner)
+        {
+            CameraMovement cam = FindObjectOfType<CameraMovement>();
+            if (cam != null)
+                cam.ResetCameraToMenu();
+
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
+        Destroy(gameObject);
     }
 }

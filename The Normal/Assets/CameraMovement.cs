@@ -3,59 +3,76 @@ using System.Collections;
 
 public class CameraMovement : MonoBehaviour
 {
+    [Header("Follow")]
     public Vector3 firstPersonOffset = new Vector3(0f, 1.6f, 0f);
-    public float smoothSpeed = 10f;
 
-    [Header("Spawn Delay")]
-    public float delayBeforeMove = 0.5f; // ⬅️ WACHTTIJD
+    [Header("Mouse Look")]
+    public float mouseSensitivity = 200f;
+    public float maxLookAngle = 85f;
 
-    public Transform target;
-    private bool ready = false;
+    [Header("Timings")]
+    [SerializeField] private float spawnCameraDelay = 1.5f;
 
-    private Vector3 defaultPosition;
-    private Quaternion defaultRotation;
-    private bool inMenu = true;
+    private Transform target;
+    private PlayerCubeController player;
+
+    private enum CameraState { Menu, Transition, FPS }
+    private CameraState state = CameraState.Menu;
+
+    private float xRotation = 0f;
+
+    private Vector3 menuPos;
+    private Quaternion menuRot;
+
+    private bool inputLocked = true;
 
     private void Start()
     {
-        defaultPosition = transform.position;
-        defaultRotation = transform.rotation;
+        menuPos = transform.position;
+        menuRot = transform.rotation;
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
     public void SetTarget(Transform newTarget)
     {
         target = newTarget;
-        inMenu = false;
-
-        ready = false;
+        player = newTarget.GetComponentInParent<PlayerCubeController>();
 
         StopAllCoroutines();
-        StartCoroutine(DelayedSnapToPlayer());
+        StartCoroutine(SmoothEnter());
+        StartCoroutine(UnlockInputAfterDelay());
+    }
+
+    private IEnumerator UnlockInputAfterDelay()
+    {
+        inputLocked = true;
+        yield return new WaitForSeconds(spawnCameraDelay);
+        inputLocked = false;
     }
 
     public void ResetCameraToMenu()
     {
         target = null;
-        ready = false;
-        inMenu = true;
+        player = null;
+        state = CameraState.Menu;
 
         StopAllCoroutines();
         StartCoroutine(ReturnToMenu());
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
+        inputLocked = true;
     }
 
-    // 🔥 NEW: delay + move combo
-    private IEnumerator DelayedSnapToPlayer()
+    private IEnumerator SmoothEnter()
     {
-        // ⏳ eerst wachten
-        yield return new WaitForSeconds(delayBeforeMove);
-
-        if (target == null) yield break;
+        state = CameraState.Transition;
 
         Vector3 startPos = transform.position;
         Quaternion startRot = transform.rotation;
-
-        Vector3 endPos = target.position + firstPersonOffset;
-        Quaternion endRot = target.rotation;
 
         float t = 0f;
         float duration = 1f;
@@ -63,15 +80,22 @@ public class CameraMovement : MonoBehaviour
         while (t < duration)
         {
             t += Time.deltaTime;
-            float progress = t / duration;
+            float p = t / duration;
 
-            transform.position = Vector3.Lerp(startPos, endPos, progress);
-            transform.rotation = Quaternion.Slerp(startRot, endRot, progress);
+            if (target == null) yield break;
+
+            Vector3 endPos = target.position + firstPersonOffset;
+
+            transform.position = Vector3.Lerp(startPos, endPos, p);
+            transform.rotation = Quaternion.Slerp(startRot, target.rotation, p);
 
             yield return null;
         }
 
-        ready = true;
+        state = CameraState.FPS;
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     private IEnumerator ReturnToMenu()
@@ -87,8 +111,8 @@ public class CameraMovement : MonoBehaviour
             t += Time.deltaTime;
             float p = t / duration;
 
-            transform.position = Vector3.Lerp(startPos, defaultPosition, p);
-            transform.rotation = Quaternion.Slerp(startRot, defaultRotation, p);
+            transform.position = Vector3.Lerp(startPos, menuPos, p);
+            transform.rotation = Quaternion.Slerp(startRot, menuRot, p);
 
             yield return null;
         }
@@ -96,9 +120,21 @@ public class CameraMovement : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (inMenu || !ready || target == null) return;
+        if (state != CameraState.FPS || target == null || player == null)
+            return;
 
+        if (inputLocked)
+            return;
+
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
+
+        player.SendLookInputServerRpc(mouseX);
+
+        xRotation -= mouseY;
+        xRotation = Mathf.Clamp(xRotation, -maxLookAngle, maxLookAngle);
+
+        transform.rotation = Quaternion.Euler(xRotation, target.eulerAngles.y, 0f);
         transform.position = target.position + firstPersonOffset;
-        transform.rotation = target.rotation;
     }
 }
