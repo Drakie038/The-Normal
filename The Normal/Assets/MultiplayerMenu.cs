@@ -20,6 +20,8 @@ using System.Collections.Generic;
 
 public class MultiplayerMenu : MonoBehaviour
 {
+    private CameraMovement cameraMovement;
+
     [Header("UI - Existing")]
     [SerializeField] private Button quickPlayButton;
     [SerializeField] private Button createServerButton;
@@ -96,6 +98,7 @@ public class MultiplayerMenu : MonoBehaviour
     private async void Start()
     {
         await UnityServices.InitializeAsync();
+        cameraMovement = FindObjectOfType<CameraMovement>();
         await AuthenticationService.Instance.SignInAnonymouslyAsync();
 
         quickPlayButton.onClick.AddListener(() => _ = QuickPlay());
@@ -574,6 +577,11 @@ public class MultiplayerMenu : MonoBehaviour
 
     private async void LeaveGame()
     {
+        // 🎥 RESET CAMERA NAAR MENU
+        if (cameraMovement != null)
+        {
+            cameraMovement.ResetCameraToMenu();
+        }
 
         if (isSingleplayer)
         {
@@ -586,7 +594,7 @@ public class MultiplayerMenu : MonoBehaviour
         forceCancelled = true;
         searching = false;
 
-        sessionId++; // ❗ kill alle lopende QuickPlay calls
+        sessionId++;
 
         CloseSettingsMenu();
 
@@ -627,7 +635,7 @@ public class MultiplayerMenu : MonoBehaviour
             }
         }
 
-        // SHUTDOWN
+        // SHUTDOWN NETCODE
         if (networkManager.IsClient || networkManager.IsHost)
             networkManager.Shutdown();
 
@@ -875,6 +883,11 @@ public class MultiplayerMenu : MonoBehaviour
             singleplayerPlayer = null;
             startGameButton.gameObject.SetActive(true);
             groupSinglePlayer.SetActive(true);
+        }
+
+        if (cameraMovement != null)
+        {
+            cameraMovement.ResetCameraToMenu();
         }
 
         searching = false;

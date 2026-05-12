@@ -1,35 +1,73 @@
 ﻿using UnityEngine;
 using Unity.Netcode;
-using Unity.Netcode.Components;
 
-[RequireComponent(typeof(NetworkObject))]
-[RequireComponent(typeof(NetworkTransform))]
+[RequireComponent(typeof(CharacterController))]
 public class PlayerCubeController : NetworkBehaviour
 {
+    [Header("Movement")]
     public float moveSpeed = 5f;
+    public float gravity = -9.81f;
+
+    private CharacterController controller;
+    private Vector3 velocity;
+
+    private Vector2 moveInput;
+
+    private Transform cameraTarget;
+
+    private void Awake()
+    {
+        controller = GetComponent<CharacterController>();
+    }
+
+    public override void OnNetworkSpawn()
+    {
+        if (!IsOwner) return;
+
+        // 🎥 camera koppelen
+        Transform t = transform.Find("CameraTarget");
+        cameraTarget = (t != null) ? t : transform;
+
+        CameraMovement cam = FindObjectOfType<CameraMovement>();
+        if (cam != null)
+        {
+            cam.SetTarget(cameraTarget);
+        }
+    }
 
     private void Update()
     {
-        // 🔥 alleen input owner
         if (!IsOwner) return;
 
-        Vector3 input = new Vector3(
+        // 📥 input alleen client
+        moveInput = new Vector2(
             Input.GetAxisRaw("Horizontal"),
-            0f,
             Input.GetAxisRaw("Vertical")
-        ).normalized;
-
-        if (input == Vector3.zero) return;
-
-        MoveServerRpc(input);
+        );
     }
 
-    // =====================================================
-    // SERVER MOVEMENT (FAIR + REALISTIC)
-    // =====================================================
-    [ServerRpc]
-    private void MoveServerRpc(Vector3 direction)
+    private void FixedUpdate()
     {
-        transform.position += direction * moveSpeed * Time.deltaTime;
+        if (!IsOwner) return;
+
+        // 🚀 stuur input naar server
+        MoveServerRpc(moveInput);
+    }
+
+    [ServerRpc]
+    private void MoveServerRpc(Vector2 input)
+    {
+        Vector3 move =
+            transform.right * input.x +
+            transform.forward * input.y;
+
+        controller.Move(move * moveSpeed * Time.fixedDeltaTime);
+
+        // 🌍 gravity
+        if (controller.isGrounded && velocity.y < 0)
+            velocity.y = -2f;
+
+        velocity.y += gravity * Time.fixedDeltaTime;
+        controller.Move(velocity * Time.fixedDeltaTime);
     }
 }
