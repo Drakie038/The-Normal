@@ -96,6 +96,9 @@ public class MultiplayerMenu : MonoBehaviour
     private GameObject singleplayerPlayer;
 
     private bool isResettingOrLeaving = false;
+    private bool isResetting = false;
+
+    private Coroutine serverListRoutine;
 
     private void OnEnable()
     {
@@ -115,7 +118,7 @@ public class MultiplayerMenu : MonoBehaviour
 
     private void Start()
     {
-        networkManager.OnClientConnectedCallback += OnClientConnected;
+        RegisterCallbacks();
 
         UnityServices.InitializeAsync();
         cameraMovement = FindObjectOfType<CameraMovement>();
@@ -332,6 +335,13 @@ public class MultiplayerMenu : MonoBehaviour
 
     private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.F1))
+        {
+            Debug.Log("IsClient: " + networkManager.IsClient);
+            Debug.Log("IsHost: " + networkManager.IsHost);
+            Debug.Log("IsListening: " + networkManager.IsListening);
+        }
+
         if (networkManager != null &&
             (networkManager.IsClient || networkManager.IsHost) &&
             Input.GetKeyDown(KeyCode.Escape))
@@ -359,7 +369,9 @@ public class MultiplayerMenu : MonoBehaviour
 
     private async Task QuickPlay()
     {
-        if (networkManager.IsClient || networkManager.IsHost)
+        if (isResetting) return;
+        
+        if (networkManager.IsListening)
             return;
 
         int mySession = ++sessionId; // unieke sessie voor deze run
@@ -464,7 +476,10 @@ public class MultiplayerMenu : MonoBehaviour
                         return;
 
                     HideDebug();
-                    StartClient(allocation);
+                    if (!TryStartClient(allocation))
+                    {
+                        throw new System.Exception("Client failed to start");
+                    }
 
                     currentLobbyId = lobby.Id;
 
@@ -502,7 +517,7 @@ public class MultiplayerMenu : MonoBehaviour
 
     private async Task CreateServer()
     {
-        if (networkManager.IsClient || networkManager.IsHost)
+        if (networkManager.IsListening)
             return;
 
         quickPlayButton.gameObject.SetActive(false);
@@ -582,48 +597,62 @@ public class MultiplayerMenu : MonoBehaviour
 
     private async void LeaveGame()
     {
+        if (isResettingOrLeaving)
+            return;
+
+        isResettingOrLeaving = true;
+
         forceCancelled = true;
         searching = false;
 
         sessionId++;
+
         SetInMatchUI(false);
 
         CloseSettingsMenu();
-        isResettingOrLeaving = true;
 
-        // STOP NETCODE EERST
-        if (networkManager != null)
-        {
-            try
-            {
-                networkManager.Shutdown();
-            }
-            catch { }
-        }
-
-        // LOBBY CLEANUP
+        // lobby cleanup
         try
         {
             if (!string.IsNullOrEmpty(currentLobbyId))
             {
                 if (isHost)
+                {
                     await LobbyService.Instance.DeleteLobbyAsync(currentLobbyId);
+                }
                 else
+                {
                     await LobbyService.Instance.RemovePlayerAsync(
                         currentLobbyId,
                         AuthenticationService.Instance.PlayerId
                     );
+                }
             }
         }
         catch (System.Exception e)
         {
-            Debug.LogWarning("Leave failed: " + e.Message);
+            Debug.LogWarning("Lobby cleanup failed: " + e.Message);
         }
 
+        // volledige NGO reset
+        await FullNetworkResetAsync();
+
+        float t = 0;
+        while (networkManager != null && networkManager.IsListening && t < 5f)
+        {
+            await Task.Delay(100);
+            t += 0.1f;
+        }
+
+        Debug.Log("Netcode fully reset");
+
+        // alles clean resetten
         ForceFullReset();
     }
     private void StartHost(Allocation allocation)
     {
+        RegisterCallbacks();
+
         var transport = networkManager.GetComponent<UnityTransport>();
 
         transport.SetRelayServerData(
@@ -639,6 +668,8 @@ public class MultiplayerMenu : MonoBehaviour
 
     private void StartClient(JoinAllocation allocation)
     {
+        RegisterCallbacks();
+
         var transport = networkManager.GetComponent<UnityTransport>();
 
         transport.SetRelayServerData(
@@ -668,29 +699,12 @@ public class MultiplayerMenu : MonoBehaviour
 
     private void HandleClientDisconnect(ulong clientId)
     {
-        if (isResettingOrLeaving)
+        if (isResettingOrLeaving || isResetting)
             return;
 
-        // CLIENT → HOST IS WEG
-        if (NetworkManager.Singleton != null &&
-            NetworkManager.Singleton.IsClient &&
-            !NetworkManager.Singleton.IsServer)
-        {
-            Debug.Log("Host disconnected → FULL RESET");
+        Debug.LogWarning("DISCONNECT DETECTED → GLOBAL RESET");
 
-            isResettingOrLeaving = true;
-
-            ForceFullReset();
-            return;
-        }
-
-        // HOST → PLAYER LEAVES
-        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer)
-        {
-            CleanupPlayer(clientId);
-
-            _ = UpdatePlayerCount();
-        }
+        _ = FullResetFromAnyError();
     }
 
     private async Task UpdatePlayerCount()
@@ -817,35 +831,82 @@ public class MultiplayerMenu : MonoBehaviour
 
         Button btn = obj.GetComponent<Button>();
         btn.onClick.RemoveAllListeners();
-        btn.onClick.AddListener(() => _ = JoinServer(joinCode));
+        btn.onClick.AddListener(async () =>
+        {
+            Debug.Log("CLICK JOIN: " + joinCode);
 
+            if (networkManager.IsListening)
+                await FullNetworkResetAsync();
+
+            await JoinServer(joinCode);
+        });
         return obj;
     }
 
+    private TaskCompletionSource<bool> joinTcs;
+
     private async Task JoinServer(string joinCode)
     {
-        if (networkManager.IsClient || networkManager.IsHost)
+        if (networkManager == null)
             return;
 
-        JoinAllocation allocation =
-            await RelayService.Instance.JoinAllocationAsync(joinCode);
+        if (networkManager.IsListening)
+        {
+            await FullNetworkResetAsync();
+        }
 
-        StartClient(allocation);
+        if (isResetting || forceCancelled)
+            return;
 
-        SetStatus("Joined server: " + joinCode);
+        try
+        {
+            JoinAllocation allocation =
+                await RelayService.Instance.JoinAllocationAsync(joinCode);
 
-        SetInMatchUI(true);
+            if (isResetting || forceCancelled)
+                return;
 
-        statusText.gameObject.SetActive(true);
-        backButton.gameObject.SetActive(false);
-        inMatch = true;
-        SetServerListVisible(false);
-        ClearButtons();
+            TaskCompletionSource<bool> joinTcs = new TaskCompletionSource<bool>();
 
-        await Task.Delay(200);
-        await UpdatePlayerCount();
+            void OnConnected(ulong id)
+            {
+                joinTcs.TrySetResult(true);
+            }
+
+            networkManager.OnClientConnectedCallback += OnConnected;
+
+            if (!TryStartClient(allocation))
+            {
+                networkManager.OnClientConnectedCallback -= OnConnected;
+                throw new System.Exception("Client failed to start");
+            }
+
+            var completed = await Task.WhenAny(
+                joinTcs.Task,
+                Task.Delay(8000)
+            );
+
+            networkManager.OnClientConnectedCallback -= OnConnected;
+
+            if (completed != joinTcs.Task)
+            {
+                throw new System.Exception("Connection timeout");
+            }
+
+            // ✅ SUCCESS
+            SetStatus("Joined server: " + joinCode);
+            SetInMatchUI(true);
+
+            inMatch = true;
+            SetServerListVisible(false);
+            ClearButtons();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning("JOIN FAILED → RESET: " + e.Message);
+            await FullResetFromAnyError();
+        }
     }
-
     private void ClearButtons()
     {
         for (int i = 0; i < spawnedButtons.Count; i++)
@@ -1030,9 +1091,6 @@ public class MultiplayerMenu : MonoBehaviour
 
         isResettingOrLeaving = true;
 
-        // 🔥 STOP EVERYTHING PROPERLY
-        FullNetworkReset();
-
         forceCancelled = true;
         searching = false;
         inMatch = false;
@@ -1061,18 +1119,28 @@ public class MultiplayerMenu : MonoBehaviour
 
         StartCoroutine(ResetUnlock());
     }
-
     private void CleanupPlayer(ulong clientId)
     {
         var players = FindObjectsOfType<PlayerCubeController>();
 
         foreach (var p in players)
         {
+            if (p == null)
+                continue;
+
             var netObj = p.GetComponent<NetworkObject>();
 
             if (netObj != null && netObj.OwnerClientId == clientId)
             {
-                Destroy(p.gameObject);
+                if (netObj.IsSpawned)
+                {
+                    netObj.Despawn(true);
+                }
+                else
+                {
+                    Destroy(p.gameObject);
+                }
+
                 return;
             }
         }
@@ -1095,8 +1163,19 @@ public class MultiplayerMenu : MonoBehaviour
 
         foreach (var p in players)
         {
-            if (p != null)
+            if (p == null)
+                continue;
+
+            NetworkObject netObj = p.GetComponent<NetworkObject>();
+
+            if (netObj != null && netObj.IsSpawned)
+            {
+                netObj.Despawn(true);
+            }
+            else
+            {
                 Destroy(p.gameObject);
+            }
         }
     }
 
@@ -1169,19 +1248,158 @@ public class MultiplayerMenu : MonoBehaviour
             debugText.gameObject.SetActive(false);
     }
 
-    private void FullNetworkReset()
+    private async Task FullNetworkResetAsync()
     {
-        if (networkManager != null)
-        {
-            networkManager.OnClientConnectedCallback -= OnClientConnected;
-            networkManager.OnClientDisconnectCallback -= HandleClientDisconnect;
+        if (networkManager == null)
+            return;
 
+        // ❌ altijd eerst callbacks UNREGISTEREN
+        networkManager.OnClientConnectedCallback -= OnClientConnected;
+        networkManager.OnClientDisconnectCallback -= HandleClientDisconnect;
+
+        // shutdown netcode
+        if (networkManager.IsListening)
+        {
             networkManager.Shutdown();
         }
 
-        if (NetworkManager.Singleton != null)
+        // ⛔ wachten tot echt gestopt
+        while (networkManager != null && networkManager.IsListening)
         {
-            NetworkManager.Singleton.Shutdown();
+            await Task.Delay(50);
+        }
+
+        await Task.Delay(100);
+
+        // transport reset
+        var transport = networkManager.GetComponent<UnityTransport>();
+        if (transport != null)
+        {
+            transport.Shutdown();
+        }
+
+        hostAllocation = null;
+
+        // 🔁 BELANGRIJK: callbacks opnieuw registreren voor volgende session
+        RegisterCallbacks();
+    }
+
+    private void RegisterCallbacks()
+    {
+        if (networkManager == null)
+            return;
+
+        // eerst verwijderen tegen duplicates
+        networkManager.OnClientConnectedCallback -= OnClientConnected;
+        networkManager.OnClientDisconnectCallback -= HandleClientDisconnect;
+
+        // opnieuw registreren
+        networkManager.OnClientConnectedCallback += OnClientConnected;
+        networkManager.OnClientDisconnectCallback += HandleClientDisconnect;
+    }
+
+    private async Task FullResetFromAnyError()
+    {
+        if (isResettingOrLeaving)
+            return;
+
+        isResettingOrLeaving = true;
+
+        forceCancelled = true;
+        searching = false;
+        isResetting = true;
+
+        sessionId++;
+
+        try
+        {
+            // 1. NETWORK RESET
+            await FullNetworkResetAsync();
+
+            float t = 0;
+            while (networkManager != null && networkManager.IsListening && t < 5f)
+            {
+                await Task.Delay(100);
+                t += 0.1f;
+            }
+
+            Debug.Log("Netcode fully reset");
+        }
+        catch { }
+
+        try
+        {
+            // 2. LOBBY CLEANUP SAFE
+            if (!string.IsNullOrEmpty(currentLobbyId))
+            {
+                if (isHost)
+                    await LobbyService.Instance.DeleteLobbyAsync(currentLobbyId);
+                else
+                    await LobbyService.Instance.RemovePlayerAsync(
+                        currentLobbyId,
+                        AuthenticationService.Instance.PlayerId
+                    );
+            }
+        }
+        catch { }
+
+        // 3. CLEAR EVERYTHING
+        currentLobbyId = "";
+        currentLobby = null;
+        hostAllocation = null;
+        isHost = false;
+        inMatch = false;
+
+        // 4. UI RESET HARD
+        ForceFullReset();
+
+        await Task.Delay(500);
+
+        isResettingOrLeaving = false;
+        isResetting = false;
+    }
+
+    private async Task SafeJoin(string joinCode)
+    {
+        try
+        {
+            await JoinServer(joinCode);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("SafeJoin failed: " + e);
+        }
+    }
+
+    private bool TryStartClient(JoinAllocation allocation)
+    {
+        try
+        {
+            var transport = networkManager.GetComponent<UnityTransport>();
+
+            transport.SetRelayServerData(
+                allocation.RelayServer.IpV4,
+                (ushort)allocation.RelayServer.Port,
+                allocation.AllocationIdBytes,
+                allocation.Key,
+                allocation.ConnectionData,
+                allocation.HostConnectionData
+            );
+
+            // ❌ BELANGRIJK: check alleen IsListening
+            if (networkManager.IsListening)
+                networkManager.Shutdown();
+
+            bool started = networkManager.StartClient();
+
+            Debug.Log("StartClient result: " + started);
+
+            return started;
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("StartClient FAILED: " + e);
+            return false;
         }
     }
 }
