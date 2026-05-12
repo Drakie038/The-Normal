@@ -98,7 +98,10 @@ public class MultiplayerMenu : MonoBehaviour
     private bool isResettingOrLeaving = false;
     private bool isResetting = false;
 
-    private Coroutine serverListRoutine;
+    private int joinSessionId = 0;
+    private bool isJoining = false;
+
+    private Coroutine serverLoop;
 
     private void OnEnable()
     {
@@ -133,7 +136,7 @@ public class MultiplayerMenu : MonoBehaviour
 
         StopSearchingButton.onClick.AddListener(StopSearching);
 
-        StartCoroutine(ServerListUpdater());
+        StartServerLoop();
 
         SetupMenu();
     }
@@ -261,7 +264,7 @@ public class MultiplayerMenu : MonoBehaviour
 
                 // 🔥 FORCE CLEAN REFRESH
                 ClearButtons();
-                _ = UpdateServerList();
+                _ = RefreshServerListSafe();
 
                 quickJoinButton.gameObject.SetActive(false);
                 browserRoomsButton.gameObject.SetActive(false);
@@ -474,12 +477,6 @@ public class MultiplayerMenu : MonoBehaviour
 
                     if (forceCancelled || mySession != sessionId)
                         return;
-
-                    HideDebug();
-                    if (!TryStartClient(allocation))
-                    {
-                        throw new System.Exception("Client failed to start");
-                    }
 
                     currentLobbyId = lobby.Id;
 
@@ -742,20 +739,7 @@ public class MultiplayerMenu : MonoBehaviour
         }
     }
 
-    private IEnumerator ServerListUpdater()
-    {
-        while (true)
-        {
-            if (!inMatch)
-            {
-                _ = UpdateServerList();
-            }
-
-            yield return new WaitForSeconds(2f);
-        }
-    }
-
-    private async Task UpdateServerList()
+    private async Task RefreshServerListSafe()
     {
         if (inMatch)
             return;
@@ -772,25 +756,12 @@ public class MultiplayerMenu : MonoBehaviour
                     new QueryLobbiesOptions { Count = 50 }
                 );
 
-            // 🔥 HARD RESET UI (fixes ghost buttons)
-            foreach (var obj in spawnedButtons)
-            {
-                if (obj != null)
-                    Destroy(obj);
-            }
-
-            spawnedButtons.Clear();
-            lobbyButtons.Clear();
-
-            HashSet<string> activeLobbies = new HashSet<string>();
+            ClearButtons();
 
             foreach (var lobby in response.Results)
             {
-                if (!lobby.Data.ContainsKey("joinCode"))
+                if (lobby.Data == null || !lobby.Data.ContainsKey("joinCode"))
                     continue;
-
-                string lobbyId = lobby.Id;
-                activeLobbies.Add(lobbyId);
 
                 string serverName = lobby.Data.ContainsKey("serverName")
                     ? lobby.Data["serverName"].Value
@@ -799,20 +770,21 @@ public class MultiplayerMenu : MonoBehaviour
                 string joinCode = lobby.Data["joinCode"].Value;
 
                 int playerCount = 1;
-
                 if (lobby.Data.ContainsKey("playerCount"))
                     int.TryParse(lobby.Data["playerCount"].Value, out playerCount);
 
-                GameObject btn = CreateServerButton(serverName, joinCode, playerCount);
-                lobbyButtons[lobbyId] = btn;
+                CreateServerButton(serverName, joinCode, playerCount);
             }
         }
         catch (System.Exception e)
         {
             Debug.LogWarning("Server list error: " + e.Message);
         }
-
-        isRefreshing = false;
+        finally
+        {
+            // 🔥 CRITICAL FIX
+            isRefreshing = false;
+        }
     }
 
     private float buttonSpacing = 80f;
@@ -822,88 +794,61 @@ public class MultiplayerMenu : MonoBehaviour
         GameObject obj = Instantiate(serverButtonPrefab, serverListParent);
         spawnedButtons.Add(obj);
 
-        RectTransform rt = obj.GetComponent<RectTransform>();
-        rt.anchoredPosition = new Vector2(0, -spawnedButtons.Count * buttonSpacing);
-
         TMP_Text text = obj.GetComponentInChildren<TMP_Text>();
         if (text != null)
             text.text = $"Server: {serverName} | Players: {playerCount}";
 
         Button btn = obj.GetComponent<Button>();
+
+        // 🔥 HARD RESET OLD LISTENERS
         btn.onClick.RemoveAllListeners();
-        btn.onClick.AddListener(async () =>
+
+        // 🔥 NO CAPTURE BUG, ONLY LOCAL COPY
+        string codeCopy = string.Copy(joinCode);
+
+        btn.onClick.AddListener(() =>
         {
-            Debug.Log("CLICK JOIN: " + joinCode);
-
-            if (networkManager.IsListening)
-                await FullNetworkResetAsync();
-
-            await JoinServer(joinCode);
+            Debug.Log("CLICK SERVER: " + codeCopy);
+            _ = JoinFromButton(codeCopy);
         });
+
         return obj;
     }
 
     private TaskCompletionSource<bool> joinTcs;
 
-    private async Task JoinServer(string joinCode)
+    private async Task JoinServerSafe(string joinCode, int session)
     {
-        if (networkManager == null)
-            return;
-
-        if (networkManager.IsListening)
-        {
-            await FullNetworkResetAsync();
-        }
-
-        if (isResetting || forceCancelled)
-            return;
+        if (session != joinSessionId) return;
 
         try
         {
+            Debug.Log("JOIN START: " + joinCode);
+
             JoinAllocation allocation =
                 await RelayService.Instance.JoinAllocationAsync(joinCode);
 
-            if (isResetting || forceCancelled)
-                return;
+            if (session != joinSessionId) return;
 
-            TaskCompletionSource<bool> joinTcs = new TaskCompletionSource<bool>();
+            bool started = StartClientSafe(allocation);
 
-            void OnConnected(ulong id)
-            {
-                joinTcs.TrySetResult(true);
-            }
+            if (!started)
+                throw new System.Exception("StartClient failed");
 
-            networkManager.OnClientConnectedCallback += OnConnected;
-
-            if (!TryStartClient(allocation))
-            {
-                networkManager.OnClientConnectedCallback -= OnConnected;
-                throw new System.Exception("Client failed to start");
-            }
-
-            var completed = await Task.WhenAny(
-                joinTcs.Task,
-                Task.Delay(8000)
-            );
-
-            networkManager.OnClientConnectedCallback -= OnConnected;
-
-            if (completed != joinTcs.Task)
-            {
-                throw new System.Exception("Connection timeout");
-            }
-
-            // ✅ SUCCESS
-            SetStatus("Joined server: " + joinCode);
-            SetInMatchUI(true);
-
+            currentLobbyId = "";
             inMatch = true;
+
+            SetStatus("Joined server");
+            SetInMatchUI(true);
             SetServerListVisible(false);
             ClearButtons();
+
+            Debug.Log("JOIN SUCCESS");
         }
         catch (System.Exception e)
         {
-            Debug.LogWarning("JOIN FAILED → RESET: " + e.Message);
+            Debug.LogError("JOIN FAILED: " + e.Message);
+
             await FullResetFromAnyError();
         }
     }
@@ -912,11 +857,23 @@ public class MultiplayerMenu : MonoBehaviour
         for (int i = 0; i < spawnedButtons.Count; i++)
         {
             if (spawnedButtons[i] != null)
+            {
+                Button b = spawnedButtons[i].GetComponent<Button>();
+                if (b != null)
+                    b.onClick.RemoveAllListeners();
+
                 Destroy(spawnedButtons[i]);
+            }
         }
 
         spawnedButtons.Clear();
         lobbyButtons.Clear();
+
+        // 🔥 FORCE UI REBUILD FIX
+        Canvas.ForceUpdateCanvases();
+        LayoutRebuilder.ForceRebuildLayoutImmediate(
+            serverListParent.GetComponent<RectTransform>()
+        );
     }
 
     private void SetServerListVisible(bool visible)
@@ -1013,9 +970,6 @@ public class MultiplayerMenu : MonoBehaviour
         Cursor.visible = true;
 
         HideDebug();
-
-        StopAllCoroutines();
-        StartCoroutine(ServerListUpdater());
     }
 
     private void OpenSettingsMenu()
@@ -1087,6 +1041,17 @@ public class MultiplayerMenu : MonoBehaviour
 
     private void ForceFullReset()
     {
+        joinSessionId++;
+        isJoining = false;
+
+        if (serverLoop != null)
+        {
+            StopCoroutine(serverLoop);
+            serverLoop = null;
+        }
+
+        StartServerLoop();
+
         Debug.Log("FORCE FULL RESET");
 
         isResettingOrLeaving = true;
@@ -1113,9 +1078,6 @@ public class MultiplayerMenu : MonoBehaviour
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
-
-        StopAllCoroutines();
-        StartCoroutine(ServerListUpdater());
 
         StartCoroutine(ResetUnlock());
     }
@@ -1253,37 +1215,44 @@ public class MultiplayerMenu : MonoBehaviour
         if (networkManager == null)
             return;
 
-        // ❌ altijd eerst callbacks UNREGISTEREN
+        Debug.Log("=== NETWORK RESET START ===");
+
+        // 1. STOP CALLBACKS (cruciaal)
         networkManager.OnClientConnectedCallback -= OnClientConnected;
         networkManager.OnClientDisconnectCallback -= HandleClientDisconnect;
 
-        // shutdown netcode
-        if (networkManager.IsListening)
+        // 2. SHUTDOWN NGO HARD
+        if (networkManager.IsHost || networkManager.IsClient || networkManager.IsListening)
         {
             networkManager.Shutdown();
         }
 
-        // ⛔ wachten tot echt gestopt
-        while (networkManager != null && networkManager.IsListening)
+        // 3. WACHT TOT ECHT GESTOPT
+        float timeout = 0f;
+        while (networkManager != null && networkManager.IsListening && timeout < 3f)
         {
-            await Task.Delay(50);
+            await Task.Delay(100);
+            timeout += 0.1f;
         }
 
-        await Task.Delay(100);
+        await Task.Delay(200);
 
-        // transport reset
+        // 4. RESET TRANSPORT (HEEL BELANGRIJK)
         var transport = networkManager.GetComponent<UnityTransport>();
         if (transport != null)
         {
             transport.Shutdown();
+            transport.SetConnectionData("0.0.0.0", 7777);
         }
 
+        // 5. RESET STATE
         hostAllocation = null;
 
-        // 🔁 BELANGRIJK: callbacks opnieuw registreren voor volgende session
+        Debug.Log("=== NETWORK RESET DONE ===");
+
+        // 6. HERSTEL CALLBACKS
         RegisterCallbacks();
     }
-
     private void RegisterCallbacks()
     {
         if (networkManager == null)
@@ -1371,10 +1340,13 @@ public class MultiplayerMenu : MonoBehaviour
         }
     }
 
-    private bool TryStartClient(JoinAllocation allocation)
+    private bool StartClientSafe(JoinAllocation allocation)
     {
         try
         {
+            if (networkManager == null)
+                return false;
+
             var transport = networkManager.GetComponent<UnityTransport>();
 
             transport.SetRelayServerData(
@@ -1386,20 +1358,202 @@ public class MultiplayerMenu : MonoBehaviour
                 allocation.HostConnectionData
             );
 
-            // ❌ BELANGRIJK: check alleen IsListening
             if (networkManager.IsListening)
                 networkManager.Shutdown();
 
             bool started = networkManager.StartClient();
 
-            Debug.Log("StartClient result: " + started);
+            Debug.Log("StartClient: " + started);
 
             return started;
         }
         catch (System.Exception e)
         {
-            Debug.LogError("StartClient FAILED: " + e);
+            Debug.LogError("StartClientSafe FAILED: " + e);
             return false;
+        }
+    }
+
+    private void StartServerLoop()
+    {
+        if (serverLoop != null)
+            StopCoroutine(serverLoop);
+
+        serverLoop = StartCoroutine(ServerLoop());
+    }
+
+    private IEnumerator ServerLoop()
+    {
+        while (true)
+        {
+            if (!inMatch && !isRefreshing && !isJoining)
+            {
+                _ = RefreshServerListSafe();
+            }
+
+            yield return new WaitForSeconds(2f);
+        }
+    }
+
+    private async Task JoinFromButton(string joinCode)
+    {
+        if (isJoining)
+            return;
+
+        isJoining = true;
+
+        // 🔥 nieuwe session invalidates ALL old joins
+        joinSessionId++;
+        int mySession = joinSessionId;
+
+        try
+        {
+            await ForceCleanNetworkState();
+
+            if (mySession != joinSessionId)
+                return;
+
+            await JoinServerInternal(joinCode, mySession);
+        }
+        finally
+        {
+            isJoining = false;
+        }
+    }
+    private IEnumerator JoinFromButtonSafe(string joinCode)
+    {
+        Task joinTask = JoinFromButton(joinCode);
+
+        while (!joinTask.IsCompleted)
+            yield return null;
+
+        if (joinTask.Exception != null)
+        {
+            Debug.LogError(joinTask.Exception);
+        }
+    }
+
+    private async Task JoinServerInternal(string joinCode, int session)
+    {
+        if (session != joinSessionId)
+            return;
+
+        Debug.Log("JOIN START: " + joinCode);
+
+        JoinAllocation allocation =
+            await RelayService.Instance.JoinAllocationAsync(joinCode);
+
+        if (session != joinSessionId)
+            return;
+
+        if (!StartClientSafe(allocation))
+            throw new System.Exception("StartClient failed");
+
+        // 🔥 wait for NGO ready
+        float t = 0;
+        while (!networkManager.IsClient && t < 3f)
+        {
+            await Task.Delay(100);
+            t += 0.1f;
+        }
+
+        if (session != joinSessionId)
+            return;
+
+        inMatch = true;
+
+        SetStatus("Joined server");
+        SetInMatchUI(true);
+        SetServerListVisible(false);
+
+        ClearButtons();
+
+        Debug.Log("JOIN SUCCESS");
+    }
+
+    private async Task ForceCleanNetworkState()
+    {
+        if (networkManager == null)
+            return;
+
+        Debug.Log("FORCE CLEAN NETWORK");
+
+        try
+        {
+            networkManager.OnClientConnectedCallback -= OnClientConnected;
+            networkManager.OnClientDisconnectCallback -= HandleClientDisconnect;
+
+            if (networkManager.IsListening || networkManager.IsClient || networkManager.IsHost)
+                networkManager.Shutdown();
+        }
+        catch { }
+
+        await Task.Delay(300);
+
+        var transport = networkManager.GetComponent<UnityTransport>();
+        if (transport != null)
+        {
+            transport.Shutdown();
+        }
+
+        await Task.Delay(200);
+
+        RegisterCallbacks();
+    }
+
+    private async Task JoinServer(string joinCode)
+    {
+        if (isJoining)
+            return;
+
+        isJoining = true;
+        joinSessionId++;
+        int mySession = joinSessionId;
+
+        try
+        {
+            // HARD CLEAN RESET ALS NODIG
+            if (networkManager != null &&
+                (networkManager.IsClient || networkManager.IsHost || networkManager.IsListening))
+            {
+                await FullNetworkResetAsync();
+                await Task.Delay(250);
+            }
+
+            if (mySession != joinSessionId)
+                return;
+
+            Debug.Log("Joining Relay...");
+
+            JoinAllocation allocation =
+                await RelayService.Instance.JoinAllocationAsync(joinCode);
+
+            if (mySession != joinSessionId)
+                return;
+
+            bool started = StartClientSafe(allocation);
+
+            if (!started)
+                throw new System.Exception("StartClient failed");
+
+            currentLobbyId = "";
+            inMatch = true;
+
+            SetStatus("Joined server");
+            SetInMatchUI(true);
+            SetServerListVisible(false);
+            ClearButtons();
+
+            Debug.Log("JOIN SUCCESS");
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("JOIN FAILED: " + e.Message);
+            await FullResetFromAnyError();
+        }
+        finally
+        {
+            isJoining = false;
         }
     }
 }
