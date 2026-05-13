@@ -762,6 +762,8 @@ public class MultiplayerMenu : MonoBehaviour
 
         // alles clean resetten
         ForceFullReset();
+
+        ShowStartMenuOnly();
     }
     private void StartHost(Allocation allocation)
     {
@@ -848,6 +850,8 @@ public class MultiplayerMenu : MonoBehaviour
         await FullNetworkResetAsync();
 
         ForceFullReset();
+
+        ShowStartMenuOnly();
 
         isResettingOrLeaving = false;
     }
@@ -1229,7 +1233,7 @@ public class MultiplayerMenu : MonoBehaviour
 
         ClearButtons();
 
-        ShowMainMenu();
+        ShowStartMenuOnly();
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -1335,6 +1339,11 @@ public class MultiplayerMenu : MonoBehaviour
         // CURSOR
         Cursor.lockState = state ? CursorLockMode.Locked : CursorLockMode.None;
         Cursor.visible = !state;
+
+        if (!inMatch)
+        {
+            ShowStartMenuOnly();
+        }
     }
 
     private void ShowMainMenu()
@@ -1835,5 +1844,38 @@ public class MultiplayerMenu : MonoBehaviour
         }
 
         playersListText.text = result;
+    }
+
+    private void ShowStartMenuOnly()
+    {
+        // MAIN UI
+        startButton.gameObject.SetActive(true);
+        playerNameInput.gameObject.SetActive(true);
+
+        if (playerInfoText != null)
+            playerInfoText.gameObject.SetActive(true);
+
+        // alles OFF (belangrijk)
+        multiplayerButton.gameObject.SetActive(false);
+        singleplayerButton.gameObject.SetActive(false);
+        backButton.gameObject.SetActive(false);
+
+        quickPlayButton.gameObject.SetActive(false);
+        createServerButton.gameObject.SetActive(false);
+        menuCreateServerButton.gameObject.SetActive(false);
+        browserRoomsButton.gameObject.SetActive(false);
+        quickJoinButton.gameObject.SetActive(false);
+        StopSearchingButton.gameObject.SetActive(false);
+
+        groupMultiplayer.SetActive(false);
+        groupSinglePlayer.SetActive(false);
+        SettingsGroup?.SetActive(false);
+
+        serverListParent.gameObject.SetActive(false);
+        statusText?.gameObject.SetActive(false);
+        debugText?.gameObject.SetActive(false);
+
+        leaveButton?.gameObject.SetActive(false);
+        ResumeButton?.gameObject.SetActive(false);
     }
 }
