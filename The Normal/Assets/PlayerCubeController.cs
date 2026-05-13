@@ -82,6 +82,17 @@ public class PlayerCubeController : NetworkBehaviour
 
     public override void OnNetworkDespawn()
     {
+        base.OnNetworkDespawn();
+
+        if (IsServer)
+        {
+            MultiplayerMenu menu = FindObjectOfType<MultiplayerMenu>();
+            if (menu != null)
+            {
+                menu.SendMessage("RequestPlayerCountUpdate");
+            }
+        }
+
         if (IsOwner)
         {
             CameraMovement cam = FindObjectOfType<CameraMovement>();
