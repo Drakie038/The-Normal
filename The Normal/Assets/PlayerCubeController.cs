@@ -2,6 +2,7 @@
 using Unity.Netcode;
 using System.Collections;
 using Unity.Collections;
+using TMPro;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerCubeController : NetworkBehaviour
@@ -21,12 +22,19 @@ public class PlayerCubeController : NetworkBehaviour
     public NetworkVariable<FixedString32Bytes> PlayerName =
         new NetworkVariable<FixedString32Bytes>();
 
+    // ✅ NEW: TEXT FIELD (drag in inspector)
+    [Header("Name Tag UI")]
+    [SerializeField] private TMP_Text nameText;
+
+    // cache camera (for billboard)
+    private Transform cam;
 
     [ServerRpc]
     public void SendLookInputServerRpc(float mouseX)
     {
         transform.Rotate(Vector3.up * mouseX);
     }
+
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
@@ -36,13 +44,12 @@ public class PlayerCubeController : NetworkBehaviour
     {
         if (IsOwner)
         {
-            CameraMovement cam = FindObjectOfType<CameraMovement>();
+            CameraMovement camMove = FindObjectOfType<CameraMovement>();
             Transform t = transform.Find("CameraTarget");
 
-            if (cam != null)
-                cam.SetTarget(t != null ? t : transform);
+            if (camMove != null)
+                camMove.SetTarget(t != null ? t : transform);
 
-            // send name to server
             MultiplayerMenu menu = FindObjectOfType<MultiplayerMenu>();
             if (menu != null)
             {
@@ -50,7 +57,31 @@ public class PlayerCubeController : NetworkBehaviour
             }
         }
 
+        // 🔥 subscribe to name changes (ALL clients)
+        PlayerName.OnValueChanged += OnNameChanged;
+
+        // initial set
+        UpdateNameVisual(PlayerName.Value.ToString());
+
         StartCoroutine(EnableMovementAfterDelay());
+    }
+
+    private void OnDestroy()
+    {
+        PlayerName.OnValueChanged -= OnNameChanged;
+    }
+
+    private void OnNameChanged(FixedString32Bytes oldName, FixedString32Bytes newName)
+    {
+        UpdateNameVisual(newName.ToString());
+    }
+
+    private void UpdateNameVisual(string name)
+    {
+        if (nameText == null)
+            return;
+
+        nameText.text = string.IsNullOrEmpty(name) ? "Player" : name;
     }
 
     private IEnumerator EnableMovementAfterDelay()
@@ -62,12 +93,30 @@ public class PlayerCubeController : NetworkBehaviour
 
     private void Update()
     {
-        if (!IsOwner || !canMove) return;
+        if (!canMove) return;
 
-        moveInput = new Vector2(
-            Input.GetAxisRaw("Horizontal"),
-            Input.GetAxisRaw("Vertical")
-        );
+        // movement alleen voor owner (blijft zoals jij had)
+        if (IsOwner)
+        {
+            moveInput = new Vector2(
+                Input.GetAxisRaw("Horizontal"),
+                Input.GetAxisRaw("Vertical")
+            );
+        }
+
+        // 🔥 BILLBOARD VOOR IEDEREEN
+        if (nameText != null)
+        {
+            Camera cam = Camera.main;
+
+            if (cam != null)
+            {
+                Vector3 dir = nameText.transform.position - cam.transform.position;
+                dir.y = 0f; // optioneel: alleen horizontaal draaien
+
+                nameText.transform.rotation = Quaternion.LookRotation(dir);
+            }
+        }
     }
 
     private void FixedUpdate()
