@@ -114,6 +114,15 @@ public class MultiplayerMenu : MonoBehaviour
 
     private bool isLeavingOrResetting => isResettingOrLeaving || isResetting;
 
+    [Header("PLAYER NAME")]
+    [SerializeField] private TMP_InputField playerNameInput;
+    [SerializeField] private TMP_Text playerInfoText;
+
+    private string playerName = "";
+
+    [Header("Settings Player List")]
+    [SerializeField] private TMP_Text playersListText;
+
     private void OnEnable()
     {
         if (networkManager != null)
@@ -176,23 +185,46 @@ public class MultiplayerMenu : MonoBehaviour
         if (debugText != null)
             debugText.gameObject.SetActive(false);
 
+        if (playerNameInput != null)
+            playerNameInput.gameObject.SetActive(true);
+
+        playerInfoText.gameObject.SetActive(true);
+        playerInfoText.text = "Enter a name (max 10 chars)";
+
+        if (playerInfoText != null)
+            playerInfoText.gameObject.SetActive(false);
+
         serverListParent.gameObject.SetActive(false);
 
-        // START
         startButton.onClick.AddListener(() =>
         {
+            if (!ValidatePlayerName())
+                return;
+
             startButton.gameObject.SetActive(false);
 
             multiplayerButton.gameObject.SetActive(true);
             singleplayerButton.gameObject.SetActive(true);
+
+            // ❗ PAS NU verbergen (na geldige naam)
+            playerNameInput.gameObject.SetActive(false);
+            playerInfoText.gameObject.SetActive(false);
 
             backButton.gameObject.SetActive(true);
 
             backStack.Push(() =>
             {
                 startButton.gameObject.SetActive(true);
+
                 multiplayerButton.gameObject.SetActive(false);
                 singleplayerButton.gameObject.SetActive(false);
+
+                // ❗ terug tonen bij back
+                playerNameInput.gameObject.SetActive(true);
+
+                playerInfoText.gameObject.SetActive(true);
+                playerInfoText.text = "Enter a name (max 10 chars)";
+
                 backButton.gameObject.SetActive(false);
             });
         });
@@ -200,20 +232,31 @@ public class MultiplayerMenu : MonoBehaviour
         // MULTIPLAYER
         multiplayerButton.onClick.AddListener(() =>
         {
+
             groupMultiplayer.gameObject.SetActive(true);
+
             multiplayerButton.gameObject.SetActive(false);
             singleplayerButton.gameObject.SetActive(false);
+
             statusText.gameObject.SetActive(false);
-            
 
             quickJoinButton.gameObject.SetActive(true);
             browserRoomsButton.gameObject.SetActive(true);
             menuCreateServerButton.gameObject.SetActive(true);
 
+            if (playerNameInput != null)
+                playerNameInput.gameObject.SetActive(false);
+
+            if (playerInfoText != null)
+                playerInfoText.gameObject.SetActive(false);
+
             backStack.Push(() =>
             {
                 multiplayerButton.gameObject.SetActive(true);
                 singleplayerButton.gameObject.SetActive(true);
+
+                if (playerNameInput != null)
+                    playerNameInput.gameObject.SetActive(true);
 
                 quickJoinButton.gameObject.SetActive(false);
                 browserRoomsButton.gameObject.SetActive(false);
@@ -273,7 +316,6 @@ public class MultiplayerMenu : MonoBehaviour
             {
                 serverListParent.gameObject.SetActive(true);
 
-                // 🔥 FORCE CLEAN REFRESH
                 ClearButtons();
                 _ = RefreshServerListSafe();
 
@@ -281,7 +323,6 @@ public class MultiplayerMenu : MonoBehaviour
                 browserRoomsButton.gameObject.SetActive(false);
                 menuCreateServerButton.gameObject.SetActive(false);
 
-                // 🔥 FIX
                 createServerButton.gameObject.SetActive(false);
 
                 if (serverNameInput != null)
@@ -312,16 +353,23 @@ public class MultiplayerMenu : MonoBehaviour
                 multiplayerButton.gameObject.SetActive(false);
                 singleplayerButton.gameObject.SetActive(false);
 
+                if (playerNameInput != null)
+                    playerNameInput.gameObject.SetActive(false);
+
+                if (playerInfoText != null)
+                    playerInfoText.gameObject.SetActive(false);
+
                 backStack.Push(() =>
                 {
                     groupSinglePlayer.SetActive(false);
 
                     multiplayerButton.gameObject.SetActive(true);
                     singleplayerButton.gameObject.SetActive(true);
+
+                    if (playerNameInput != null)
+                        playerNameInput.gameObject.SetActive(true);
                 });
             });
-
-
         }
 
         // BACK BUTTON
@@ -337,7 +385,6 @@ public class MultiplayerMenu : MonoBehaviour
             });
         }
 
-
         if (startGameButton != null)
         {
             startGameButton.onClick.AddListener(() =>
@@ -349,6 +396,11 @@ public class MultiplayerMenu : MonoBehaviour
 
     private void Update()
     {
+        if (SettingsGroup != null && SettingsGroup.activeSelf)
+        {
+            RefreshPlayerList();
+        }
+
         if (Input.GetKeyDown(KeyCode.F1))
         {
             Debug.Log("IsClient: " + networkManager.IsClient);
@@ -1105,6 +1157,8 @@ public class MultiplayerMenu : MonoBehaviour
         leaveButton.gameObject.SetActive(true);
         ResumeButton.gameObject.SetActive(true);
 
+        RefreshPlayerList(); // 🔥 SHOW PLAYERS HERE
+
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
@@ -1720,5 +1774,91 @@ public class MultiplayerMenu : MonoBehaviour
         currentLobby = null;
         inMatch = false;
         isHost = false;
+    }
+
+    private bool ValidatePlayerName()
+    {
+        if (playerNameInput == null || playerInfoText == null)
+            return false;
+
+        string enteredName = playerNameInput.text.Trim();
+
+        if (string.IsNullOrEmpty(enteredName))
+        {
+            playerInfoText.gameObject.SetActive(true);
+            playerInfoText.text = "Enter a name";
+            return false;
+        }
+
+        if (enteredName.Length > 10)
+        {
+            playerInfoText.gameObject.SetActive(true);
+            playerInfoText.text = "Max 10 letters";
+            return false;
+        }
+
+        playerName = enteredName;
+
+        playerInfoText.gameObject.SetActive(false);
+
+        return true;
+    }
+
+    private void UpdatePlayerListUI()
+    {
+        if (playersListText == null)
+            return;
+
+        if (NetworkManager.Singleton == null)
+        {
+            playersListText.text = "No network";
+            return;
+        }
+
+        string list = "Players:\n";
+
+        foreach (var client in NetworkManager.Singleton.ConnectedClientsList)
+        {
+            ulong id = client.ClientId;
+
+            string name = $"Player {id}";
+
+            // als je later player name sync toevoegt kun je hier echte naam gebruiken
+
+            list += $"- {name}\n";
+        }
+
+        playersListText.text = list;
+    }
+
+    public string GetPlayerName()
+    {
+        return playerName;
+    }
+
+    private void RefreshPlayerList()
+    {
+        if (playersListText == null)
+            return;
+
+        PlayerCubeController[] players =
+            FindObjectsOfType<PlayerCubeController>();
+
+        string result = "";
+
+        foreach (var p in players)
+        {
+            if (p == null)
+                continue;
+
+            string name = p.PlayerName.Value.ToString();
+
+            if (string.IsNullOrEmpty(name))
+                name = "Player";
+
+            result += name + "\n";
+        }
+
+        playersListText.text = result;
     }
 }

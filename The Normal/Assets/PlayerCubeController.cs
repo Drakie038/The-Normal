@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using Unity.Netcode;
 using System.Collections;
+using Unity.Collections;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerCubeController : NetworkBehaviour
@@ -16,6 +17,16 @@ public class PlayerCubeController : NetworkBehaviour
     private bool canMove = false;
     private float spawnLockTime = 1.5f;
 
+    // 🔥 NETWORK NAME
+    public NetworkVariable<FixedString32Bytes> PlayerName =
+        new NetworkVariable<FixedString32Bytes>();
+
+
+    [ServerRpc]
+    public void SendLookInputServerRpc(float mouseX)
+    {
+        transform.Rotate(Vector3.up * mouseX);
+    }
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
@@ -23,13 +34,21 @@ public class PlayerCubeController : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        if (!IsOwner) return;
+        if (IsOwner)
+        {
+            CameraMovement cam = FindObjectOfType<CameraMovement>();
+            Transform t = transform.Find("CameraTarget");
 
-        Transform t = transform.Find("CameraTarget");
+            if (cam != null)
+                cam.SetTarget(t != null ? t : transform);
 
-        CameraMovement cam = FindObjectOfType<CameraMovement>();
-        if (cam != null)
-            cam.SetTarget(t != null ? t : transform);
+            // send name to server
+            MultiplayerMenu menu = FindObjectOfType<MultiplayerMenu>();
+            if (menu != null)
+            {
+                SetNameServerRpc(menu.GetPlayerName());
+            }
+        }
 
         StartCoroutine(EnableMovementAfterDelay());
     }
@@ -75,23 +94,14 @@ public class PlayerCubeController : NetworkBehaviour
     }
 
     [ServerRpc]
-    public void SendLookInputServerRpc(float mouseX)
+    private void SetNameServerRpc(string name)
     {
-        transform.Rotate(Vector3.up * mouseX);
+        PlayerName.Value = name;
     }
 
     public override void OnNetworkDespawn()
     {
         base.OnNetworkDespawn();
-
-        if (IsServer)
-        {
-            MultiplayerMenu menu = FindObjectOfType<MultiplayerMenu>();
-            if (menu != null)
-            {
-                menu.SendMessage("RequestPlayerCountUpdate");
-            }
-        }
 
         if (IsOwner)
         {
