@@ -809,27 +809,6 @@ public class MultiplayerMenu : MonoBehaviour
         networkManager.StartClient();
     }
 
-    private async void OnClientConnected(ulong clientId)
-    {
-        if (networkManager == null || !networkManager.IsServer)
-            return;
-
-        GameObject obj = Instantiate(playerPrefab);
-
-        NetworkObject netObj = obj.GetComponent<NetworkObject>();
-        if (netObj == null)
-        {
-            Debug.LogError("Player prefab has no NetworkObject!");
-            return;
-        }
-
-        netObj.SpawnWithOwnership(clientId);
-
-        await Task.Delay(100);
-
-        RequestPlayerCountUpdate();
-    }
-
     private void OnClientDisconnect(ulong clientId)
     {
         if (networkManager == null)
@@ -1394,7 +1373,6 @@ public class MultiplayerMenu : MonoBehaviour
         Debug.Log("=== NETWORK RESET START ===");
 
         // 1. STOP CALLBACKS (cruciaal)
-        networkManager.OnClientConnectedCallback -= OnClientConnected;
         networkManager.OnClientDisconnectCallback -= HandleClientDisconnect;
 
         // 2. SHUTDOWN NGO HARD
@@ -1434,12 +1412,10 @@ public class MultiplayerMenu : MonoBehaviour
         if (networkManager == null)
             return;
 
-        networkManager.OnClientConnectedCallback -= OnClientConnected;
         networkManager.OnClientDisconnectCallback -= HandleClientDisconnect;
 
         networkManager.OnClientConnectedCallback -= OnClientDisconnect;
 
-        networkManager.OnClientConnectedCallback += OnClientConnected;
         networkManager.OnClientDisconnectCallback += HandleClientDisconnect;
 
         networkManager.OnClientDisconnectCallback += OnClientDisconnect;
@@ -1670,7 +1646,6 @@ public class MultiplayerMenu : MonoBehaviour
 
         try
         {
-            networkManager.OnClientConnectedCallback -= OnClientConnected;
             networkManager.OnClientDisconnectCallback -= HandleClientDisconnect;
 
             if (networkManager.IsListening || networkManager.IsClient || networkManager.IsHost)
