@@ -103,6 +103,13 @@ public class MultiplayerMenu : MonoBehaviour
 
     private Coroutine serverLoop;
 
+    [Header("Server List Layout (manual)")]
+    [SerializeField] private float buttonSpacing = 80f;
+    [SerializeField] private float startY = 0f;
+    [SerializeField] private float buttonHeight = 60f;
+
+    private float currentY;
+
     private void OnEnable()
     {
         if (networkManager != null)
@@ -787,23 +794,29 @@ public class MultiplayerMenu : MonoBehaviour
         }
     }
 
-    private float buttonSpacing = 80f;
-
     private GameObject CreateServerButton(string serverName, string joinCode, int playerCount)
     {
         GameObject obj = Instantiate(serverButtonPrefab, serverListParent);
         spawnedButtons.Add(obj);
+
+        RectTransform rt = obj.GetComponent<RectTransform>();
+
+        // FORCE LOCAL UI POSITIONING
+        rt.anchorMin = new Vector2(0.5f, 1f);
+        rt.anchorMax = new Vector2(0.5f, 1f);
+        rt.pivot = new Vector2(0.5f, 1f);
+
+        rt.anchoredPosition = new Vector2(0f, -currentY);
+
+        currentY += buttonHeight + buttonSpacing;
 
         TMP_Text text = obj.GetComponentInChildren<TMP_Text>();
         if (text != null)
             text.text = $"Server: {serverName} | Players: {playerCount}";
 
         Button btn = obj.GetComponent<Button>();
-
-        // 🔥 HARD RESET OLD LISTENERS
         btn.onClick.RemoveAllListeners();
 
-        // 🔥 NO CAPTURE BUG, ONLY LOCAL COPY
         string codeCopy = string.Copy(joinCode);
 
         btn.onClick.AddListener(() =>
@@ -869,11 +882,10 @@ public class MultiplayerMenu : MonoBehaviour
         spawnedButtons.Clear();
         lobbyButtons.Clear();
 
-        // 🔥 FORCE UI REBUILD FIX
+        // RESET POSITIONING
+        currentY = startY;
+
         Canvas.ForceUpdateCanvases();
-        LayoutRebuilder.ForceRebuildLayoutImmediate(
-            serverListParent.GetComponent<RectTransform>()
-        );
     }
 
     private void SetServerListVisible(bool visible)

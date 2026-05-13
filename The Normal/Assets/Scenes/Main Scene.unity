@@ -679,6 +679,9 @@ MonoBehaviour:
   menuCreateServerButton: {fileID: 418777465}
   StopSearchingButton: {fileID: 627659871}
   backButton: {fileID: 805816349}
+  buttonSpacing: 80
+  startY: 0
+  buttonHeight: 60
 --- !u!114 &238958202
 MonoBehaviour:
   m_ObjectHideFlags: 0
