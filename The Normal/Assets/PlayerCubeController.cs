@@ -93,7 +93,8 @@ public class PlayerCubeController : NetworkBehaviour
 
     private void Update()
     {
-        if (!canMove) return;
+        if (!canMove || GlobalChatUI.IsTyping)
+            return;
 
         // movement alleen voor owner (blijft zoals jij had)
         if (IsOwner)
@@ -121,7 +122,8 @@ public class PlayerCubeController : NetworkBehaviour
 
     private void FixedUpdate()
     {
-        if (!IsOwner || !canMove) return;
+        if (!IsOwner || !canMove || GlobalChatUI.IsTyping)
+            return;
 
         MoveServerRpc(moveInput);
     }

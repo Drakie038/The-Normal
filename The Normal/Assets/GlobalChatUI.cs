@@ -6,6 +6,8 @@ using UnityEngine.EventSystems;
 
 public class GlobalChatUI : NetworkBehaviour
 {
+    public static bool IsTyping;
+
     [Header("UI")]
     [SerializeField] private Button toggleChatButton;
 
@@ -29,6 +31,8 @@ public class GlobalChatUI : NetworkBehaviour
     private void Start()
     {
         multiplayerMenu = FindObjectOfType<MultiplayerMenu>();
+
+        IsTyping = false;
 
         if (chatScrollView != null)
             chatScrollView.SetActive(false);
@@ -80,15 +84,32 @@ public class GlobalChatUI : NetworkBehaviour
             SendChatMessage();
         }
 
-        // ❗ klik buiten input = unfocus (niet meer typen)
+        // linkermuisknop buiten input = chat sluiten
         if (chatOpen && Input.GetMouseButtonDown(0))
         {
             if (!RectTransformUtility.RectangleContainsScreenPoint(
                 chatInput.GetComponent<RectTransform>(),
                 Input.mousePosition))
             {
-                EventSystem.current.SetSelectedGameObject(null);
-                chatInput.DeactivateInputField();
+                CloseChat();
+            }
+        }
+
+        // scroll omhoog
+        if (chatOpen && Input.GetKey(KeyCode.UpArrow))
+        {
+            if (scrollRect != null)
+            {
+                scrollRect.verticalNormalizedPosition += 2f * Time.deltaTime;
+            }
+        }
+
+        // scroll omlaag
+        if (chatOpen && Input.GetKey(KeyCode.DownArrow))
+        {
+            if (scrollRect != null)
+            {
+                scrollRect.verticalNormalizedPosition -= 2f * Time.deltaTime;
             }
         }
 
@@ -128,6 +149,7 @@ public class GlobalChatUI : NetworkBehaviour
     private void OpenChat()
     {
         chatOpen = true;
+        IsTyping = true;
 
         if (chatScrollView != null)
             chatScrollView.SetActive(true);
@@ -145,6 +167,7 @@ public class GlobalChatUI : NetworkBehaviour
     private void CloseChat()
     {
         chatOpen = false;
+        IsTyping = false;
 
         if (chatInput != null)
         {
