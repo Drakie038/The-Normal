@@ -123,21 +123,6 @@ public class MultiplayerMenu : MonoBehaviour
     [Header("Settings Player List")]
     [SerializeField] private TMP_Text playersListText;
 
-    private void OnEnable()
-    {
-        if (networkManager != null)
-        {
-            networkManager.OnClientDisconnectCallback += HandleClientDisconnect;
-        }
-    }
-
-    private void OnDisable()
-    {
-        if (networkManager != null)
-        {
-            networkManager.OnClientDisconnectCallback -= HandleClientDisconnect;
-        }
-    }
 
     private void Start()
     {
@@ -449,10 +434,8 @@ public class MultiplayerMenu : MonoBehaviour
         if (isResetting) return;
         if (isJoining) return;
 
-        // 🔥 BELANGRIJK: eerst cleanup afronden
-        await EnsureNotInLobbyAsync();
-
-        await FullNetworkResetAsync(); // extra safety
+        await LeaveEverything();
+        isLeavingEverything = false;
 
         if (networkManager.IsListening)
             return;
@@ -711,59 +694,7 @@ public class MultiplayerMenu : MonoBehaviour
 
     private async void LeaveGame()
     {
-        if (isResettingOrLeaving)
-            return;
-
-        isResettingOrLeaving = true;
-
-        forceCancelled = true;
-        searching = false;
-
-        sessionId++;
-
-        SetInMatchUI(false);
-
-        CloseSettingsMenu();
-
-        // lobby cleanup
-        try
-        {
-            if (!string.IsNullOrEmpty(currentLobbyId))
-            {
-                if (isHost)
-                {
-                    await LobbyService.Instance.DeleteLobbyAsync(currentLobbyId);
-                }
-                else
-                {
-                    await LobbyService.Instance.RemovePlayerAsync(
-                        currentLobbyId,
-                        AuthenticationService.Instance.PlayerId
-                    );
-                }
-            }
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogWarning("Lobby cleanup failed: " + e.Message);
-        }
-
-        // volledige NGO reset
-        await FullNetworkResetAsync();
-
-        float t = 0;
-        while (networkManager != null && networkManager.IsListening && t < 5f)
-        {
-            await Task.Delay(100);
-            t += 0.1f;
-        }
-
-        Debug.Log("Netcode fully reset");
-
-        // alles clean resetten
-        ForceFullReset();
-
-        ShowStartMenuOnly();
+        await LeaveEverything();
     }
     private void StartHost(Allocation allocation)
     {
@@ -816,14 +747,10 @@ public class MultiplayerMenu : MonoBehaviour
         if (networkManager == null)
             return;
 
+        // alleen server logic
         if (networkManager.IsServer)
         {
             _ = OnServerClientDisconnect(clientId);
-        }
-
-        if (clientId == networkManager.LocalClientId)
-        {
-            HandleClientDisconnect(clientId);
         }
     }
 
@@ -845,11 +772,8 @@ public class MultiplayerMenu : MonoBehaviour
 
         isResettingOrLeaving = true;
 
-        await EnsureNotInLobbyAsync();
-
-        await FullNetworkResetAsync();
-
-        ForceFullReset();
+        await LeaveEverything();
+        isLeavingEverything = false;
 
         ShowStartMenuOnly();
 
@@ -1007,7 +931,8 @@ public class MultiplayerMenu : MonoBehaviour
         {
             Debug.LogError("JOIN FAILED: " + e.Message);
 
-            await FullResetFromAnyError();
+            await LeaveEverything();
+            isLeavingEverything = false;
         }
     }
     private void ClearButtons()
@@ -1057,76 +982,6 @@ public class MultiplayerMenu : MonoBehaviour
         if (debugText == null) return;
         debugText.text = "";
         debugText.gameObject.SetActive(false);
-    }
-
-    private void ResetAllState()
-    {
-
-        isSingleplayer = false;
-
-        if (singleplayerPlayer != null)
-        {
-            Destroy(singleplayerPlayer);
-            singleplayerPlayer = null;
-            startGameButton.gameObject.SetActive(true);
-            groupSinglePlayer.SetActive(true);
-        }
-
-        if (cameraMovement != null)
-        {
-            cameraMovement.ResetCameraToMenu();
-        }
-
-        searching = false;
-        forceCancelled = true;
-
-        sessionId++; // ❗ invalideert ALLE lopende async processen
-
-        inMatch = false;
-        isHost = false;
-
-        currentLobby = null;
-        hostAllocation = null;
-        currentLobbyId = "";
-        currentServerName = "";
-        searching = false;
-        inMatch = false;
-        isHost = false;
-
-        currentLobby = null;
-        hostAllocation = null;
-        currentLobbyId = "";
-        currentServerName = "";
-
-        ClearButtons();
-
-        SetServerListVisible(true);
-
-        // SETTINGS MENU UIT
-        if (SettingsGroup != null)
-            SettingsGroup.SetActive(false);
-
-        leaveButton.gameObject.SetActive(false);
-        ResumeButton.gameObject.SetActive(false);
-
-        StopSearchingButton.gameObject.SetActive(false);
-
-        statusText.gameObject.SetActive(false);
-
-        quickPlayButton.gameObject.SetActive(true);
-        createServerButton.gameObject.SetActive(false);
-        menuCreateServerButton.gameObject.SetActive(true);
-
-        browserRoomsButton.gameObject.SetActive(true);
-
-        backButton.gameObject.SetActive(true);
-
-        serverListParent.gameObject.SetActive(false);
-
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
-
-        HideDebug();
     }
 
     private void OpenSettingsMenu()
@@ -1198,48 +1053,6 @@ public class MultiplayerMenu : MonoBehaviour
         SetStatus("Singleplayer mode");
     }
 
-    private void ForceFullReset()
-    {
-        joinSessionId++;
-        isJoining = false;
-
-        if (serverLoop != null)
-        {
-            StopCoroutine(serverLoop);
-            serverLoop = null;
-        }
-
-        StartServerLoop();
-
-        Debug.Log("FORCE FULL RESET");
-
-        isResettingOrLeaving = true;
-
-        forceCancelled = true;
-        searching = false;
-        inMatch = false;
-        isHost = false;
-
-        currentLobby = null;
-        currentLobbyId = "";
-        hostAllocation = null;
-
-        sessionId++;
-
-        CleanupAllPlayers();
-
-        if (cameraMovement != null)
-            cameraMovement.ResetCameraToMenu();
-
-        ClearButtons();
-
-        ShowStartMenuOnly();
-
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
-
-        StartCoroutine(ResetUnlock());
-    }
     private void CleanupPlayer(ulong clientId)
     {
         var players = FindObjectsOfType<PlayerCubeController>();
@@ -1265,11 +1078,6 @@ public class MultiplayerMenu : MonoBehaviour
                 return;
             }
         }
-    }
-
-    private void BeginReset()
-    {
-        ForceFullReset();
     }
 
     private IEnumerator ResetUnlock()
@@ -1374,134 +1182,20 @@ public class MultiplayerMenu : MonoBehaviour
             debugText.gameObject.SetActive(false);
     }
 
-    private async Task FullNetworkResetAsync()
-    {
-        if (networkManager == null)
-            return;
-
-        Debug.Log("=== NETWORK RESET START ===");
-
-        // 1. STOP CALLBACKS (cruciaal)
-        networkManager.OnClientDisconnectCallback -= HandleClientDisconnect;
-
-        // 2. SHUTDOWN NGO HARD
-        if (networkManager.IsHost || networkManager.IsClient || networkManager.IsListening)
-        {
-            networkManager.Shutdown();
-        }
-
-        // 3. WACHT TOT ECHT GESTOPT
-        float timeout = 0f;
-        while (networkManager != null && networkManager.IsListening && timeout < 3f)
-        {
-            await Task.Delay(100);
-            timeout += 0.1f;
-        }
-
-        await Task.Delay(200);
-
-        // 4. RESET TRANSPORT (HEEL BELANGRIJK)
-        var transport = networkManager.GetComponent<UnityTransport>();
-        if (transport != null)
-        {
-            transport.Shutdown();
-            transport.SetConnectionData("0.0.0.0", 7777);
-        }
-
-        // 5. RESET STATE
-        hostAllocation = null;
-
-        Debug.Log("=== NETWORK RESET DONE ===");
-
-        // 6. HERSTEL CALLBACKS
-        RegisterCallbacks();
-    }
     private void RegisterCallbacks()
     {
         if (networkManager == null)
             return;
 
+        // eerst alles clean verwijderen
         networkManager.OnClientDisconnectCallback -= HandleClientDisconnect;
+        networkManager.OnClientDisconnectCallback -= OnClientDisconnect;
 
-        networkManager.OnClientConnectedCallback -= OnClientDisconnect;
-
+        // opnieuw registreren
         networkManager.OnClientDisconnectCallback += HandleClientDisconnect;
-
         networkManager.OnClientDisconnectCallback += OnClientDisconnect;
     }
 
-    private async Task FullResetFromAnyError()
-    {
-        if (isResettingOrLeaving)
-            return;
-
-        isResettingOrLeaving = true;
-
-        forceCancelled = true;
-        searching = false;
-        isResetting = true;
-
-        sessionId++;
-
-        try
-        {
-            // 1. NETWORK RESET
-            await FullNetworkResetAsync();
-
-            float t = 0;
-            while (networkManager != null && networkManager.IsListening && t < 5f)
-            {
-                await Task.Delay(100);
-                t += 0.1f;
-            }
-
-            Debug.Log("Netcode fully reset");
-        }
-        catch { }
-
-        try
-        {
-            if (!string.IsNullOrEmpty(currentLobbyId))
-            {
-                // altijd eerst jezelf verwijderen (veiligheid)
-                try
-                {
-                    await LobbyService.Instance.RemovePlayerAsync(
-                        currentLobbyId,
-                        AuthenticationService.Instance.PlayerId
-                    );
-                }
-                catch { }
-
-                // alleen host delete lobby
-                if (isHost)
-                {
-                    await LobbyService.Instance.DeleteLobbyAsync(currentLobbyId);
-                }
-            }
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogWarning("Lobby cleanup failed: " + e.Message);
-        }
-
-        catch { }
-
-        // 3. CLEAR EVERYTHING
-        currentLobbyId = "";
-        currentLobby = null;
-        hostAllocation = null;
-        isHost = false;
-        inMatch = false;
-
-        // 4. UI RESET HARD
-        ForceFullReset();
-
-        await Task.Delay(500);
-
-        isResettingOrLeaving = false;
-        isResetting = false;
-    }
 
     private async Task SafeJoin(string joinCode)
     {
@@ -1583,8 +1277,6 @@ public class MultiplayerMenu : MonoBehaviour
 
         try
         {
-            await ForceCleanNetworkState();
-
             if (mySession != joinSessionId)
                 return;
 
@@ -1646,34 +1338,6 @@ public class MultiplayerMenu : MonoBehaviour
         Debug.Log("JOIN SUCCESS");
     }
 
-    private async Task ForceCleanNetworkState()
-    {
-        if (networkManager == null)
-            return;
-
-        Debug.Log("FORCE CLEAN NETWORK");
-
-        try
-        {
-            networkManager.OnClientDisconnectCallback -= HandleClientDisconnect;
-
-            if (networkManager.IsListening || networkManager.IsClient || networkManager.IsHost)
-                networkManager.Shutdown();
-        }
-        catch { }
-
-        await Task.Delay(300);
-
-        var transport = networkManager.GetComponent<UnityTransport>();
-        if (transport != null)
-        {
-            transport.Shutdown();
-        }
-
-        await Task.Delay(200);
-
-        RegisterCallbacks();
-    }
 
     private async Task JoinServer(string joinCode)
     {
@@ -1690,8 +1354,8 @@ public class MultiplayerMenu : MonoBehaviour
             if (networkManager != null &&
                 (networkManager.IsClient || networkManager.IsHost || networkManager.IsListening))
             {
-                await FullNetworkResetAsync();
-                await Task.Delay(250);
+                await LeaveEverything();
+                isLeavingEverything = false;
             }
 
             if (mySession != joinSessionId)
@@ -1722,8 +1386,8 @@ public class MultiplayerMenu : MonoBehaviour
         }
         catch (System.Exception e)
         {
-            Debug.LogError("JOIN FAILED: " + e.Message);
-            await FullResetFromAnyError();
+            await LeaveEverything();
+            isLeavingEverything = false;
         }
         finally
         {
@@ -1736,29 +1400,6 @@ public class MultiplayerMenu : MonoBehaviour
         await UpdatePlayerCount();
     }
 
-    private async Task EnsureNotInLobbyAsync()
-    {
-        if (string.IsNullOrEmpty(currentLobbyId))
-            return;
-
-        try
-        {
-            // probeer eerst netjes te leaven
-            await LobbyService.Instance.RemovePlayerAsync(
-                currentLobbyId,
-                AuthenticationService.Instance.PlayerId
-            );
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogWarning("RemovePlayer failed: " + e.Message);
-        }
-
-        currentLobbyId = "";
-        currentLobby = null;
-        inMatch = false;
-        isHost = false;
-    }
 
     private bool ValidatePlayerName()
     {
@@ -1877,5 +1518,146 @@ public class MultiplayerMenu : MonoBehaviour
 
         leaveButton?.gameObject.SetActive(false);
         ResumeButton?.gameObject.SetActive(false);
+    }
+
+    private bool isLeavingEverything = false;
+
+    private async Task LeaveEverything()
+    {
+        if (isLeavingEverything)
+            return;
+
+        isLeavingEverything = true;
+
+        Debug.Log("=== LEAVE EVERYTHING START ===");
+
+        try
+        {
+            forceCancelled = true;
+            searching = false;
+            isJoining = false;
+
+            sessionId++;
+            joinSessionId++;
+
+            // -----------------------------
+            // 1. LOBBY CLEANUP
+            // -----------------------------
+            if (!string.IsNullOrEmpty(currentLobbyId))
+            {
+                try
+                {
+                    Debug.Log("Cleaning lobby...");
+
+                    if (isHost)
+                    {
+                        await LobbyService.Instance.DeleteLobbyAsync(currentLobbyId);
+                    }
+                    else
+                    {
+                        await LobbyService.Instance.RemovePlayerAsync(
+                            currentLobbyId,
+                            AuthenticationService.Instance.PlayerId
+                        );
+                    }
+
+                    Debug.Log("Lobby cleanup success");
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogWarning("Lobby cleanup failed: " + e.Message);
+                }
+            }
+
+            // BELANGRIJK:
+            // PAS NA succesvolle cleanup resetten
+            currentLobby = null;
+            currentLobbyId = "";
+
+            // -----------------------------
+            // 2. NGO SHUTDOWN
+            // -----------------------------
+            if (networkManager != null)
+            {
+                networkManager.OnClientDisconnectCallback -= HandleClientDisconnect;
+                networkManager.OnClientDisconnectCallback -= OnClientDisconnect;
+
+                if (networkManager.IsListening ||
+                    networkManager.IsClient ||
+                    networkManager.IsHost)
+                {
+                    Debug.Log("Shutdown NGO...");
+
+                    networkManager.Shutdown();
+
+                    float timeout = 0f;
+
+                    while (networkManager.IsListening && timeout < 5f)
+                    {
+                        await Task.Delay(100);
+                        timeout += 0.1f;
+                    }
+                }
+            }
+
+            // -----------------------------
+            // 3. TRANSPORT RESET
+            // -----------------------------
+            var transport = networkManager.GetComponent<UnityTransport>();
+
+            if (transport != null)
+            {
+                Debug.Log("Shutdown Transport...");
+
+                transport.Shutdown();
+
+                transport.SetConnectionData("0.0.0.0", 7777);
+            }
+
+            // kleine delay zodat Relay echt sluit
+            await Task.Delay(500);
+
+            // -----------------------------
+            // 4. CLEAN PLAYERS
+            // -----------------------------
+            CleanupAllPlayers();
+
+            // -----------------------------
+            // 5. RESET STATE
+            // -----------------------------
+            isHost = false;
+            inMatch = false;
+            searching = false;
+            isJoining = false;
+
+            hostAllocation = null;
+            currentServerName = "";
+
+            // -----------------------------
+            // 6. UI RESET
+            // -----------------------------
+            ClearButtons();
+
+            if (cameraMovement != null)
+            {
+                cameraMovement.ResetCameraToMenu();
+            }
+
+            CloseSettingsMenu();
+
+            ShowStartMenuOnly();
+
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+
+            // callbacks opnieuw registreren
+            RegisterCallbacks();
+
+            Debug.Log("=== LEAVE EVERYTHING DONE ===");
+        }
+        finally
+        {
+            isLeavingEverything = false;
+        }
     }
 }
