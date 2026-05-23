@@ -114,6 +114,8 @@ public class MultiplayerMenu : MonoBehaviour
 
     private bool isLeavingOrResetting => isResettingOrLeaving || isResetting;
 
+    private bool isQuickJoining = false;
+
     [Header("PLAYER NAME")]
     [SerializeField] private TMP_InputField playerNameInput;
     [SerializeField] private TMP_Text playerInfoText;
@@ -124,14 +126,14 @@ public class MultiplayerMenu : MonoBehaviour
     [SerializeField] private TMP_Text playersListText;
 
 
-    private void Start()
+    private async void Start()
     {
         RegisterCallbacks();
 
-        UnityServices.InitializeAsync();
-        cameraMovement = FindObjectOfType<CameraMovement>();
+        await UnityServices.InitializeAsync();
+        await AuthenticationService.Instance.SignInAnonymouslyAsync();
 
-        AuthenticationService.Instance.SignInAnonymouslyAsync();
+        cameraMovement = FindObjectOfType<CameraMovement>();
 
         quickPlayButton.onClick.AddListener(() => _ = QuickPlay());
         createServerButton.onClick.AddListener(() => _ = CreateServer());
@@ -142,7 +144,6 @@ public class MultiplayerMenu : MonoBehaviour
         StopSearchingButton.onClick.AddListener(StopSearching);
 
         StartServerLoop();
-
         SetupMenu();
     }
 
@@ -428,26 +429,21 @@ public class MultiplayerMenu : MonoBehaviour
 
     private async Task QuickPlay()
     {
-        if (isLeavingOrResetting)
+        if (isLeavingOrResetting || isResetting || isJoining)
             return;
 
-        if (isResetting) return;
-        if (isJoining) return;
-
-        await LeaveEverything();
-        isLeavingEverything = false;
+        isQuickJoining = true;
 
         if (networkManager.IsListening)
+        {
+            isQuickJoining = false;
             return;
+        }
 
-        int mySession = ++sessionId; // unieke sessie voor deze run
+        int mySession = ++sessionId;
+
         forceCancelled = false;
         searching = true;
-
-        quickJoinButton.gameObject.SetActive(false);
-        browserRoomsButton.gameObject.SetActive(false);
-        menuCreateServerButton.gameObject.SetActive(false);
-        backButton.gameObject.SetActive(false);
 
         StopSearchingButton.gameObject.SetActive(true);
 
@@ -455,10 +451,10 @@ public class MultiplayerMenu : MonoBehaviour
 
         while (searching)
         {
-            // ❌ HARD CANCEL CHECK
             if (forceCancelled || mySession != sessionId)
             {
                 StopSearchingButton.gameObject.SetActive(false);
+                isQuickJoining = false;
                 return;
             }
 
@@ -471,25 +467,14 @@ public class MultiplayerMenu : MonoBehaviour
 
                 if (remaining <= 0f)
                 {
-                    if (forceCancelled || mySession != sessionId)
-                        return;
-
                     ShowDebug("No servers online");
+
                     await Task.Delay(3000);
 
-                    if (forceCancelled || mySession != sessionId)
-                        return;
-
-                    HideDebug();
-
-                    quickJoinButton.gameObject.SetActive(true);
-                    browserRoomsButton.gameObject.SetActive(true);
-                    menuCreateServerButton.gameObject.SetActive(true);
-                    backButton.gameObject.SetActive(true);
-
                     StopSearchingButton.gameObject.SetActive(false);
-
                     searching = false;
+
+                    isQuickJoining = false;
                     return;
                 }
 
@@ -498,101 +483,31 @@ public class MultiplayerMenu : MonoBehaviour
                         new QueryLobbiesOptions { Count = 50 }
                     );
 
-                // ❌ CHECK NA AWAIT
                 if (forceCancelled || mySession != sessionId)
+                {
+                    isQuickJoining = false;
                     return;
+                }
 
                 List<Lobby> valid = new List<Lobby>();
 
-                foreach (var l in response.Results)
+                foreach (var lobby in response.Results)
                 {
-                    if (l.Data != null && l.Data.ContainsKey("joinCode"))
-                        valid.Add(l);
+                    if (lobby.Data != null && lobby.Data.ContainsKey("joinCode"))
+                        valid.Add(lobby);
                 }
 
                 if (valid.Count > 0)
                 {
-                    // ❌ FINAL CHECK VOOR JOIN
-                    if (forceCancelled || mySession != sessionId)
-                        return;
-
                     Lobby lobby = valid[Random.Range(0, valid.Count)];
                     string joinCode = lobby.Data["joinCode"].Value;
 
-                    await LobbyService.Instance.JoinLobbyByIdAsync(lobby.Id);
-
-                    if (forceCancelled || mySession != sessionId)
-                    {
-                        try
-                        {
-                            await LobbyService.Instance.RemovePlayerAsync(
-                                lobby.Id,
-                                AuthenticationService.Instance.PlayerId
-                            );
-                        }
-                        catch { }
-
-                        return;
-                    }
-
-                    JoinAllocation allocation =
-                        await RelayService.Instance.JoinAllocationAsync(joinCode);
-
-                    if (allocation == null)
-                    {
-                        Debug.LogError("Relay allocation failed");
-                        return;
-                    }
-
-                    bool started = StartClientSafe(allocation);
-
-                    if (!started)
-                    {
-                        Debug.LogError("StartClientSafe failed");
-                        return;
-                    }
-
-                    // WACHT TOT CLIENT ECHT CONNECTED IS
-                    float t = 0;
-                    while (!networkManager.IsClient && t < 3f)
-                    {
-                        await Task.Delay(100);
-                        t += 0.1f;
-                    }
-
-                    if (!networkManager.IsClient)
-                    {
-                        Debug.LogError("Client never fully connected");
-                        return;
-                    }
-
-                    currentLobbyId = "";
-
-                    inMatch = true;
-                    SetStatus("Joined server: " + currentServerName);
-                    SetInMatchUI(true);
-                    SetServerListVisible(false);
-
-                    ClearButtons();
-
-                    if (forceCancelled || mySession != sessionId)
-                        return;
-
-                    currentLobbyId = lobby.Id;
-
-                    currentServerName = lobby.Data.ContainsKey("serverName")
-                        ? lobby.Data["serverName"].Value
-                        : "Server";
-
-                    SetStatus("Joined server: " + currentServerName);
-
-                    statusText.gameObject.SetActive(true);
-
-                    SetInMatchUI(true);
-
+                    searching = false;
                     StopSearchingButton.gameObject.SetActive(false);
 
-                    searching = false;
+                    await JoinServerInternal(joinCode, ++joinSessionId);
+
+                    isQuickJoining = false;
                     return;
                 }
 
@@ -600,16 +515,13 @@ public class MultiplayerMenu : MonoBehaviour
             }
             catch (System.Exception e)
             {
-                if (forceCancelled || mySession != sessionId)
-                    return;
-
-                Debug.LogWarning("QuickPlay error (ignored): " + e.Message);
-
+                Debug.LogWarning("QuickPlay error: " + e.Message);
                 await Task.Delay(500);
             }
         }
 
         StopSearchingButton.gameObject.SetActive(false);
+        isQuickJoining = false;
     }
 
     private async Task CreateServer()
@@ -1152,6 +1064,9 @@ public class MultiplayerMenu : MonoBehaviour
         {
             ShowStartMenuOnly();
         }
+
+        if (isQuickJoining && !state)
+            return;
     }
 
     private void ShowMainMenu()
@@ -1489,6 +1404,9 @@ public class MultiplayerMenu : MonoBehaviour
 
     private void ShowStartMenuOnly()
     {
+        if (isQuickJoining)
+            return;
+
         // MAIN UI
         startButton.gameObject.SetActive(true);
         playerNameInput.gameObject.SetActive(true);

@@ -43,7 +43,7 @@ public class ElevatorPlayers : NetworkBehaviour
     {
         if (playerCountText != null)
         {
-            playerCountText.text = $"Players: {value}";
+            playerCountText.text = $"{value}";
         }
     }
 

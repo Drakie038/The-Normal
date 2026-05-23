@@ -6,124 +6,107 @@ public class CameraMovement : MonoBehaviour
     [Header("Follow")]
     public Vector3 firstPersonOffset = new Vector3(0f, 1.6f, 0f);
 
-    [Header("Mouse Look")]
+    [Header("Mouse")]
     public float mouseSensitivity = 200f;
     public float maxLookAngle = 85f;
 
-    [Header("Timings")]
-    [SerializeField] private float spawnCameraDelay = 1.5f;
+    [Header("Cinematic")]
+    public float cinematicDuration = 3f;
+    public float waitBeforeMove = 1f;
+    public AnimationCurve curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
     private Transform target;
     private PlayerCubeController player;
 
-    private enum CameraState { Menu, Transition, FPS }
-    private CameraState state = CameraState.Menu;
+    private enum State { Menu, Cinematic, FPS }
+    private State state;
 
-    private float xRotation = 0f;
+    private float xRotation;
+    private bool inputLocked;
 
     private Vector3 menuPos;
     private Quaternion menuRot;
 
-    private bool inputLocked = true;
+    private Vector3 frozenPos;
+    private Quaternion frozenRot;
 
     private void Start()
     {
         menuPos = transform.position;
         menuRot = transform.rotation;
-
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
     }
 
-    public void SetTarget(Transform newTarget)
+    public void SetTarget(Transform newTarget, PlayerCubeController newPlayer)
     {
         target = newTarget;
-        player = newTarget.GetComponentInParent<PlayerCubeController>();
+        player = newPlayer;
 
         StopAllCoroutines();
-        StartCoroutine(SmoothEnter());
-        StartCoroutine(UnlockInputAfterDelay());
+        StartCoroutine(Cinematic());
     }
 
-    private IEnumerator UnlockInputAfterDelay()
+    private IEnumerator Cinematic()
     {
-        inputLocked = true;
-        yield return new WaitForSeconds(spawnCameraDelay);
-        inputLocked = false;
-    }
-
-    public void ResetCameraToMenu()
-    {
-        target = null;
-        player = null;
-        state = CameraState.Menu;
-
-        StopAllCoroutines();
-        StartCoroutine(ReturnToMenu());
-
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        if (player == null || !player.IsOwner)
+            yield break;
 
         inputLocked = true;
-    }
+        state = State.Cinematic;
 
-    private IEnumerator SmoothEnter()
-    {
-        state = CameraState.Transition;
+        yield return new WaitForSeconds(waitBeforeMove);
+
+        // 🔥 freeze player movement
+        player.SetFrozen(true);
+
+        // 🔥 snapshot target (NO jitter)
+        frozenPos = target.position;
+        frozenRot = target.rotation;
 
         Vector3 startPos = transform.position;
         Quaternion startRot = transform.rotation;
 
         float t = 0f;
-        float duration = 1f;
 
-        while (t < duration)
+        while (t < cinematicDuration)
         {
             t += Time.deltaTime;
-            float p = t / duration;
 
-            if (target == null) yield break;
+            float n = Mathf.Clamp01(t / cinematicDuration);
+            float c = curve.Evaluate(n);
 
-            Vector3 endPos = target.position + firstPersonOffset;
+            Vector3 endPos = frozenPos + firstPersonOffset;
+            Quaternion endRot = Quaternion.Euler(0f, frozenRot.eulerAngles.y, 0f);
 
-            transform.position = Vector3.Lerp(startPos, endPos, p);
-            transform.rotation = Quaternion.Slerp(startRot, target.rotation, p);
+            transform.position = Vector3.Lerp(startPos, endPos, c);
+            transform.rotation = Quaternion.Slerp(startRot, endRot, c);
 
             yield return null;
         }
 
-        state = CameraState.FPS;
+        // 🔥 FINAL SNAP POSITION (important)
+        transform.position = frozenPos + firstPersonOffset;
+        transform.rotation = Quaternion.Euler(0f, frozenRot.eulerAngles.y, 0f);
+
+        // 🔥 CRITICAL FIX: prevent downward snap
+        xRotation = 0f;
+
+        state = State.FPS;
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-    }
 
-    private IEnumerator ReturnToMenu()
-    {
-        Vector3 startPos = transform.position;
-        Quaternion startRot = transform.rotation;
+        inputLocked = false;
 
-        float t = 0f;
-        float duration = 1f;
-
-        while (t < duration)
-        {
-            t += Time.deltaTime;
-            float p = t / duration;
-
-            transform.position = Vector3.Lerp(startPos, menuPos, p);
-            transform.rotation = Quaternion.Slerp(startRot, menuRot, p);
-
-            yield return null;
-        }
+        player.SetFrozen(false);
+        player.EnableMovement();
     }
 
     private void LateUpdate()
     {
-        if (state != CameraState.FPS || target == null || player == null)
+        if (player == null || !player.IsOwner)
             return;
 
-        if (inputLocked)
+        if (state != State.FPS || inputLocked || target == null)
             return;
 
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
@@ -134,7 +117,40 @@ public class CameraMovement : MonoBehaviour
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, -maxLookAngle, maxLookAngle);
 
-        transform.rotation = Quaternion.Euler(xRotation, target.eulerAngles.y, 0f);
+        float yaw = target.eulerAngles.y;
+
+        transform.rotation = Quaternion.Euler(xRotation, yaw, 0f);
         transform.position = target.position + firstPersonOffset;
+    }
+
+    public void ResetCameraToMenu()
+    {
+        StopAllCoroutines();
+
+        target = null;
+        player = null;
+
+        state = State.Menu;
+        inputLocked = true;
+
+        StartCoroutine(ReturnToMenu());
+    }
+
+    private IEnumerator ReturnToMenu()
+    {
+        Vector3 startPos = transform.position;
+        Quaternion startRot = transform.rotation;
+
+        float t = 0f;
+
+        while (t < 1f)
+        {
+            t += Time.deltaTime;
+
+            transform.position = Vector3.Lerp(startPos, menuPos, t);
+            transform.rotation = Quaternion.Slerp(startRot, menuRot, t);
+
+            yield return null;
+        }
     }
 }

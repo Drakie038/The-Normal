@@ -7,33 +7,25 @@ using TMPro;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerCubeController : NetworkBehaviour
 {
+    [Header("Movement")]
     public float moveSpeed = 5f;
     public float gravity = -9.81f;
 
     private CharacterController controller;
     private Vector3 velocity;
-
     private Vector2 moveInput;
 
-    private bool canMove = false;
-    private float spawnLockTime = 1.5f;
+    private bool canMove;
+    private bool frozen;
 
-    // 🔥 NETWORK NAME
+    [Header("Camera Pivot")]
+    public Transform cameraPivot;
+
+    [Header("Player Name")]
     public NetworkVariable<FixedString32Bytes> PlayerName =
         new NetworkVariable<FixedString32Bytes>();
 
-    // ✅ NEW: TEXT FIELD (drag in inspector)
-    [Header("Name Tag UI")]
     [SerializeField] private TMP_Text nameText;
-
-    // cache camera (for billboard)
-    private Transform cam;
-
-    [ServerRpc]
-    public void SendLookInputServerRpc(float mouseX)
-    {
-        transform.Rotate(Vector3.up * mouseX);
-    }
 
     private void Awake()
     {
@@ -42,128 +34,118 @@ public class PlayerCubeController : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
+        velocity = Vector3.zero;
+        canMove = false;
+        frozen = false;
+
+        PlayerName.OnValueChanged += OnNameChanged;
+        UpdateNameVisual(PlayerName.Value.ToString());
+
         if (IsOwner)
         {
-            CameraMovement camMove = FindObjectOfType<CameraMovement>();
-            Transform t = transform.Find("CameraTarget");
+            CameraMovement cam = FindObjectOfType<CameraMovement>();
+            if (cam != null)
+                cam.SetTarget(cameraPivot != null ? cameraPivot : transform, this);
 
-            if (camMove != null)
-                camMove.SetTarget(t != null ? t : transform);
-
-            MultiplayerMenu menu = FindObjectOfType<MultiplayerMenu>();
+            // 🔥 FIX: stuur naam direct naar server
+            var menu = FindObjectOfType<MultiplayerMenu>();
             if (menu != null)
             {
                 SetNameServerRpc(menu.GetPlayerName());
             }
         }
-
-        // 🔥 subscribe to name changes (ALL clients)
-        PlayerName.OnValueChanged += OnNameChanged;
-
-        // initial set
-        UpdateNameVisual(PlayerName.Value.ToString());
-
-        StartCoroutine(EnableMovementAfterDelay());
     }
 
-    private void OnDestroy()
+    public override void OnNetworkDespawn()
     {
         PlayerName.OnValueChanged -= OnNameChanged;
     }
+
+    // =========================
+    // NAME TEXT (RESTORED EXACT STYLE)
+    // =========================
 
     private void OnNameChanged(FixedString32Bytes oldName, FixedString32Bytes newName)
     {
         UpdateNameVisual(newName.ToString());
     }
 
-    private void UpdateNameVisual(string name)
+    private void UpdateNameVisual(string playerName)
     {
-        if (nameText == null)
-            return;
-
-        nameText.text = string.IsNullOrEmpty(name) ? "Player" : name;
+        if (nameText == null) return;
+        nameText.text = string.IsNullOrEmpty(playerName) ? "Player" : playerName;
     }
 
-    private IEnumerator EnableMovementAfterDelay()
+    // =========================
+    // MOVEMENT CONTROL
+    // =========================
+
+    public void EnableMovement()
     {
-        canMove = false;
-        yield return new WaitForSeconds(spawnLockTime);
         canMove = true;
+    }
+
+    public void SetFrozen(bool value)
+    {
+        frozen = value;
+        moveInput = Vector2.zero;
+
+        if (value)
+            velocity = Vector3.zero;
     }
 
     private void Update()
     {
-        if (!canMove || GlobalChatUI.IsTyping)
+        if (!IsOwner || !canMove || frozen)
             return;
 
-        // movement alleen voor owner (blijft zoals jij had)
-        if (IsOwner)
-        {
-            moveInput = new Vector2(
-                Input.GetAxisRaw("Horizontal"),
-                Input.GetAxisRaw("Vertical")
-            );
-        }
-
-        // 🔥 BILLBOARD VOOR IEDEREEN
-        if (nameText != null)
-        {
-            Camera cam = Camera.main;
-
-            if (cam != null)
-            {
-                Vector3 dir = nameText.transform.position - cam.transform.position;
-                dir.y = 0f; // optioneel: alleen horizontaal draaien
-
-                nameText.transform.rotation = Quaternion.LookRotation(dir);
-            }
-        }
+        moveInput = new Vector2(
+            Input.GetAxisRaw("Horizontal"),
+            Input.GetAxisRaw("Vertical")
+        );
     }
 
     private void FixedUpdate()
     {
-        if (!IsOwner || !canMove || GlobalChatUI.IsTyping)
+        if (!IsOwner || frozen)
             return;
 
-        MoveServerRpc(moveInput);
+        MoveServerRpc(moveInput, Time.fixedDeltaTime);
     }
 
     [ServerRpc]
-    private void MoveServerRpc(Vector2 input)
+    private void MoveServerRpc(Vector2 input, float dt)
     {
+        ApplyGravityServer(dt);
+
         Vector3 move =
             transform.right * input.x +
             transform.forward * input.y;
 
-        controller.Move(move * moveSpeed * Time.fixedDeltaTime);
+        controller.Move((move * moveSpeed + velocity) * dt);
+    }
 
+    private void ApplyGravityServer(float dt)
+    {
         if (controller.isGrounded && velocity.y < 0)
             velocity.y = -2f;
 
-        velocity.y += gravity * Time.fixedDeltaTime;
-        controller.Move(velocity * Time.fixedDeltaTime);
+        velocity.y += gravity * dt;
+    }
+
+    // =========================
+    // CAMERA LOOK
+    // =========================
+
+    [ServerRpc]
+    public void SendLookInputServerRpc(float mouseX)
+    {
+        transform.Rotate(Vector3.up * mouseX);
     }
 
     [ServerRpc]
-    private void SetNameServerRpc(string name)
+    public void SetNameServerRpc(string name)
     {
-        PlayerName.Value = name;
-    }
-
-    public override void OnNetworkDespawn()
-    {
-        base.OnNetworkDespawn();
-
-        if (IsOwner)
-        {
-            CameraMovement cam = FindObjectOfType<CameraMovement>();
-            if (cam != null)
-                cam.ResetCameraToMenu();
-
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
-
-        Destroy(gameObject);
+        PlayerName.Value = new FixedString32Bytes(name);
     }
 }
