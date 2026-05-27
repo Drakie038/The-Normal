@@ -429,80 +429,82 @@ public class MultiplayerMenu : MonoBehaviour
 
     private async Task QuickPlay()
     {
-        if (isLeavingOrResetting || isResetting || isJoining)
+        if (isQuickJoining || isJoining || inMatch)
             return;
 
         isQuickJoining = true;
 
-        if (networkManager.IsListening)
-        {
-            isQuickJoining = false;
-            return;
-        }
-
-        int mySession = ++sessionId;
-
         forceCancelled = false;
         searching = true;
 
+        // UI
+        quickJoinButton.gameObject.SetActive(false);
+        browserRoomsButton.gameObject.SetActive(false);
+        menuCreateServerButton.gameObject.SetActive(false);
+
         StopSearchingButton.gameObject.SetActive(true);
 
-        float startTime = Time.realtimeSinceStartup;
+        ShowDebug("Searching...");
+
+        float startTime = Time.time;
 
         while (searching)
         {
-            if (forceCancelled || mySession != sessionId)
+            // CANCEL
+            if (forceCancelled)
             {
-                StopSearchingButton.gameObject.SetActive(false);
-                isQuickJoining = false;
+                ResetQuickJoinUI();
+                return;
+            }
+
+            // TIMEOUT
+            float elapsed = Time.time - startTime;
+
+            if (elapsed >= 10f)
+            {
+                ShowDebug("No servers found");
+
+                await Task.Delay(1500);
+
+                ResetQuickJoinUI();
                 return;
             }
 
             try
             {
-                float elapsed = Time.realtimeSinceStartup - startTime;
-                float remaining = 10f - elapsed;
-
-                ShowDebug("Searching " + Mathf.CeilToInt(remaining));
-
-                if (remaining <= 0f)
-                {
-                    ShowDebug("No servers online");
-
-                    await Task.Delay(3000);
-
-                    StopSearchingButton.gameObject.SetActive(false);
-                    searching = false;
-
-                    isQuickJoining = false;
-                    return;
-                }
-
                 QueryResponse response =
                     await LobbyService.Instance.QueryLobbiesAsync(
                         new QueryLobbiesOptions { Count = 50 }
                     );
 
-                if (forceCancelled || mySession != sessionId)
+                if (forceCancelled)
                 {
-                    isQuickJoining = false;
+                    ResetQuickJoinUI();
                     return;
                 }
 
-                List<Lobby> valid = new List<Lobby>();
+                List<Lobby> validLobbies = new List<Lobby>();
 
                 foreach (var lobby in response.Results)
                 {
-                    if (lobby.Data != null && lobby.Data.ContainsKey("joinCode"))
-                        valid.Add(lobby);
+                    if (lobby.Data != null &&
+                        lobby.Data.ContainsKey("joinCode"))
+                    {
+                        validLobbies.Add(lobby);
+                    }
                 }
 
-                if (valid.Count > 0)
+                // SERVER FOUND
+                if (validLobbies.Count > 0)
                 {
-                    Lobby lobby = valid[Random.Range(0, valid.Count)];
-                    string joinCode = lobby.Data["joinCode"].Value;
+                    Lobby chosenLobby =
+                        validLobbies[Random.Range(0, validLobbies.Count)];
+
+                    string joinCode =
+                        chosenLobby.Data["joinCode"].Value;
 
                     searching = false;
+
                     StopSearchingButton.gameObject.SetActive(false);
 
                     await JoinServerInternal(joinCode, ++joinSessionId);
@@ -510,18 +512,16 @@ public class MultiplayerMenu : MonoBehaviour
                     isQuickJoining = false;
                     return;
                 }
-
-                await Task.Delay(1000);
             }
             catch (System.Exception e)
             {
                 Debug.LogWarning("QuickPlay error: " + e.Message);
-                await Task.Delay(500);
             }
+
+            await Task.Delay(1000);
         }
 
-        StopSearchingButton.gameObject.SetActive(false);
-        isQuickJoining = false;
+        ResetQuickJoinUI();
     }
 
     private async Task CreateServer()
@@ -927,20 +927,10 @@ public class MultiplayerMenu : MonoBehaviour
 
     private void StopSearching()
     {
-        searching = false;
         forceCancelled = true;
+        searching = false;
 
-        sessionId++; // breekt QuickPlay volledig af
-
-        HideDebug();
-
-        StopSearchingButton.gameObject.SetActive(false);
-
-        quickJoinButton.gameObject.SetActive(true);
-        browserRoomsButton.gameObject.SetActive(true);
-        menuCreateServerButton.gameObject.SetActive(true);
-
-        backButton.gameObject.SetActive(true);
+        ResetQuickJoinUI();
     }
 
     private void StartSingleplayer()
@@ -1577,5 +1567,20 @@ public class MultiplayerMenu : MonoBehaviour
         {
             isLeavingEverything = false;
         }
+    }
+
+    private void ResetQuickJoinUI()
+    {
+        searching = false;
+        forceCancelled = false;
+        isQuickJoining = false;
+
+        StopSearchingButton.gameObject.SetActive(false);
+
+        quickJoinButton.gameObject.SetActive(true);
+        browserRoomsButton.gameObject.SetActive(true);
+        menuCreateServerButton.gameObject.SetActive(true);
+
+        HideDebug();
     }
 }
