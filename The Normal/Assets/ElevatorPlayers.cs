@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Unity.Netcode;
 using TMPro;
 using System.Collections;
@@ -15,18 +15,11 @@ public class ElevatorPlayers : NetworkBehaviour
     [Header("Smooth")]
     [SerializeField] private float rotateDuration = 2f;
 
-    private NetworkVariable<int> playerCount = new NetworkVariable<int>(
-        0,
-        NetworkVariableReadPermission.Everyone,
-        NetworkVariableWritePermission.Server
-    );
+    private NetworkVariable<int> playerCount =
+        new NetworkVariable<int>(0);
 
     private HashSet<ulong> playersInside = new HashSet<ulong>();
-
-    private void Start()
-    {
-        UpdateUI(playerCount.Value);
-    }
+    private Coroutine enterRoutine;
 
     public override void OnNetworkSpawn()
     {
@@ -47,16 +40,11 @@ public class ElevatorPlayers : NetworkBehaviour
     private void UpdateUI(int value)
     {
         if (playerCountText != null)
-        {
             playerCountText.text = $"{value}";
-        }
     }
 
     private IEnumerator SmoothEnterElevator(PlayerCubeController player)
     {
-        if (player == null)
-            yield break;
-
         player.SetFrozen(true);
 
         Transform t = player.transform;
@@ -71,24 +59,24 @@ public class ElevatorPlayers : NetworkBehaviour
                 centerPoint.position.z
             );
 
-        Vector3 dir =
-            centerPoint.position - t.position;
-
+        Vector3 dir = centerPoint.position - t.position;
         dir.y = 0f;
 
-        Quaternion targetRot =
-            Quaternion.LookRotation(dir);
+        Quaternion targetRot = Quaternion.LookRotation(dir);
 
-        CameraMovement cam =
-            FindObjectOfType<CameraMovement>();
+        CameraMovement cam = FindObjectOfType<CameraMovement>();
+
+        ElevatorLeaveButton leaveBtn =
+            FindObjectOfType<ElevatorLeaveButton>();
+
+        if (leaveBtn != null && player.IsOwner)
+            leaveBtn.ShowButton(true);
 
         if (cam != null && player.IsOwner)
         {
             StartCoroutine(
                 cam.ElevatorLookAt(
-                    player.cameraPivot != null
-                        ? player.cameraPivot
-                        : player.transform,
+                    player.cameraPivot != null ? player.cameraPivot : player.transform,
                     rotateDuration
                 )
             );
@@ -102,11 +90,8 @@ public class ElevatorPlayers : NetworkBehaviour
 
             float n = Mathf.Clamp01(tValue / rotateDuration);
 
-            t.position =
-                Vector3.Lerp(startPos, targetPos, n);
-
-            t.rotation =
-                Quaternion.Slerp(startRot, targetRot, n);
+            t.position = Vector3.Lerp(startPos, targetPos, n);
+            t.rotation = Quaternion.Slerp(startRot, targetRot, n);
 
             yield return null;
         }
@@ -119,7 +104,9 @@ public class ElevatorPlayers : NetworkBehaviour
     {
         if (!IsServer) return;
 
-        PlayerCubeController player = other.GetComponent<PlayerCubeController>();
+        PlayerCubeController player =
+            other.GetComponent<PlayerCubeController>();
+
         if (player == null) return;
 
         ulong id = player.OwnerClientId;
@@ -127,8 +114,7 @@ public class ElevatorPlayers : NetworkBehaviour
         if (playersInside.Add(id))
         {
             playerCount.Value++;
-
-            StartCoroutine(SmoothEnterElevator(player));
+            enterRoutine = StartCoroutine(SmoothEnterElevator(player));
         }
     }
 
@@ -136,14 +122,17 @@ public class ElevatorPlayers : NetworkBehaviour
     {
         if (!IsServer) return;
 
-        PlayerCubeController player = other.GetComponent<PlayerCubeController>();
+        PlayerCubeController player =
+            other.GetComponent<PlayerCubeController>();
+
         if (player == null) return;
 
         ulong id = player.OwnerClientId;
 
         if (playersInside.Remove(id))
         {
-            playerCount.Value = Mathf.Max(0, playerCount.Value - 1);
+            playerCount.Value =
+                Mathf.Max(0, playerCount.Value - 1);
         }
     }
 }

@@ -668,6 +668,7 @@ GameObject:
   - component: {fileID: 204819197}
   - component: {fileID: 204819196}
   - component: {fileID: 204819195}
+  - component: {fileID: 204819199}
   m_Layer: 5
   m_Name: ElevatorUI
   m_TagString: Untagged
@@ -758,6 +759,23 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &204819199
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 204819194}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6dd95a245d3c2014485f36b18d9cd5c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  cameraMovement: {fileID: 1418348413}
+  player: {fileID: 7127470165182896410, guid: 773a8dc1c98081243bb5f4b59de0a768, type: 3}
+  elevator: {fileID: 1100157947}
+  leaveButton: {fileID: 1433961683}
+  exitDuration: 2.5
 --- !u!1 &214442636
 GameObject:
   m_ObjectHideFlags: 0
@@ -6457,6 +6475,7 @@ MonoBehaviour:
   playerCountText: {fileID: 107567067}
   centerPoint: {fileID: 1100157946}
   rotateDuration: 2
+  exitForce: 6
 --- !u!114 &1100157948
 MonoBehaviour:
   m_ObjectHideFlags: 0

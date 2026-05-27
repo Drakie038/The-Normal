@@ -44,14 +44,16 @@ public class PlayerCubeController : NetworkBehaviour
         if (IsOwner)
         {
             CameraMovement cam = FindObjectOfType<CameraMovement>();
+
             if (cam != null)
-                cam.SetTarget(cameraPivot != null ? cameraPivot : transform, this);
+                cam.SetTarget(
+                    cameraPivot != null ? cameraPivot : transform,
+                    this
+                );
 
             var menu = FindObjectOfType<MultiplayerMenu>();
             if (menu != null)
-            {
                 SetNameServerRpc(menu.GetPlayerName());
-            }
         }
     }
 
@@ -67,8 +69,8 @@ public class PlayerCubeController : NetworkBehaviour
 
     private void UpdateNameVisual(string playerName)
     {
-        if (nameText == null) return;
-        nameText.text = string.IsNullOrEmpty(playerName) ? "Player" : playerName;
+        if (nameText != null)
+            nameText.text = string.IsNullOrEmpty(playerName) ? "Player" : playerName;
     }
 
     public void EnableMovement()
@@ -79,17 +81,12 @@ public class PlayerCubeController : NetworkBehaviour
     public void SetFrozen(bool value)
     {
         frozen = value;
-        moveInput = Vector2.zero;
 
         if (value)
+        {
+            moveInput = Vector2.zero;
             velocity = Vector3.zero;
-    }
-
-    public void ForceLookRotation(float yRotation)
-    {
-        Vector3 rot = transform.eulerAngles;
-        rot.y = yRotation;
-        transform.eulerAngles = rot;
+        }
     }
 
     private void Update()
@@ -146,5 +143,25 @@ public class PlayerCubeController : NetworkBehaviour
     public void ForceRotation(Quaternion rot)
     {
         transform.rotation = rot;
+    }
+
+    public void TeleportFromServer(Vector3 pos)
+    {
+        StartCoroutine(TeleportRoutine(pos));
+    }
+
+    private IEnumerator TeleportRoutine(Vector3 pos)
+    {
+        controller.enabled = false;
+        transform.position = pos;
+        yield return null;
+        controller.enabled = true;
+    }
+
+    // 🔥 NEW: server exit elevator teleport
+    [ServerRpc(RequireOwnership = false)]
+    public void RequestExitElevatorServerRpc(Vector3 exitPos)
+    {
+        StartCoroutine(TeleportRoutine(exitPos));
     }
 }

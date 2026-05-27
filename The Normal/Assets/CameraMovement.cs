@@ -51,9 +51,6 @@ public class CameraMovement : MonoBehaviour
 
     private IEnumerator Cinematic()
     {
-        if (player == null || !player.IsOwner)
-            yield break;
-
         inputLocked = true;
         state = State.Cinematic;
 
@@ -106,10 +103,7 @@ public class CameraMovement : MonoBehaviour
         if (player == null || !player.IsOwner)
             return;
 
-        if (state != State.FPS ||
-            inputLocked ||
-            target == null ||
-            elevatorLocked)
+        if (state != State.FPS || inputLocked || elevatorLocked || target == null)
             return;
 
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
@@ -126,22 +120,20 @@ public class CameraMovement : MonoBehaviour
         transform.position = target.position + firstPersonOffset;
     }
 
-    // ✅ ELEVATOR CAMERA + PLAYER SYNC
     public IEnumerator ElevatorLookAt(Transform lookTarget, float duration)
     {
-        if (player == null || !player.IsOwner)
-            yield break;
-
         elevatorLocked = true;
         inputLocked = true;
 
         player.SetFrozen(true);
 
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
         Vector3 startPos = transform.position;
         Quaternion startRot = transform.rotation;
 
-        Vector3 targetPos =
-            lookTarget.position + firstPersonOffset;
+        Vector3 targetPos = lookTarget.position + firstPersonOffset;
 
         Quaternion targetRot =
             Quaternion.Euler(
@@ -159,34 +151,57 @@ public class CameraMovement : MonoBehaviour
             float n = Mathf.Clamp01(t / duration);
             float c = curve.Evaluate(n);
 
-            transform.position =
-                Vector3.Lerp(startPos, targetPos, c);
-
-            transform.rotation =
-                Quaternion.Slerp(startRot, targetRot, c);
-
-            // 🔥 PLAYER DRAAIT MEE MET CAMERA (ONLY Y)
-            if (player != null)
-            {
-                player.ForceRotation(
-                    Quaternion.Euler(0f, transform.eulerAngles.y, 0f)
-                );
-            }
+            transform.position = Vector3.Lerp(startPos, targetPos, c);
+            transform.rotation = Quaternion.Slerp(startRot, targetRot, c);
 
             yield return null;
         }
 
         transform.position = targetPos;
         transform.rotation = targetRot;
-
-        if (player != null)
-        {
-            player.ForceRotation(
-                Quaternion.Euler(0f, targetRot.eulerAngles.y, 0f)
-            );
-        }
     }
 
+    public IEnumerator ExitElevatorCinematic(Transform targetPivot, float duration)
+    {
+        inputLocked = true;
+
+        Vector3 startPos = transform.position;
+        Quaternion startRot = transform.rotation;
+
+        Vector3 endPos = targetPivot.position + firstPersonOffset;
+        Quaternion endRot = Quaternion.Euler(0f, 0f, 0f);
+
+        float t = 0f;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+
+            float n = Mathf.Clamp01(t / duration);
+            float c = curve.Evaluate(n);
+
+            transform.position = Vector3.Lerp(startPos, endPos, c);
+            transform.rotation = Quaternion.Slerp(startRot, endRot, c);
+
+            yield return null;
+        }
+
+        transform.position = endPos;
+        transform.rotation = endRot;
+
+        xRotation = 0f;
+
+        elevatorLocked = false;
+        inputLocked = false;
+        state = State.FPS;
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
+    // =========================================================
+    // 🔥 BACK EXACTLY AS REQUESTED
+    // =========================================================
     public void ResetCameraToMenu()
     {
         StopAllCoroutines();
@@ -195,9 +210,9 @@ public class CameraMovement : MonoBehaviour
         player = null;
 
         elevatorLocked = false;
+        inputLocked = true;
 
         state = State.Menu;
-        inputLocked = true;
 
         StartCoroutine(ReturnToMenu());
     }
