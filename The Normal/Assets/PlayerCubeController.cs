@@ -47,7 +47,6 @@ public class PlayerCubeController : NetworkBehaviour
             if (cam != null)
                 cam.SetTarget(cameraPivot != null ? cameraPivot : transform, this);
 
-            // 🔥 FIX: stuur naam direct naar server
             var menu = FindObjectOfType<MultiplayerMenu>();
             if (menu != null)
             {
@@ -61,10 +60,6 @@ public class PlayerCubeController : NetworkBehaviour
         PlayerName.OnValueChanged -= OnNameChanged;
     }
 
-    // =========================
-    // NAME TEXT (RESTORED EXACT STYLE)
-    // =========================
-
     private void OnNameChanged(FixedString32Bytes oldName, FixedString32Bytes newName)
     {
         UpdateNameVisual(newName.ToString());
@@ -75,10 +70,6 @@ public class PlayerCubeController : NetworkBehaviour
         if (nameText == null) return;
         nameText.text = string.IsNullOrEmpty(playerName) ? "Player" : playerName;
     }
-
-    // =========================
-    // MOVEMENT CONTROL
-    // =========================
 
     public void EnableMovement()
     {
@@ -92,6 +83,13 @@ public class PlayerCubeController : NetworkBehaviour
 
         if (value)
             velocity = Vector3.zero;
+    }
+
+    public void ForceLookRotation(float yRotation)
+    {
+        Vector3 rot = transform.eulerAngles;
+        rot.y = yRotation;
+        transform.eulerAngles = rot;
     }
 
     private void Update()
@@ -133,10 +131,6 @@ public class PlayerCubeController : NetworkBehaviour
         velocity.y += gravity * dt;
     }
 
-    // =========================
-    // CAMERA LOOK
-    // =========================
-
     [ServerRpc]
     public void SendLookInputServerRpc(float mouseX)
     {
@@ -147,5 +141,10 @@ public class PlayerCubeController : NetworkBehaviour
     public void SetNameServerRpc(string name)
     {
         PlayerName.Value = new FixedString32Bytes(name);
+    }
+
+    public void ForceRotation(Quaternion rot)
+    {
+        transform.rotation = rot;
     }
 }

@@ -15,6 +15,9 @@ public class CameraMovement : MonoBehaviour
     public float waitBeforeMove = 1f;
     public AnimationCurve curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
+    [Header("Elevator Lock Rotation")]
+    public Vector3 elevatorCameraRotation;
+
     private Transform target;
     private PlayerCubeController player;
 
@@ -23,6 +26,7 @@ public class CameraMovement : MonoBehaviour
 
     private float xRotation;
     private bool inputLocked;
+    private bool elevatorLocked;
 
     private Vector3 menuPos;
     private Quaternion menuRot;
@@ -55,10 +59,8 @@ public class CameraMovement : MonoBehaviour
 
         yield return new WaitForSeconds(waitBeforeMove);
 
-        // 🔥 freeze player movement
         player.SetFrozen(true);
 
-        // 🔥 snapshot target (NO jitter)
         frozenPos = target.position;
         frozenRot = target.rotation;
 
@@ -83,11 +85,9 @@ public class CameraMovement : MonoBehaviour
             yield return null;
         }
 
-        // 🔥 FINAL SNAP POSITION (important)
         transform.position = frozenPos + firstPersonOffset;
         transform.rotation = Quaternion.Euler(0f, frozenRot.eulerAngles.y, 0f);
 
-        // 🔥 CRITICAL FIX: prevent downward snap
         xRotation = 0f;
 
         state = State.FPS;
@@ -106,7 +106,10 @@ public class CameraMovement : MonoBehaviour
         if (player == null || !player.IsOwner)
             return;
 
-        if (state != State.FPS || inputLocked || target == null)
+        if (state != State.FPS ||
+            inputLocked ||
+            target == null ||
+            elevatorLocked)
             return;
 
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
@@ -123,12 +126,75 @@ public class CameraMovement : MonoBehaviour
         transform.position = target.position + firstPersonOffset;
     }
 
+    // ✅ ELEVATOR CAMERA + PLAYER SYNC
+    public IEnumerator ElevatorLookAt(Transform lookTarget, float duration)
+    {
+        if (player == null || !player.IsOwner)
+            yield break;
+
+        elevatorLocked = true;
+        inputLocked = true;
+
+        player.SetFrozen(true);
+
+        Vector3 startPos = transform.position;
+        Quaternion startRot = transform.rotation;
+
+        Vector3 targetPos =
+            lookTarget.position + firstPersonOffset;
+
+        Quaternion targetRot =
+            Quaternion.Euler(
+                elevatorCameraRotation.x,
+                elevatorCameraRotation.y,
+                elevatorCameraRotation.z
+            );
+
+        float t = 0f;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+
+            float n = Mathf.Clamp01(t / duration);
+            float c = curve.Evaluate(n);
+
+            transform.position =
+                Vector3.Lerp(startPos, targetPos, c);
+
+            transform.rotation =
+                Quaternion.Slerp(startRot, targetRot, c);
+
+            // 🔥 PLAYER DRAAIT MEE MET CAMERA (ONLY Y)
+            if (player != null)
+            {
+                player.ForceRotation(
+                    Quaternion.Euler(0f, transform.eulerAngles.y, 0f)
+                );
+            }
+
+            yield return null;
+        }
+
+        transform.position = targetPos;
+        transform.rotation = targetRot;
+
+        if (player != null)
+        {
+            player.ForceRotation(
+                Quaternion.Euler(0f, targetRot.eulerAngles.y, 0f)
+            );
+        }
+    }
+
     public void ResetCameraToMenu()
     {
         StopAllCoroutines();
 
         target = null;
         player = null;
+
+        elevatorLocked = false;
 
         state = State.Menu;
         inputLocked = true;

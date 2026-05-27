@@ -1,6 +1,7 @@
 using UnityEngine;
 using Unity.Netcode;
 using TMPro;
+using System.Collections;
 using System.Collections.Generic;
 
 public class ElevatorPlayers : NetworkBehaviour
@@ -8,14 +9,18 @@ public class ElevatorPlayers : NetworkBehaviour
     [Header("UI")]
     [SerializeField] private TMP_Text playerCountText;
 
-    // netwerk gesynchroniseerde count
+    [Header("Elevator Center")]
+    [SerializeField] private Transform centerPoint;
+
+    [Header("Smooth")]
+    [SerializeField] private float rotateDuration = 2f;
+
     private NetworkVariable<int> playerCount = new NetworkVariable<int>(
         0,
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server
     );
 
-    // voorkomt dubbele counts per player
     private HashSet<ulong> playersInside = new HashSet<ulong>();
 
     private void Start()
@@ -47,6 +52,69 @@ public class ElevatorPlayers : NetworkBehaviour
         }
     }
 
+    private IEnumerator SmoothEnterElevator(PlayerCubeController player)
+    {
+        if (player == null)
+            yield break;
+
+        player.SetFrozen(true);
+
+        Transform t = player.transform;
+
+        Vector3 startPos = t.position;
+        Quaternion startRot = t.rotation;
+
+        Vector3 targetPos =
+            new Vector3(
+                centerPoint.position.x,
+                t.position.y,
+                centerPoint.position.z
+            );
+
+        Vector3 dir =
+            centerPoint.position - t.position;
+
+        dir.y = 0f;
+
+        Quaternion targetRot =
+            Quaternion.LookRotation(dir);
+
+        CameraMovement cam =
+            FindObjectOfType<CameraMovement>();
+
+        if (cam != null && player.IsOwner)
+        {
+            StartCoroutine(
+                cam.ElevatorLookAt(
+                    player.cameraPivot != null
+                        ? player.cameraPivot
+                        : player.transform,
+                    rotateDuration
+                )
+            );
+        }
+
+        float tValue = 0f;
+
+        while (tValue < rotateDuration)
+        {
+            tValue += Time.deltaTime;
+
+            float n = Mathf.Clamp01(tValue / rotateDuration);
+
+            t.position =
+                Vector3.Lerp(startPos, targetPos, n);
+
+            t.rotation =
+                Quaternion.Slerp(startRot, targetRot, n);
+
+            yield return null;
+        }
+
+        t.position = targetPos;
+        t.rotation = targetRot;
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         if (!IsServer) return;
@@ -59,6 +127,8 @@ public class ElevatorPlayers : NetworkBehaviour
         if (playersInside.Add(id))
         {
             playerCount.Value++;
+
+            StartCoroutine(SmoothEnterElevator(player));
         }
     }
 
