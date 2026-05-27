@@ -12,24 +12,24 @@ public class ElevatorPlayers : NetworkBehaviour
     [Header("Elevator Center")]
     [SerializeField] private Transform centerPoint;
 
-    [Header("Smooth")]
-    [SerializeField] private float rotateDuration = 2f;
+    [Header("Movement")]
+    [SerializeField] private float moveSpeed = 1.2f;
+
+    [Header("Rotation")]
+    [SerializeField] private float rotationSpeed = 60f;
 
     private NetworkVariable<int> playerCount =
         new NetworkVariable<int>(0);
 
-    private HashSet<ulong> playersInside = new HashSet<ulong>();
+    private HashSet<ulong> playersInside =
+        new HashSet<ulong>();
+
     private Coroutine enterRoutine;
 
     public override void OnNetworkSpawn()
     {
         playerCount.OnValueChanged += OnCountChanged;
         UpdateUI(playerCount.Value);
-    }
-
-    public override void OnNetworkDespawn()
-    {
-        playerCount.OnValueChanged -= OnCountChanged;
     }
 
     private void OnCountChanged(int oldValue, int newValue)
@@ -46,52 +46,34 @@ public class ElevatorPlayers : NetworkBehaviour
     private IEnumerator SmoothEnterElevator(PlayerCubeController player)
     {
         player.SetFrozen(true);
+        player.SetInElevator(true);
+        player.SetCameraLocked(true);
 
         Transform t = player.transform;
 
-        Vector3 startPos = t.position;
-        Quaternion startRot = t.rotation;
-
         Vector3 targetPos =
-            new Vector3(
-                centerPoint.position.x,
-                t.position.y,
-                centerPoint.position.z
+            new Vector3(centerPoint.position.x, t.position.y, centerPoint.position.z);
+
+        Quaternion targetRot =
+            Quaternion.Euler(0f, 180f, 0f);
+
+        while (true)
+        {
+            t.position = Vector3.MoveTowards(
+                t.position,
+                targetPos,
+                moveSpeed * Time.deltaTime
             );
 
-        Vector3 dir = centerPoint.position - t.position;
-        dir.y = 0f;
-
-        Quaternion targetRot = Quaternion.LookRotation(dir);
-
-        CameraMovement cam = FindObjectOfType<CameraMovement>();
-
-        ElevatorLeaveButton leaveBtn =
-            FindObjectOfType<ElevatorLeaveButton>();
-
-        if (leaveBtn != null && player.IsOwner)
-            leaveBtn.ShowButton(true);
-
-        if (cam != null && player.IsOwner)
-        {
-            StartCoroutine(
-                cam.ElevatorLookAt(
-                    player.cameraPivot != null ? player.cameraPivot : player.transform,
-                    rotateDuration
-                )
+            t.rotation = Quaternion.RotateTowards(
+                t.rotation,
+                targetRot,
+                rotationSpeed * Time.deltaTime
             );
-        }
 
-        float tValue = 0f;
-
-        while (tValue < rotateDuration)
-        {
-            tValue += Time.deltaTime;
-
-            float n = Mathf.Clamp01(tValue / rotateDuration);
-
-            t.position = Vector3.Lerp(startPos, targetPos, n);
-            t.rotation = Quaternion.Slerp(startRot, targetRot, n);
+            if (Vector3.Distance(t.position, targetPos) < 0.03f &&
+                Quaternion.Angle(t.rotation, targetRot) < 1f)
+                break;
 
             yield return null;
         }

@@ -18,8 +18,14 @@ public class PlayerCubeController : NetworkBehaviour
     private bool canMove;
     private bool frozen;
 
+    // 🔥 FIX: elevator state
+    public bool inElevator;
+
     [Header("Camera Pivot")]
     public Transform cameraPivot;
+
+    [Header("Camera Reference")]
+    public CameraMovement cam;
 
     [Header("Player Name")]
     public NetworkVariable<FixedString32Bytes> PlayerName =
@@ -37,13 +43,14 @@ public class PlayerCubeController : NetworkBehaviour
         velocity = Vector3.zero;
         canMove = false;
         frozen = false;
+        inElevator = false;
 
         PlayerName.OnValueChanged += OnNameChanged;
         UpdateNameVisual(PlayerName.Value.ToString());
 
         if (IsOwner)
         {
-            CameraMovement cam = FindObjectOfType<CameraMovement>();
+            cam = FindObjectOfType<CameraMovement>();
 
             if (cam != null)
                 cam.SetTarget(
@@ -86,12 +93,40 @@ public class PlayerCubeController : NetworkBehaviour
         {
             moveInput = Vector2.zero;
             velocity = Vector3.zero;
+            Input.ResetInputAxes();
+        }
+    }
+
+    // 🔥 FIX: elevator lock
+    public void SetInElevator(bool value)
+    {
+        inElevator = value;
+
+        if (value)
+        {
+            moveInput = Vector2.zero;
+            velocity = Vector3.zero;
+            Input.ResetInputAxes();
+        }
+    }
+
+    public void SetCameraLocked(bool value)
+    {
+        if (!IsOwner) return;
+
+        if (cam == null)
+            cam = FindObjectOfType<CameraMovement>();
+
+        if (cam != null)
+        {
+            cam.inputLocked = value;
+            cam.elevatorLocked = value;
         }
     }
 
     private void Update()
     {
-        if (!IsOwner || !canMove || frozen)
+        if (!IsOwner || !canMove || frozen || inElevator)
             return;
 
         moveInput = new Vector2(
@@ -102,7 +137,7 @@ public class PlayerCubeController : NetworkBehaviour
 
     private void FixedUpdate()
     {
-        if (!IsOwner || frozen)
+        if (!IsOwner || frozen || inElevator)
             return;
 
         MoveServerRpc(moveInput, Time.fixedDeltaTime);
@@ -111,6 +146,9 @@ public class PlayerCubeController : NetworkBehaviour
     [ServerRpc]
     private void MoveServerRpc(Vector2 input, float dt)
     {
+        if (frozen || inElevator)
+            return;
+
         ApplyGravityServer(dt);
 
         Vector3 move =
@@ -131,6 +169,8 @@ public class PlayerCubeController : NetworkBehaviour
     [ServerRpc]
     public void SendLookInputServerRpc(float mouseX)
     {
+        if (inElevator) return;
+
         transform.Rotate(Vector3.up * mouseX);
     }
 
@@ -158,10 +198,18 @@ public class PlayerCubeController : NetworkBehaviour
         controller.enabled = true;
     }
 
-    // 🔥 NEW: server exit elevator teleport
     [ServerRpc(RequireOwnership = false)]
     public void RequestExitElevatorServerRpc(Vector3 exitPos)
     {
         StartCoroutine(TeleportRoutine(exitPos));
+
+        SetInElevator(false);
+        SetFrozen(false);
+
+        if (IsOwner && cam != null)
+        {
+            cam.inputLocked = false;
+            cam.elevatorLocked = false;
+        }
     }
 }

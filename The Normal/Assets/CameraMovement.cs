@@ -13,7 +13,8 @@ public class CameraMovement : MonoBehaviour
     [Header("Cinematic")]
     public float cinematicDuration = 3f;
     public float waitBeforeMove = 1f;
-    public AnimationCurve curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+    public AnimationCurve curve =
+        AnimationCurve.EaseInOut(0, 0, 1, 1);
 
     [Header("Elevator Lock Rotation")]
     public Vector3 elevatorCameraRotation;
@@ -25,8 +26,9 @@ public class CameraMovement : MonoBehaviour
     private State state;
 
     private float xRotation;
-    private bool inputLocked;
-    private bool elevatorLocked;
+
+    public bool inputLocked;
+    public bool elevatorLocked;
 
     private Vector3 menuPos;
     private Quaternion menuRot;
@@ -100,11 +102,46 @@ public class CameraMovement : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (player == null || !player.IsOwner)
+        if (player == null || !player.IsOwner || target == null)
             return;
 
-        if (state != State.FPS || inputLocked || elevatorLocked || target == null)
+        if (state != State.FPS)
             return;
+
+        float yaw = target.eulerAngles.y;
+
+        // =====================================================
+        // 🚨 FULL ELEVATOR LOCK (FIXED)
+        // =====================================================
+        if (inputLocked || elevatorLocked || player.inElevator)
+        {
+            // ❌ HARD STOP: no vertical look ever
+            xRotation = 0f;
+
+            // smooth follow only (no input influence)
+            transform.position = Vector3.Lerp(
+                transform.position,
+                target.position + firstPersonOffset,
+                12f * Time.deltaTime
+            );
+
+            // FULL LOCK ROTATION (no pitch, no input)
+            transform.rotation = Quaternion.Slerp(
+                transform.rotation,
+                Quaternion.Euler(
+                    elevatorCameraRotation.x,
+                    yaw,
+                    elevatorCameraRotation.z
+                ),
+                12f * Time.deltaTime
+            );
+
+            return;
+        }
+
+        // =====================================================
+        // 🎮 NORMAL FPS CAMERA
+        // =====================================================
 
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
@@ -113,8 +150,6 @@ public class CameraMovement : MonoBehaviour
 
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, -maxLookAngle, maxLookAngle);
-
-        float yaw = target.eulerAngles.y;
 
         transform.rotation = Quaternion.Euler(xRotation, yaw, 0f);
         transform.position = target.position + firstPersonOffset;
@@ -126,39 +161,9 @@ public class CameraMovement : MonoBehaviour
         inputLocked = true;
 
         player.SetFrozen(true);
+        player.SetInElevator(true);
 
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
-
-        Vector3 startPos = transform.position;
-        Quaternion startRot = transform.rotation;
-
-        Vector3 targetPos = lookTarget.position + firstPersonOffset;
-
-        Quaternion targetRot =
-            Quaternion.Euler(
-                elevatorCameraRotation.x,
-                elevatorCameraRotation.y,
-                elevatorCameraRotation.z
-            );
-
-        float t = 0f;
-
-        while (t < duration)
-        {
-            t += Time.deltaTime;
-
-            float n = Mathf.Clamp01(t / duration);
-            float c = curve.Evaluate(n);
-
-            transform.position = Vector3.Lerp(startPos, targetPos, c);
-            transform.rotation = Quaternion.Slerp(startRot, targetRot, c);
-
-            yield return null;
-        }
-
-        transform.position = targetPos;
-        transform.rotation = targetRot;
+        yield return null;
     }
 
     public IEnumerator ExitElevatorCinematic(Transform targetPivot, float duration)
@@ -169,7 +174,7 @@ public class CameraMovement : MonoBehaviour
         Quaternion startRot = transform.rotation;
 
         Vector3 endPos = targetPivot.position + firstPersonOffset;
-        Quaternion endRot = Quaternion.Euler(0f, 0f, 0f);
+        Quaternion endRot = Quaternion.identity;
 
         float t = 0f;
 
@@ -177,8 +182,7 @@ public class CameraMovement : MonoBehaviour
         {
             t += Time.deltaTime;
 
-            float n = Mathf.Clamp01(t / duration);
-            float c = curve.Evaluate(n);
+            float c = curve.Evaluate(Mathf.Clamp01(t / duration));
 
             transform.position = Vector3.Lerp(startPos, endPos, c);
             transform.rotation = Quaternion.Slerp(startRot, endRot, c);
@@ -186,22 +190,15 @@ public class CameraMovement : MonoBehaviour
             yield return null;
         }
 
-        transform.position = endPos;
-        transform.rotation = endRot;
-
-        xRotation = 0f;
-
-        elevatorLocked = false;
         inputLocked = false;
+        elevatorLocked = false;
+
         state = State.FPS;
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
-    // =========================================================
-    // 🔥 BACK EXACTLY AS REQUESTED
-    // =========================================================
     public void ResetCameraToMenu()
     {
         StopAllCoroutines();
@@ -209,8 +206,8 @@ public class CameraMovement : MonoBehaviour
         target = null;
         player = null;
 
-        elevatorLocked = false;
         inputLocked = true;
+        elevatorLocked = false;
 
         state = State.Menu;
 
