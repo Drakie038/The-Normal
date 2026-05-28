@@ -18,7 +18,6 @@ public class PlayerCubeController : NetworkBehaviour
     private bool canMove;
     private bool frozen;
 
-    // 🔥 FIX: elevator state
     public bool inElevator;
 
     [Header("Camera Pivot")]
@@ -32,6 +31,8 @@ public class PlayerCubeController : NetworkBehaviour
         new NetworkVariable<FixedString32Bytes>();
 
     [SerializeField] private TMP_Text nameText;
+
+    private ElevatorPlayers currentElevator;
 
     private void Awake()
     {
@@ -97,7 +98,6 @@ public class PlayerCubeController : NetworkBehaviour
         }
     }
 
-    // 🔥 FIX: elevator lock
     public void SetInElevator(bool value)
     {
         inElevator = value;
@@ -110,7 +110,35 @@ public class PlayerCubeController : NetworkBehaviour
         }
     }
 
+    public void SetCurrentElevator(ElevatorPlayers elevator)
+    {
+        currentElevator = elevator;
+    }
+
+    public void LeaveElevator()
+    {
+        if (!IsOwner || currentElevator == null)
+            return;
+
+        currentElevator.RequestLeaveElevatorServerRpc(OwnerClientId);
+    }
+
     public void SetCameraLocked(bool value)
+    {
+        if (!IsOwner) return;
+
+        if (cam == null)
+            cam = FindObjectOfType<CameraMovement>();
+
+        if (cam != null)
+        {
+            cam.inputLocked = value;
+            cam.elevatorLocked = value;
+        }
+    }
+
+    [ClientRpc]
+    public void SetCameraLockedClientRpc(bool value)
     {
         if (!IsOwner) return;
 
@@ -206,10 +234,6 @@ public class PlayerCubeController : NetworkBehaviour
         SetInElevator(false);
         SetFrozen(false);
 
-        if (IsOwner && cam != null)
-        {
-            cam.inputLocked = false;
-            cam.elevatorLocked = false;
-        }
+        SetCameraLockedClientRpc(false);
     }
 }
