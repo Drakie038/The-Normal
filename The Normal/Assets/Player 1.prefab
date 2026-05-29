@@ -184,6 +184,9 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   moveSpeed: 5
   gravity: -9.81
+  inElevator: 0
+  cameraPivot: {fileID: 0}
+  cam: {fileID: 0}
   PlayerName:
     UpdateTraits:
       MinSecondsBetweenUpdates: 0
@@ -223,6 +226,7 @@ MonoBehaviour:
         byte0028: 0
         byte0029: 0
   nameText: {fileID: 3315448964448688858}
+  nameCanvas: {fileID: 5052377926898686109}
 --- !u!114 &3198490143852361096
 MonoBehaviour:
   m_ObjectHideFlags: 0

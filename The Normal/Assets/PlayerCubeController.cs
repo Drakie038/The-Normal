@@ -32,6 +32,9 @@ public class PlayerCubeController : NetworkBehaviour
 
     [SerializeField] private TMP_Text nameText;
 
+    [Header("Name Billboard")]
+    [SerializeField] private Transform nameCanvas;
+
     // 🔥 FIXED FOR CLIENTS
     private NetworkObjectReference currentElevator;
 
@@ -84,6 +87,28 @@ public class PlayerCubeController : NetworkBehaviour
                 string.IsNullOrEmpty(playerName)
                 ? "Player"
                 : playerName;
+    }
+
+    private void LateUpdate()
+    {
+        // eigen naam niet draaien
+        if (IsOwner)
+            return;
+
+        if (nameCanvas == null)
+            return;
+
+        Camera cam = Camera.main;
+
+        if (cam == null)
+            return;
+
+        // draai naam naar lokale speler camera
+        Vector3 dir =
+            nameCanvas.position - cam.transform.position;
+
+        nameCanvas.rotation =
+            Quaternion.LookRotation(dir);
     }
 
     public void EnableMovement()
