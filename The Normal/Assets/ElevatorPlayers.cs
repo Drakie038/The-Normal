@@ -27,15 +27,29 @@ public class ElevatorPlayers : NetworkBehaviour
     [Header("Lock Collider")]
     [SerializeField] private BoxCollider lockCollider;
 
+    // 🔥 SERVER AUTHORITATIVE
     private HashSet<ulong> playersInside = new HashSet<ulong>();
+
+    // 🔥 NETWORK SYNCED COUNT
+    private NetworkVariable<int> syncedPlayerCount =
+        new NetworkVariable<int>(0);
 
     public override void OnNetworkSpawn()
     {
-        UpdateUI();
+        // 🔥 HARD RESET BIJ NIEUWE SESSION/SPAWN
+        if (IsServer)
+        {
+            playersInside.Clear();
+            syncedPlayerCount.Value = 0;
+        }
+
+        syncedPlayerCount.OnValueChanged += OnPlayerCountChanged;
+
+        UpdateUI(syncedPlayerCount.Value);
         UpdateLockCollider();
 
-        // 🔥 SERVER ONLY: listen for disconnects
-        if (IsServer && NetworkManager.Singleton != null)
+        // 🔥 disconnect cleanup
+        if (IsServer)
         {
             NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
         }
@@ -43,47 +57,53 @@ public class ElevatorPlayers : NetworkBehaviour
 
     public override void OnNetworkDespawn()
     {
+        syncedPlayerCount.OnValueChanged -= OnPlayerCountChanged;
+
         if (NetworkManager.Singleton != null)
         {
             NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
         }
+
+        // 🔥 HARD UI RESET
+        if (ElevatorMenu.Instance != null)
+        {
+            ElevatorMenu.Instance.ForceResetUI();
+        }
     }
 
-    // =========================
-    // DISCONNECT FIX (IMPORTANT)
-    // =========================
+    private void OnPlayerCountChanged(int oldValue, int newValue)
+    {
+        UpdateUI(newValue);
+    }
 
+    // 🔥 remove disconnected player
     private void OnClientDisconnected(ulong clientId)
     {
         if (!IsServer) return;
 
         if (playersInside.Remove(clientId))
         {
-            UpdateUI();
+            syncedPlayerCount.Value = playersInside.Count;
+
+            UpdateUI(syncedPlayerCount.Value);
             UpdateLockCollider();
         }
     }
 
-    // =========================
-    // UI
-    // =========================
-
-    private void UpdateUI()
+    private void UpdateUI(int count)
     {
         if (playerCountText != null)
-            playerCountText.text = $"{playersInside.Count}/{maxPlayers}";
+            playerCountText.text = $"{count}/{maxPlayers}";
     }
 
     private void UpdateLockCollider()
     {
-        if (lockCollider == null) return;
+        if (lockCollider == null)
+            return;
 
-        lockCollider.enabled = playersInside.Count >= maxPlayers;
+        lockCollider.enabled =
+            playersInside.Count >= maxPlayers;
     }
-
-    // =========================
-    // ENTER
-    // =========================
 
     private void OnTriggerEnter(Collider other)
     {
@@ -92,25 +112,26 @@ public class ElevatorPlayers : NetworkBehaviour
         PlayerCubeController player =
             other.GetComponent<PlayerCubeController>();
 
-        if (player == null) return;
+        if (player == null)
+            return;
 
         ulong id = player.OwnerClientId;
 
+        // 🔥 elevator full
         if (playersInside.Count >= maxPlayers)
             return;
 
+        // 🔥 already inside
         if (!playersInside.Add(id))
             return;
 
-        UpdateUI();
+        syncedPlayerCount.Value = playersInside.Count;
+
+        UpdateUI(syncedPlayerCount.Value);
         UpdateLockCollider();
 
         StartCoroutine(SmoothEnterElevator(player));
     }
-
-    // =========================
-    // EXIT TRIGGER
-    // =========================
 
     private void OnTriggerExit(Collider other)
     {
@@ -119,28 +140,30 @@ public class ElevatorPlayers : NetworkBehaviour
         PlayerCubeController player =
             other.GetComponent<PlayerCubeController>();
 
-        if (player == null) return;
+        if (player == null)
+            return;
 
         ulong id = player.OwnerClientId;
 
         if (playersInside.Remove(id))
         {
-            UpdateUI();
+            syncedPlayerCount.Value = playersInside.Count;
+
+            UpdateUI(syncedPlayerCount.Value);
             UpdateLockCollider();
         }
     }
 
-    // =========================
-    // LEAVE BUTTON
-    // =========================
-
     [ServerRpc(RequireOwnership = false)]
     public void RequestLeaveElevatorServerRpc(ulong clientId)
     {
-        playersInside.Remove(clientId);
+        if (playersInside.Remove(clientId))
+        {
+            syncedPlayerCount.Value = playersInside.Count;
 
-        UpdateUI();
-        UpdateLockCollider();
+            UpdateUI(syncedPlayerCount.Value);
+            UpdateLockCollider();
+        }
 
         foreach (var client in NetworkManager.Singleton.ConnectedClientsList)
         {
@@ -151,33 +174,34 @@ public class ElevatorPlayers : NetworkBehaviour
                 client.PlayerObject.GetComponent<PlayerCubeController>();
 
             if (player != null)
+            {
                 StartCoroutine(SmoothExitElevator(player));
+            }
 
             break;
         }
     }
 
-    // =========================
-    // ENTER ANIMATION
-    // =========================
-
     private IEnumerator SmoothEnterElevator(PlayerCubeController player)
     {
         player.SetFrozen(true);
         player.SetInElevator(true);
+
         player.SetCameraLockedClientRpc(true);
 
         Transform t = player.transform;
 
-        Vector3 targetPos = new Vector3(
-            centerPoint.position.x,
-            t.position.y,
-            centerPoint.position.z
-        );
+        Vector3 targetPos =
+            new Vector3(
+                centerPoint.position.x,
+                t.position.y,
+                centerPoint.position.z
+            );
 
-        Quaternion targetRot = Quaternion.Euler(0f, 180f, 0f);
+        Quaternion targetRot =
+            Quaternion.Euler(0f, 180f, 0f);
 
-        while (Vector3.Distance(t.position, targetPos) > 0.03f)
+        while (true)
         {
             t.position = Vector3.MoveTowards(
                 t.position,
@@ -190,6 +214,12 @@ public class ElevatorPlayers : NetworkBehaviour
                 targetRot,
                 rotationSpeed * Time.deltaTime
             );
+
+            if (
+                Vector3.Distance(t.position, targetPos) < 0.03f &&
+                Quaternion.Angle(t.rotation, targetRot) < 1f
+            )
+                break;
 
             yield return null;
         }
@@ -202,23 +232,21 @@ public class ElevatorPlayers : NetworkBehaviour
         ShowElevatorUIClientRpc(player.OwnerClientId);
     }
 
-    // =========================
-    // EXIT ANIMATION
-    // =========================
-
     private IEnumerator SmoothExitElevator(PlayerCubeController player)
     {
         Transform t = player.transform;
 
-        Vector3 targetPos = new Vector3(
-            exitPoint.position.x,
-            t.position.y,
-            exitPoint.position.z
-        );
+        Vector3 targetPos =
+            new Vector3(
+                exitPoint.position.x,
+                t.position.y,
+                exitPoint.position.z
+            );
 
-        Quaternion targetRot = Quaternion.Euler(0f, 180f, 0f);
+        Quaternion targetRot =
+            Quaternion.Euler(0f, 180f, 0f);
 
-        while (Vector3.Distance(t.position, targetPos) > 0.03f)
+        while (true)
         {
             t.position = Vector3.MoveTowards(
                 t.position,
@@ -232,6 +260,12 @@ public class ElevatorPlayers : NetworkBehaviour
                 rotationSpeed * Time.deltaTime
             );
 
+            if (
+                Vector3.Distance(t.position, targetPos) < 0.03f &&
+                Quaternion.Angle(t.rotation, targetRot) < 1f
+            )
+                break;
+
             yield return null;
         }
 
@@ -240,14 +274,11 @@ public class ElevatorPlayers : NetworkBehaviour
 
         player.SetInElevator(false);
         player.SetFrozen(false);
+
         player.SetCameraLockedClientRpc(false);
 
         HideElevatorUIClientRpc(player.OwnerClientId);
     }
-
-    // =========================
-    // UI CLIENT RPC
-    // =========================
 
     [ClientRpc]
     private void ShowElevatorUIClientRpc(ulong targetClientId)
@@ -255,7 +286,10 @@ public class ElevatorPlayers : NetworkBehaviour
         if (NetworkManager.Singleton.LocalClientId != targetClientId)
             return;
 
-        ElevatorMenu.Instance?.ShowLeaveButton(true);
+        if (ElevatorMenu.Instance != null)
+        {
+            ElevatorMenu.Instance.ShowLeaveButton(true);
+        }
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -267,7 +301,10 @@ public class ElevatorPlayers : NetworkBehaviour
         if (NetworkManager.Singleton.LocalClientId != targetClientId)
             return;
 
-        ElevatorMenu.Instance?.ShowLeaveButton(false);
+        if (ElevatorMenu.Instance != null)
+        {
+            ElevatorMenu.Instance.ShowLeaveButton(false);
+        }
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;

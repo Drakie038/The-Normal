@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class ElevatorMenu : MonoBehaviour
@@ -25,6 +25,15 @@ public class ElevatorMenu : MonoBehaviour
         {
             leaveButton.gameObject.SetActive(value);
         }
+    }
+
+    // 🔥 HARD RESET
+    public void ForceResetUI()
+    {
+        ShowLeaveButton(false);
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
     private void OnClickLeave()

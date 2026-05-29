@@ -899,7 +899,7 @@ public class MultiplayerMenu : MonoBehaviour
         debugText.gameObject.SetActive(false);
     }
 
-    private void OpenSettingsMenu()
+    public void OpenSettingsMenu()
     {
         if (!inMatch)
             return;
@@ -910,13 +910,17 @@ public class MultiplayerMenu : MonoBehaviour
         leaveButton.gameObject.SetActive(true);
         ResumeButton.gameObject.SetActive(true);
 
-        RefreshPlayerList(); // 🔥 SHOW PLAYERS HERE
+        RefreshPlayerList();
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+
+        // ✅ ADDED
+        if (cameraMovement != null)
+            cameraMovement.settingsLocked = true;
     }
 
-    private void CloseSettingsMenu()
+    public void CloseSettingsMenu()
     {
         if (SettingsGroup != null)
             SettingsGroup.SetActive(false);
@@ -924,8 +928,25 @@ public class MultiplayerMenu : MonoBehaviour
         leaveButton.gameObject.SetActive(false);
         ResumeButton.gameObject.SetActive(false);
 
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        var player = FindFirstObjectByType<PlayerCubeController>();
+
+        bool inElevator =
+            player != null && player.inElevator;
+
+        if (inElevator)
+        {
+            // 🔥 FIX: force UNLOCKED in elevator
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+
+        if (cameraMovement != null)
+            cameraMovement.settingsLocked = false;
     }
 
     private void StopSearching()
@@ -1556,6 +1577,12 @@ public class MultiplayerMenu : MonoBehaviour
 
             CloseSettingsMenu();
 
+            // 🔥 FORCE ELEVATOR UI RESET
+            if (ElevatorMenu.Instance != null)
+            {
+                ElevatorMenu.Instance.ForceResetUI();
+            }
+
             ShowStartMenuOnly();
 
             Cursor.lockState = CursorLockMode.None;
@@ -1585,5 +1612,10 @@ public class MultiplayerMenu : MonoBehaviour
         menuCreateServerButton.gameObject.SetActive(true);
 
         HideDebug();
+    }
+
+    public bool IsSettingsOpen()
+    {
+        return SettingsGroup != null && SettingsGroup.activeSelf;
     }
 }

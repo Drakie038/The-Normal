@@ -35,7 +35,6 @@ public class PlayerCubeController : NetworkBehaviour
     [Header("Name Billboard")]
     [SerializeField] private Transform nameCanvas;
 
-    // 🔥 FIXED FOR CLIENTS
     private NetworkObjectReference currentElevator;
 
     private void Awake()
@@ -83,15 +82,11 @@ public class PlayerCubeController : NetworkBehaviour
     private void UpdateNameVisual(string playerName)
     {
         if (nameText != null)
-            nameText.text =
-                string.IsNullOrEmpty(playerName)
-                ? "Player"
-                : playerName;
+            nameText.text = string.IsNullOrEmpty(playerName) ? "Player" : playerName;
     }
 
     private void LateUpdate()
     {
-        // eigen naam niet draaien
         if (IsOwner)
             return;
 
@@ -103,12 +98,8 @@ public class PlayerCubeController : NetworkBehaviour
         if (cam == null)
             return;
 
-        // draai naam naar lokale speler camera
-        Vector3 dir =
-            nameCanvas.position - cam.transform.position;
-
-        nameCanvas.rotation =
-            Quaternion.LookRotation(dir);
+        Vector3 dir = nameCanvas.position - cam.transform.position;
+        nameCanvas.rotation = Quaternion.LookRotation(dir);
     }
 
     public void EnableMovement()
@@ -140,13 +131,11 @@ public class PlayerCubeController : NetworkBehaviour
         }
     }
 
-    // 🔥 FIXED
     public void SetCurrentElevator(ElevatorPlayers elevator)
     {
         currentElevator = elevator.NetworkObject;
     }
 
-    // 🔥 FIXED
     public void LeaveElevator()
     {
         if (!IsOwner)
@@ -155,15 +144,13 @@ public class PlayerCubeController : NetworkBehaviour
         RequestLeaveElevatorServerRpc();
     }
 
-    // 🔥 FIXED
     [ServerRpc]
     private void RequestLeaveElevatorServerRpc()
     {
         if (!currentElevator.TryGet(out NetworkObject obj))
             return;
 
-        ElevatorPlayers elevator =
-            obj.GetComponent<ElevatorPlayers>();
+        ElevatorPlayers elevator = obj.GetComponent<ElevatorPlayers>();
 
         if (elevator == null)
             return;
@@ -205,6 +192,11 @@ public class PlayerCubeController : NetworkBehaviour
         if (!IsOwner || !canMove || frozen || inElevator)
             return;
 
+        // 🔥 NIEUW: settings lock (BELANGRIJK)
+        var menu = FindObjectOfType<MultiplayerMenu>();
+        if (menu != null && menu.IsSettingsOpen())
+            return;
+
         moveInput = new Vector2(
             Input.GetAxisRaw("Horizontal"),
             Input.GetAxisRaw("Vertical")
@@ -214,6 +206,11 @@ public class PlayerCubeController : NetworkBehaviour
     private void FixedUpdate()
     {
         if (!IsOwner || frozen || inElevator)
+            return;
+
+        // 🔥 NIEUW: settings lock (BELANGRIJK)
+        var menu = FindObjectOfType<MultiplayerMenu>();
+        if (menu != null && menu.IsSettingsOpen())
             return;
 
         MoveServerRpc(moveInput, Time.fixedDeltaTime);
@@ -253,8 +250,7 @@ public class PlayerCubeController : NetworkBehaviour
     [ServerRpc]
     public void SetNameServerRpc(string name)
     {
-        PlayerName.Value =
-            new FixedString32Bytes(name);
+        PlayerName.Value = new FixedString32Bytes(name);
     }
 
     public void ForceRotation(Quaternion rot)
@@ -270,11 +266,8 @@ public class PlayerCubeController : NetworkBehaviour
     private IEnumerator TeleportRoutine(Vector3 pos)
     {
         controller.enabled = false;
-
         transform.position = pos;
-
         yield return null;
-
         controller.enabled = true;
     }
 
