@@ -27,38 +27,58 @@ public class ElevatorPlayers : NetworkBehaviour
     [Header("Lock Collider")]
     [SerializeField] private BoxCollider lockCollider;
 
-    // ✅ ONLY source of truth for UI
-    private NetworkVariable<int> playerCount =
-        new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-
-    // server-only logic tracking
     private HashSet<ulong> playersInside = new HashSet<ulong>();
 
     public override void OnNetworkSpawn()
     {
-        playerCount.OnValueChanged += OnCountChanged;
-
-        UpdateUI(playerCount.Value);
+        UpdateUI();
         UpdateLockCollider();
+
+        // 🔥 SERVER ONLY: listen for disconnects
+        if (IsServer && NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+        }
     }
 
-    private void OnCountChanged(int oldValue, int newValue)
+    public override void OnNetworkDespawn()
     {
-        UpdateUI(newValue);
-        UpdateLockCollider();
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+        }
     }
 
-    private void UpdateUI(int value)
+    // =========================
+    // DISCONNECT FIX (IMPORTANT)
+    // =========================
+
+    private void OnClientDisconnected(ulong clientId)
+    {
+        if (!IsServer) return;
+
+        if (playersInside.Remove(clientId))
+        {
+            UpdateUI();
+            UpdateLockCollider();
+        }
+    }
+
+    // =========================
+    // UI
+    // =========================
+
+    private void UpdateUI()
     {
         if (playerCountText != null)
-            playerCountText.text = $"{value}/{maxPlayers}";
+            playerCountText.text = $"{playersInside.Count}/{maxPlayers}";
     }
 
     private void UpdateLockCollider()
     {
         if (lockCollider == null) return;
 
-        lockCollider.enabled = playerCount.Value >= maxPlayers;
+        lockCollider.enabled = playersInside.Count >= maxPlayers;
     }
 
     // =========================
@@ -76,20 +96,20 @@ public class ElevatorPlayers : NetworkBehaviour
 
         ulong id = player.OwnerClientId;
 
-        // full check
-        if (playerCount.Value >= maxPlayers)
+        if (playersInside.Count >= maxPlayers)
             return;
 
         if (!playersInside.Add(id))
             return;
 
-        playerCount.Value = playersInside.Count;
+        UpdateUI();
+        UpdateLockCollider();
 
         StartCoroutine(SmoothEnterElevator(player));
     }
 
     // =========================
-    // EXIT TRIGGER SAFETY
+    // EXIT TRIGGER
     // =========================
 
     private void OnTriggerExit(Collider other)
@@ -105,7 +125,8 @@ public class ElevatorPlayers : NetworkBehaviour
 
         if (playersInside.Remove(id))
         {
-            playerCount.Value = playersInside.Count;
+            UpdateUI();
+            UpdateLockCollider();
         }
     }
 
@@ -118,7 +139,8 @@ public class ElevatorPlayers : NetworkBehaviour
     {
         playersInside.Remove(clientId);
 
-        playerCount.Value = playersInside.Count;
+        UpdateUI();
+        UpdateLockCollider();
 
         foreach (var client in NetworkManager.Singleton.ConnectedClientsList)
         {
@@ -157,8 +179,18 @@ public class ElevatorPlayers : NetworkBehaviour
 
         while (Vector3.Distance(t.position, targetPos) > 0.03f)
         {
-            t.position = Vector3.MoveTowards(t.position, targetPos, moveSpeed * Time.deltaTime);
-            t.rotation = Quaternion.RotateTowards(t.rotation, targetRot, rotationSpeed * Time.deltaTime);
+            t.position = Vector3.MoveTowards(
+                t.position,
+                targetPos,
+                moveSpeed * Time.deltaTime
+            );
+
+            t.rotation = Quaternion.RotateTowards(
+                t.rotation,
+                targetRot,
+                rotationSpeed * Time.deltaTime
+            );
+
             yield return null;
         }
 
@@ -188,8 +220,18 @@ public class ElevatorPlayers : NetworkBehaviour
 
         while (Vector3.Distance(t.position, targetPos) > 0.03f)
         {
-            t.position = Vector3.MoveTowards(t.position, targetPos, moveSpeed * Time.deltaTime);
-            t.rotation = Quaternion.RotateTowards(t.rotation, targetRot, rotationSpeed * Time.deltaTime);
+            t.position = Vector3.MoveTowards(
+                t.position,
+                targetPos,
+                moveSpeed * Time.deltaTime
+            );
+
+            t.rotation = Quaternion.RotateTowards(
+                t.rotation,
+                targetRot,
+                rotationSpeed * Time.deltaTime
+            );
+
             yield return null;
         }
 

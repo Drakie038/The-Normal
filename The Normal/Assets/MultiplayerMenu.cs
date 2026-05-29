@@ -119,12 +119,12 @@ public class MultiplayerMenu : MonoBehaviour
     [Header("PLAYER NAME")]
     [SerializeField] private TMP_InputField playerNameInput;
     [SerializeField] private TMP_Text playerInfoText;
-
     private string playerName = "";
 
     [Header("Settings Player List")]
     [SerializeField] private TMP_Text playersListText;
 
+    private const int MAX_PLAYERS = 15;
 
     private async void Start()
     {
@@ -572,7 +572,7 @@ public class MultiplayerMenu : MonoBehaviour
         isHost = true;
         currentServerName = serverName;
 
-        hostAllocation = await RelayService.Instance.CreateAllocationAsync(4);
+        hostAllocation = await RelayService.Instance.CreateAllocationAsync(15);
         string joinCode = await RelayService.Instance.GetJoinCodeAsync(hostAllocation.AllocationId);
 
         CreateLobbyOptions options = new CreateLobbyOptions
@@ -586,7 +586,7 @@ public class MultiplayerMenu : MonoBehaviour
             }
         };
 
-        currentLobby = await LobbyService.Instance.CreateLobbyAsync(serverName, 4, options);
+        currentLobby = await LobbyService.Instance.CreateLobbyAsync(serverName, 15, options);
 
         currentLobbyId = currentLobby.Id;
 
@@ -793,7 +793,10 @@ public class MultiplayerMenu : MonoBehaviour
 
         TMP_Text text = obj.GetComponentInChildren<TMP_Text>();
         if (text != null)
-            text.text = $"Server: {serverName} | Players: {playerCount}";
+        {
+            string status = playerCount >= MAX_PLAYERS ? "FULL" : "OPEN";
+            text.text = $"{serverName} | {playerCount}/{MAX_PLAYERS} | {status}";
+        }
 
         Button btn = obj.GetComponent<Button>();
         btn.onClick.RemoveAllListeners();
