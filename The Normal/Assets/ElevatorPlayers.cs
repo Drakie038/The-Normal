@@ -54,7 +54,11 @@ public class ElevatorPlayers : NetworkBehaviour
         Transform t = player.transform;
 
         Vector3 targetPos =
-            new Vector3(centerPoint.position.x, t.position.y, centerPoint.position.z);
+            new Vector3(
+                centerPoint.position.x,
+                t.position.y,
+                centerPoint.position.z
+            );
 
         Quaternion targetRot =
             Quaternion.Euler(0f, 180f, 0f);
@@ -73,8 +77,10 @@ public class ElevatorPlayers : NetworkBehaviour
                 rotationSpeed * Time.deltaTime
             );
 
-            if (Vector3.Distance(t.position, targetPos) < 0.03f &&
-                Quaternion.Angle(t.rotation, targetRot) < 1f)
+            if (
+                Vector3.Distance(t.position, targetPos) < 0.03f &&
+                Quaternion.Angle(t.rotation, targetRot) < 1f
+            )
                 break;
 
             yield return null;
@@ -85,14 +91,8 @@ public class ElevatorPlayers : NetworkBehaviour
 
         player.SetCurrentElevator(this);
 
-        // ✅ SHOW UI + UNLOCK CURSOR
-        if (ElevatorMenu.Instance != null)
-        {
-            ElevatorMenu.Instance.ShowLeaveButton(true);
-        }
-
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        // 🔥 CLIENT UI + CURSOR
+        ShowElevatorUIClientRpc(player.OwnerClientId);
     }
 
     private IEnumerator SmoothExitElevator(PlayerCubeController player)
@@ -100,7 +100,11 @@ public class ElevatorPlayers : NetworkBehaviour
         Transform t = player.transform;
 
         Vector3 targetPos =
-            new Vector3(exitPoint.position.x, t.position.y, exitPoint.position.z);
+            new Vector3(
+                exitPoint.position.x,
+                t.position.y,
+                exitPoint.position.z
+            );
 
         Quaternion targetRot =
             Quaternion.Euler(0f, 180f, 0f);
@@ -119,8 +123,10 @@ public class ElevatorPlayers : NetworkBehaviour
                 rotationSpeed * Time.deltaTime
             );
 
-            if (Vector3.Distance(t.position, targetPos) < 0.03f &&
-                Quaternion.Angle(t.rotation, targetRot) < 1f)
+            if (
+                Vector3.Distance(t.position, targetPos) < 0.03f &&
+                Quaternion.Angle(t.rotation, targetRot) < 1f
+            )
                 break;
 
             yield return null;
@@ -134,7 +140,31 @@ public class ElevatorPlayers : NetworkBehaviour
 
         player.SetCameraLockedClientRpc(false);
 
-        // ❌ HIDE UI + LOCK CURSOR
+        // 🔥 CLIENT UI + CURSOR
+        HideElevatorUIClientRpc(player.OwnerClientId);
+    }
+
+    [ClientRpc]
+    private void ShowElevatorUIClientRpc(ulong targetClientId)
+    {
+        if (NetworkManager.Singleton.LocalClientId != targetClientId)
+            return;
+
+        if (ElevatorMenu.Instance != null)
+        {
+            ElevatorMenu.Instance.ShowLeaveButton(true);
+        }
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    [ClientRpc]
+    private void HideElevatorUIClientRpc(ulong targetClientId)
+    {
+        if (NetworkManager.Singleton.LocalClientId != targetClientId)
+            return;
+
         if (ElevatorMenu.Instance != null)
         {
             ElevatorMenu.Instance.ShowLeaveButton(false);
@@ -183,6 +213,7 @@ public class ElevatorPlayers : NetworkBehaviour
         if (playersInside.Add(id))
         {
             playerCount.Value++;
+
             StartCoroutine(SmoothEnterElevator(player));
         }
     }

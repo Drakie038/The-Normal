@@ -32,7 +32,8 @@ public class PlayerCubeController : NetworkBehaviour
 
     [SerializeField] private TMP_Text nameText;
 
-    private ElevatorPlayers currentElevator;
+    // 🔥 FIXED FOR CLIENTS
+    private NetworkObjectReference currentElevator;
 
     private void Awake()
     {
@@ -60,6 +61,7 @@ public class PlayerCubeController : NetworkBehaviour
                 );
 
             var menu = FindObjectOfType<MultiplayerMenu>();
+
             if (menu != null)
                 SetNameServerRpc(menu.GetPlayerName());
         }
@@ -78,7 +80,10 @@ public class PlayerCubeController : NetworkBehaviour
     private void UpdateNameVisual(string playerName)
     {
         if (nameText != null)
-            nameText.text = string.IsNullOrEmpty(playerName) ? "Player" : playerName;
+            nameText.text =
+                string.IsNullOrEmpty(playerName)
+                ? "Player"
+                : playerName;
     }
 
     public void EnableMovement()
@@ -110,17 +115,35 @@ public class PlayerCubeController : NetworkBehaviour
         }
     }
 
+    // 🔥 FIXED
     public void SetCurrentElevator(ElevatorPlayers elevator)
     {
-        currentElevator = elevator;
+        currentElevator = elevator.NetworkObject;
     }
 
+    // 🔥 FIXED
     public void LeaveElevator()
     {
-        if (!IsOwner || currentElevator == null)
+        if (!IsOwner)
             return;
 
-        currentElevator.RequestLeaveElevatorServerRpc(OwnerClientId);
+        RequestLeaveElevatorServerRpc();
+    }
+
+    // 🔥 FIXED
+    [ServerRpc]
+    private void RequestLeaveElevatorServerRpc()
+    {
+        if (!currentElevator.TryGet(out NetworkObject obj))
+            return;
+
+        ElevatorPlayers elevator =
+            obj.GetComponent<ElevatorPlayers>();
+
+        if (elevator == null)
+            return;
+
+        elevator.RequestLeaveElevatorServerRpc(OwnerClientId);
     }
 
     public void SetCameraLocked(bool value)
@@ -205,7 +228,8 @@ public class PlayerCubeController : NetworkBehaviour
     [ServerRpc]
     public void SetNameServerRpc(string name)
     {
-        PlayerName.Value = new FixedString32Bytes(name);
+        PlayerName.Value =
+            new FixedString32Bytes(name);
     }
 
     public void ForceRotation(Quaternion rot)
@@ -221,8 +245,11 @@ public class PlayerCubeController : NetworkBehaviour
     private IEnumerator TeleportRoutine(Vector3 pos)
     {
         controller.enabled = false;
+
         transform.position = pos;
+
         yield return null;
+
         controller.enabled = true;
     }
 
