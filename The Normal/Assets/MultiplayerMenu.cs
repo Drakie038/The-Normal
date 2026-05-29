@@ -1570,6 +1570,11 @@ public class MultiplayerMenu : MonoBehaviour
             // -----------------------------
             ClearButtons();
 
+            if (ElevatorPlayers.Instance != null)
+            {
+                ElevatorPlayers.Instance.ResetElevatorState();
+            }
+
             if (cameraMovement != null)
             {
                 cameraMovement.ResetCameraToMenu();
