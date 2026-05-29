@@ -144,6 +144,10 @@ public class PlayerCubeController : NetworkBehaviour
         if (!IsOwner)
             return;
 
+        // 🔥 FIX: direct UI weg op client (anti spam click)
+        if (ElevatorMenu.Instance != null)
+            ElevatorMenu.Instance.ShowLeaveButton(false);
+
         RequestLeaveElevatorServerRpc();
     }
 
@@ -298,5 +302,10 @@ public class PlayerCubeController : NetworkBehaviour
         SetFrozen(false);
 
         SetCameraLockedClientRpc(false);
+    }
+
+    public void ResetVelocity()
+    {
+        velocity = Vector3.zero;
     }
 }

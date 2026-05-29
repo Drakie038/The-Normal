@@ -42,6 +42,12 @@ public class ElevatorPlayers : NetworkBehaviour
     [SerializeField] private Vector3 startPosition;
     [SerializeField] private Vector3 endPosition;
 
+    [Header("Spawn Points")]
+    [SerializeField] private Transform[] spawnPoints;
+
+    private Dictionary<ulong, int> playerSpawnIndex = new Dictionary<ulong, int>();
+    private bool[] spawnOccupied;
+
     private bool timerRunning;
 
     private HashSet<ulong> playersInside = new HashSet<ulong>();
@@ -59,6 +65,8 @@ public class ElevatorPlayers : NetworkBehaviour
             syncedPlayerCount.Value = 0;
 
             elevatorPlatform.position = startPosition;
+
+            spawnOccupied = new bool[spawnPoints.Length];
         }
 
         syncedPlayerCount.OnValueChanged += OnPlayerCountChanged;
@@ -77,12 +85,7 @@ public class ElevatorPlayers : NetworkBehaviour
         syncedPlayerCount.OnValueChanged -= OnPlayerCountChanged;
 
         if (NetworkManager.Singleton != null)
-        {
             NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
-        }
-
-        if (ElevatorMenu.Instance != null)
-            ElevatorMenu.Instance.ForceResetUI();
     }
 
     private void OnPlayerCountChanged(int oldValue, int newValue)
@@ -92,13 +95,11 @@ public class ElevatorPlayers : NetworkBehaviour
 
     private void OnClientDisconnected(ulong clientId)
     {
-        if (!IsServer)
-            return;
+        if (!IsServer) return;
 
         if (playersInside.Remove(clientId))
         {
             syncedPlayerCount.Value = playersInside.Count;
-
             UpdateUI(syncedPlayerCount.Value);
             UpdateLockCollider();
             CheckFullState();
@@ -113,36 +114,27 @@ public class ElevatorPlayers : NetworkBehaviour
 
     private void UpdateLockCollider()
     {
-        if (lockCollider == null)
-            return;
+        if (lockCollider == null) return;
 
         lockCollider.enabled = playersInside.Count >= maxPlayers;
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!IsServer)
-            return;
+        if (!IsServer) return;
 
-        PlayerCubeController player =
-            other.GetComponent<PlayerCubeController>();
-
-        if (player == null)
-            return;
+        PlayerCubeController player = other.GetComponent<PlayerCubeController>();
+        if (player == null) return;
 
         ulong id = player.OwnerClientId;
 
-        if (playersInside.Count >= maxPlayers)
-            return;
-
-        if (!playersInside.Add(id))
-            return;
+        if (playersInside.Count >= maxPlayers) return;
+        if (!playersInside.Add(id)) return;
 
         syncedPlayerCount.Value = playersInside.Count;
 
         UpdateUI(syncedPlayerCount.Value);
         UpdateLockCollider();
-
         CheckFullState();
 
         StartCoroutine(SmoothEnterElevator(player));
@@ -150,24 +142,18 @@ public class ElevatorPlayers : NetworkBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (!IsServer)
-            return;
+        if (!IsServer) return;
 
-        PlayerCubeController player =
-            other.GetComponent<PlayerCubeController>();
-
-        if (player == null)
-            return;
+        PlayerCubeController player = other.GetComponent<PlayerCubeController>();
+        if (player == null) return;
 
         ulong id = player.OwnerClientId;
 
         if (playersInside.Remove(id))
         {
             syncedPlayerCount.Value = playersInside.Count;
-
             UpdateUI(syncedPlayerCount.Value);
             UpdateLockCollider();
-
             CheckFullState();
         }
     }
@@ -185,6 +171,8 @@ public class ElevatorPlayers : NetworkBehaviour
         else
         {
             timerRunning = false;
+
+            // 🔥 FIX: alleen timer stoppen, NIET UI forceren resetten
             StopFullTimerClientRpc();
         }
     }
@@ -199,11 +187,9 @@ public class ElevatorPlayers : NetworkBehaviour
     [ClientRpc]
     private void StopFullTimerClientRpc()
     {
+        // 🔥 FIX: GEEN HideLeaveButton meer hier
         if (ElevatorMenu.Instance != null)
-        {
             ElevatorMenu.Instance.StopTimer();
-            ElevatorMenu.Instance.ForceHideLeaveButton();
-        }
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -250,17 +236,14 @@ public class ElevatorPlayers : NetworkBehaviour
         if (playersInside.Remove(clientId))
         {
             syncedPlayerCount.Value = playersInside.Count;
-
             UpdateUI(syncedPlayerCount.Value);
             UpdateLockCollider();
-
             CheckFullState();
         }
 
         foreach (var client in NetworkManager.Singleton.ConnectedClientsList)
         {
-            if (client.ClientId != clientId)
-                continue;
+            if (client.ClientId != clientId) continue;
 
             PlayerCubeController player =
                 client.PlayerObject.GetComponent<PlayerCubeController>();
@@ -280,11 +263,27 @@ public class ElevatorPlayers : NetworkBehaviour
 
         Transform t = player.transform;
 
+        ulong id = player.OwnerClientId;
+
+        int index = 0;
+
+        for (int i = 0; i < spawnPoints.Length; i++)
+        {
+            if (!spawnOccupied[i])
+            {
+                index = i;
+                spawnOccupied[i] = true;
+                break;
+            }
+        }
+
+        playerSpawnIndex[id] = index;
+
         Vector3 targetPos =
             new Vector3(
-                centerPoint.position.x,
+                spawnPoints[index].position.x,
                 t.position.y,
-                centerPoint.position.z
+                spawnPoints[index].position.z
             );
 
         Quaternion targetRot =
@@ -292,17 +291,8 @@ public class ElevatorPlayers : NetworkBehaviour
 
         while (true)
         {
-            t.position = Vector3.MoveTowards(
-                t.position,
-                targetPos,
-                moveSpeed * Time.deltaTime
-            );
-
-            t.rotation = Quaternion.RotateTowards(
-                t.rotation,
-                targetRot,
-                rotationSpeed * Time.deltaTime
-            );
+            t.position = Vector3.MoveTowards(t.position, targetPos, moveSpeed * Time.deltaTime);
+            t.rotation = Quaternion.RotateTowards(t.rotation, targetRot, rotationSpeed * Time.deltaTime);
 
             if (Vector3.Distance(t.position, targetPos) < 0.03f &&
                 Quaternion.Angle(t.rotation, targetRot) < 1f)
@@ -314,7 +304,6 @@ public class ElevatorPlayers : NetworkBehaviour
         t.position = targetPos;
         t.rotation = targetRot;
 
-        // 🔥 PLAYER AAN ELEVATOR VASTMAKEN
         t.SetParent(elevatorPlatform);
 
         player.SetCurrentElevator(this);
@@ -326,29 +315,25 @@ public class ElevatorPlayers : NetworkBehaviour
     {
         Transform t = player.transform;
 
-        Vector3 targetPos =
-            new Vector3(
-                exitPoint.position.x,
-                t.position.y,
-                exitPoint.position.z
-            );
+        ulong id = player.OwnerClientId;
 
-        Quaternion targetRot =
-            Quaternion.Euler(0f, 180f, 0f);
+        if (playerSpawnIndex.TryGetValue(id, out int index))
+        {
+            if (index >= 0 && index < spawnOccupied.Length)
+                spawnOccupied[index] = false;
+
+            playerSpawnIndex.Remove(id);
+        }
+
+        Vector3 targetPos =
+            new Vector3(exitPoint.position.x, t.position.y, exitPoint.position.z);
+
+        Quaternion targetRot = Quaternion.Euler(0f, 180f, 0f);
 
         while (true)
         {
-            t.position = Vector3.MoveTowards(
-                t.position,
-                targetPos,
-                moveSpeed * Time.deltaTime
-            );
-
-            t.rotation = Quaternion.RotateTowards(
-                t.rotation,
-                targetRot,
-                rotationSpeed * Time.deltaTime
-            );
+            t.position = Vector3.MoveTowards(t.position, targetPos, moveSpeed * Time.deltaTime);
+            t.rotation = Quaternion.RotateTowards(t.rotation, targetRot, rotationSpeed * Time.deltaTime);
 
             if (Vector3.Distance(t.position, targetPos) < 0.03f &&
                 Quaternion.Angle(t.rotation, targetRot) < 1f)
@@ -360,7 +345,6 @@ public class ElevatorPlayers : NetworkBehaviour
         t.position = targetPos;
         t.rotation = targetRot;
 
-        // 🔥 LOSMAKEN VAN ELEVATOR
         t.SetParent(null);
 
         player.SetInElevator(false);
@@ -378,10 +362,9 @@ public class ElevatorPlayers : NetworkBehaviour
             return;
 
         if (ElevatorMenu.Instance != null)
+        {
             ElevatorMenu.Instance.ShowLeaveButton(true);
-
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        }
     }
 
     [ClientRpc]
@@ -391,16 +374,14 @@ public class ElevatorPlayers : NetworkBehaviour
             return;
 
         if (ElevatorMenu.Instance != null)
+        {
             ElevatorMenu.Instance.ShowLeaveButton(false);
-
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        }
     }
 
     public void ResetElevatorState()
     {
-        if (!IsServer)
-            return;
+        if (!IsServer) return;
 
         elevatorPlatform.position = startPosition;
 
@@ -409,9 +390,6 @@ public class ElevatorPlayers : NetworkBehaviour
         playersInside.Clear();
 
         syncedPlayerCount.Value = 0;
-
-        UpdateUI(0);
-        UpdateLockCollider();
 
         StopAllCoroutines();
 

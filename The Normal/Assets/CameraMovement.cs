@@ -13,8 +13,7 @@ public class CameraMovement : MonoBehaviour
     [Header("Cinematic")]
     public float cinematicDuration = 3f;
     public float waitBeforeMove = 1f;
-    public AnimationCurve curve =
-        AnimationCurve.EaseInOut(0, 0, 1, 1);
+    public AnimationCurve curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
     [Header("Elevator Lock Rotation")]
     public Vector3 elevatorCameraRotation;
@@ -29,8 +28,6 @@ public class CameraMovement : MonoBehaviour
 
     public bool inputLocked;
     public bool elevatorLocked;
-
-    // 🔥 FIX ADDED
     public bool settingsLocked;
 
     private Vector3 menuPos;
@@ -93,13 +90,12 @@ public class CameraMovement : MonoBehaviour
         transform.rotation = Quaternion.Euler(0f, frozenRot.eulerAngles.y, 0f);
 
         xRotation = 0f;
-
         state = State.FPS;
+
+        inputLocked = false;
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-
-        inputLocked = false;
 
         player.SetFrozen(false);
         player.EnableMovement();
@@ -113,10 +109,18 @@ public class CameraMovement : MonoBehaviour
         if (state != State.FPS)
             return;
 
-        float yaw = target.eulerAngles.y;
+        bool inElevator = player.inElevator;
 
-        // 🚨 LOCK (incl settings)
-        if (inputLocked || elevatorLocked || player.inElevator || settingsLocked)
+        bool lockCamera =
+            inputLocked ||
+            elevatorLocked ||
+            settingsLocked ||
+            inElevator;
+
+        // =========================
+        // LOCKED CAMERA STATE
+        // =========================
+        if (lockCamera)
         {
             xRotation = 0f;
 
@@ -126,19 +130,25 @@ public class CameraMovement : MonoBehaviour
                 12f * Time.deltaTime
             );
 
+            Quaternion targetRot = Quaternion.Euler(
+                inElevator ? elevatorCameraRotation.x : 0f,
+                target.eulerAngles.y,
+                inElevator ? elevatorCameraRotation.z : 0f
+            );
+
             transform.rotation = Quaternion.Slerp(
                 transform.rotation,
-                Quaternion.Euler(
-                    elevatorCameraRotation.x,
-                    yaw,
-                    elevatorCameraRotation.z
-                ),
+                targetRot,
                 12f * Time.deltaTime
             );
 
+            HandleCursor(inElevator);
             return;
         }
 
+        // =========================
+        // NORMAL FPS CAMERA
+        // =========================
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
@@ -147,25 +157,28 @@ public class CameraMovement : MonoBehaviour
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, -maxLookAngle, maxLookAngle);
 
-        transform.rotation = Quaternion.Euler(xRotation, yaw, 0f);
+        transform.rotation = Quaternion.Euler(xRotation, target.eulerAngles.y, 0f);
         transform.position = target.position + firstPersonOffset;
 
-        // ESC
-        if (player != null && player.IsOwner && Input.GetKeyDown(KeyCode.Escape))
+        HandleCursor(inElevator);
+    }
+
+    private void HandleCursor(bool inElevator)
+    {
+        if (settingsLocked)
         {
-            if (menu != null)
-            {
-                if (menu.IsSettingsOpen())
-                {
-                    menu.CloseSettingsMenu();
-                    settingsLocked = false;
-                }
-                else
-                {
-                    menu.OpenSettingsMenu();
-                    settingsLocked = true;
-                }
-            }
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+        else if (inElevator)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
         }
     }
 
@@ -178,6 +191,7 @@ public class CameraMovement : MonoBehaviour
 
         inputLocked = true;
         elevatorLocked = false;
+        settingsLocked = false;
 
         state = State.Menu;
 

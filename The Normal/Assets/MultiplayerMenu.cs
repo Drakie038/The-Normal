@@ -398,12 +398,44 @@ public class MultiplayerMenu : MonoBehaviour
             (networkManager.IsClient || networkManager.IsHost) &&
             Input.GetKeyDown(KeyCode.Escape))
         {
-            if (SettingsGroup == null) return;
+            if (SettingsGroup == null)
+                return;
 
-            if (SettingsGroup.activeSelf)
+            var player = FindFirstObjectByType<PlayerCubeController>();
+            bool inElevator = player != null && player.inElevator;
+
+            bool isOpen = SettingsGroup.activeSelf;
+
+            if (isOpen)
+            {
                 CloseSettingsMenu();
+
+                // camera unlock
+                if (cameraMovement != null)
+                    cameraMovement.settingsLocked = false;
+
+                // cursor restore
+                if (!inElevator)
+                {
+                    Cursor.lockState = CursorLockMode.Locked;
+                    Cursor.visible = false;
+                }
+                else
+                {
+                    Cursor.lockState = CursorLockMode.None;
+                    Cursor.visible = true;
+                }
+            }
             else
+            {
                 OpenSettingsMenu();
+
+                if (cameraMovement != null)
+                    cameraMovement.settingsLocked = true;
+
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+            }
         }
 
         // HOST HEARTBEAT
@@ -912,10 +944,6 @@ public class MultiplayerMenu : MonoBehaviour
 
         RefreshPlayerList();
 
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
-
-        // ✅ ADDED
         if (cameraMovement != null)
             cameraMovement.settingsLocked = true;
     }
@@ -928,14 +956,14 @@ public class MultiplayerMenu : MonoBehaviour
         leaveButton.gameObject.SetActive(false);
         ResumeButton.gameObject.SetActive(false);
 
-        var player = FindFirstObjectByType<PlayerCubeController>();
+        if (cameraMovement != null)
+            cameraMovement.settingsLocked = false;
 
-        bool inElevator =
-            player != null && player.inElevator;
+        var player = FindFirstObjectByType<PlayerCubeController>();
+        bool inElevator = player != null && player.inElevator;
 
         if (inElevator)
         {
-            // 🔥 FIX: force UNLOCKED in elevator
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
         }
@@ -944,9 +972,6 @@ public class MultiplayerMenu : MonoBehaviour
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         }
-
-        if (cameraMovement != null)
-            cameraMovement.settingsLocked = false;
     }
 
     private void StopSearching()
