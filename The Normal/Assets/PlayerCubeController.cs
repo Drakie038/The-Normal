@@ -94,11 +94,15 @@ public class PlayerCubeController : NetworkBehaviour
             return;
 
         Camera cam = Camera.main;
-
         if (cam == null)
             return;
 
         Vector3 dir = nameCanvas.position - cam.transform.position;
+
+        // 🔥 voorkomt Unity error + spam
+        if (dir.sqrMagnitude < 0.0001f)
+            return;
+
         nameCanvas.rotation = Quaternion.LookRotation(dir);
     }
 
@@ -126,7 +130,6 @@ public class PlayerCubeController : NetworkBehaviour
         if (value)
         {
             moveInput = Vector2.zero;
-            velocity = Vector3.zero;
             Input.ResetInputAxes();
         }
     }
@@ -189,13 +192,19 @@ public class PlayerCubeController : NetworkBehaviour
 
     private void Update()
     {
-        if (!IsOwner || !canMove || frozen || inElevator)
+        if (!IsOwner || !canMove || frozen)
             return;
 
-        // 🔥 NIEUW: settings lock (BELANGRIJK)
         var menu = FindObjectOfType<MultiplayerMenu>();
+
         if (menu != null && menu.IsSettingsOpen())
             return;
+
+        if (inElevator)
+        {
+            moveInput = Vector2.zero;
+            return;
+        }
 
         moveInput = new Vector2(
             Input.GetAxisRaw("Horizontal"),
@@ -205,11 +214,12 @@ public class PlayerCubeController : NetworkBehaviour
 
     private void FixedUpdate()
     {
-        if (!IsOwner || frozen || inElevator)
+        // 🔥 gravity blijft actief in elevator
+        if (!IsOwner || frozen)
             return;
 
-        // 🔥 NIEUW: settings lock (BELANGRIJK)
         var menu = FindObjectOfType<MultiplayerMenu>();
+
         if (menu != null && menu.IsSettingsOpen())
             return;
 
@@ -219,14 +229,21 @@ public class PlayerCubeController : NetworkBehaviour
     [ServerRpc]
     private void MoveServerRpc(Vector2 input, float dt)
     {
-        if (frozen || inElevator)
+        // 🔥 elevator stopt movement maar NIET gravity
+        if (frozen)
             return;
 
         ApplyGravityServer(dt);
 
-        Vector3 move =
-            transform.right * input.x +
-            transform.forward * input.y;
+        Vector3 move = Vector3.zero;
+
+        // 🔥 geen movement in elevator
+        if (!inElevator)
+        {
+            move =
+                transform.right * input.x +
+                transform.forward * input.y;
+        }
 
         controller.Move((move * moveSpeed + velocity) * dt);
     }
@@ -242,7 +259,8 @@ public class PlayerCubeController : NetworkBehaviour
     [ServerRpc]
     public void SendLookInputServerRpc(float mouseX)
     {
-        if (inElevator) return;
+        if (inElevator)
+            return;
 
         transform.Rotate(Vector3.up * mouseX);
     }

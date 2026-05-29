@@ -92,11 +92,13 @@ public class ElevatorPlayers : NetworkBehaviour
 
     private void OnClientDisconnected(ulong clientId)
     {
-        if (!IsServer) return;
+        if (!IsServer)
+            return;
 
         if (playersInside.Remove(clientId))
         {
             syncedPlayerCount.Value = playersInside.Count;
+
             UpdateUI(syncedPlayerCount.Value);
             UpdateLockCollider();
             CheckFullState();
@@ -119,10 +121,14 @@ public class ElevatorPlayers : NetworkBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!IsServer) return;
+        if (!IsServer)
+            return;
 
-        PlayerCubeController player = other.GetComponent<PlayerCubeController>();
-        if (player == null) return;
+        PlayerCubeController player =
+            other.GetComponent<PlayerCubeController>();
+
+        if (player == null)
+            return;
 
         ulong id = player.OwnerClientId;
 
@@ -144,10 +150,14 @@ public class ElevatorPlayers : NetworkBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (!IsServer) return;
+        if (!IsServer)
+            return;
 
-        PlayerCubeController player = other.GetComponent<PlayerCubeController>();
-        if (player == null) return;
+        PlayerCubeController player =
+            other.GetComponent<PlayerCubeController>();
+
+        if (player == null)
+            return;
 
         ulong id = player.OwnerClientId;
 
@@ -271,42 +281,23 @@ public class ElevatorPlayers : NetworkBehaviour
         Transform t = player.transform;
 
         Vector3 targetPos =
-            new Vector3(centerPoint.position.x, t.position.y, centerPoint.position.z);
+            new Vector3(
+                centerPoint.position.x,
+                t.position.y,
+                centerPoint.position.z
+            );
 
-        Quaternion targetRot = Quaternion.Euler(0f, 180f, 0f);
-
-        while (true)
-        {
-            t.position = Vector3.MoveTowards(t.position, targetPos, moveSpeed * Time.deltaTime);
-            t.rotation = Quaternion.RotateTowards(t.rotation, targetRot, rotationSpeed * Time.deltaTime);
-
-            if (Vector3.Distance(t.position, targetPos) < 0.03f &&
-                Quaternion.Angle(t.rotation, targetRot) < 1f)
-                break;
-
-            yield return null;
-        }
-
-        t.position = targetPos;
-        t.rotation = targetRot;
-
-        player.SetCurrentElevator(this);
-
-        ShowElevatorUIClientRpc(player.OwnerClientId);
-    }
-
-    private IEnumerator SmoothExitElevator(PlayerCubeController player)
-    {
-        Transform t = player.transform;
-
-        Vector3 targetPos =
-            new Vector3(exitPoint.position.x, t.position.y, exitPoint.position.z);
-
-        Quaternion targetRot = Quaternion.Euler(0f, 180f, 0f);
+        Quaternion targetRot =
+            Quaternion.Euler(0f, 180f, 0f);
 
         while (true)
         {
-            t.position = Vector3.MoveTowards(t.position, targetPos, moveSpeed * Time.deltaTime);
+            t.position = Vector3.MoveTowards(
+                t.position,
+                targetPos,
+                moveSpeed * Time.deltaTime
+            );
+
             t.rotation = Quaternion.RotateTowards(
                 t.rotation,
                 targetRot,
@@ -323,8 +314,58 @@ public class ElevatorPlayers : NetworkBehaviour
         t.position = targetPos;
         t.rotation = targetRot;
 
+        // 🔥 PLAYER AAN ELEVATOR VASTMAKEN
+        t.SetParent(elevatorPlatform);
+
+        player.SetCurrentElevator(this);
+
+        ShowElevatorUIClientRpc(player.OwnerClientId);
+    }
+
+    private IEnumerator SmoothExitElevator(PlayerCubeController player)
+    {
+        Transform t = player.transform;
+
+        Vector3 targetPos =
+            new Vector3(
+                exitPoint.position.x,
+                t.position.y,
+                exitPoint.position.z
+            );
+
+        Quaternion targetRot =
+            Quaternion.Euler(0f, 180f, 0f);
+
+        while (true)
+        {
+            t.position = Vector3.MoveTowards(
+                t.position,
+                targetPos,
+                moveSpeed * Time.deltaTime
+            );
+
+            t.rotation = Quaternion.RotateTowards(
+                t.rotation,
+                targetRot,
+                rotationSpeed * Time.deltaTime
+            );
+
+            if (Vector3.Distance(t.position, targetPos) < 0.03f &&
+                Quaternion.Angle(t.rotation, targetRot) < 1f)
+                break;
+
+            yield return null;
+        }
+
+        t.position = targetPos;
+        t.rotation = targetRot;
+
+        // 🔥 LOSMAKEN VAN ELEVATOR
+        t.SetParent(null);
+
         player.SetInElevator(false);
         player.SetFrozen(false);
+
         player.SetCameraLockedClientRpc(false);
 
         HideElevatorUIClientRpc(player.OwnerClientId);
@@ -364,7 +405,9 @@ public class ElevatorPlayers : NetworkBehaviour
         elevatorPlatform.position = startPosition;
 
         timerRunning = false;
+
         playersInside.Clear();
+
         syncedPlayerCount.Value = 0;
 
         UpdateUI(0);
