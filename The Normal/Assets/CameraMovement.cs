@@ -33,9 +33,6 @@ public class CameraMovement : MonoBehaviour
     private Vector3 menuPos;
     private Quaternion menuRot;
 
-    private Vector3 frozenPos;
-    private Quaternion frozenRot;
-
     public MultiplayerMenu menu;
 
     private void Start()
@@ -62,8 +59,8 @@ public class CameraMovement : MonoBehaviour
 
         player.SetFrozen(true);
 
-        frozenPos = target.position;
-        frozenRot = target.rotation;
+        Vector3 frozenPos = target.position;
+        Quaternion frozenRot = target.rotation;
 
         Vector3 startPos = transform.position;
         Quaternion startRot = transform.rotation;
@@ -94,9 +91,6 @@ public class CameraMovement : MonoBehaviour
 
         inputLocked = false;
 
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-
         player.SetFrozen(false);
         player.EnableMovement();
     }
@@ -109,7 +103,7 @@ public class CameraMovement : MonoBehaviour
         if (state != State.FPS)
             return;
 
-        bool inElevator = player.inElevator;
+        bool inElevator = player != null && player.inElevator.Value;
 
         bool lockCamera =
             inputLocked ||
@@ -117,38 +111,42 @@ public class CameraMovement : MonoBehaviour
             settingsLocked ||
             inElevator;
 
-        // =========================
-        // LOCKED CAMERA STATE
-        // =========================
         if (lockCamera)
         {
-            xRotation = 0f;
-
-            transform.position = Vector3.Lerp(
-                transform.position,
-                target.position + firstPersonOffset,
-                12f * Time.deltaTime
-            );
-
-            Quaternion targetRot = Quaternion.Euler(
-                inElevator ? elevatorCameraRotation.x : 0f,
-                target.eulerAngles.y,
-                inElevator ? elevatorCameraRotation.z : 0f
-            );
-
-            transform.rotation = Quaternion.Slerp(
-                transform.rotation,
-                targetRot,
-                12f * Time.deltaTime
-            );
-
+            HandleLockedCamera(inElevator);
             HandleCursor(inElevator);
             return;
         }
 
-        // =========================
-        // NORMAL FPS CAMERA
-        // =========================
+        HandleFPSCamera(inElevator);
+        HandleCursor(inElevator);
+    }
+
+    private void HandleLockedCamera(bool inElevator)
+    {
+        xRotation = 0f;
+
+        transform.position = Vector3.Lerp(
+            transform.position,
+            target.position + firstPersonOffset,
+            12f * Time.deltaTime
+        );
+
+        Quaternion targetRot = Quaternion.Euler(
+            inElevator ? elevatorCameraRotation.x : 0f,
+            target.eulerAngles.y,
+            inElevator ? elevatorCameraRotation.z : 0f
+        );
+
+        transform.rotation = Quaternion.Slerp(
+            transform.rotation,
+            targetRot,
+            12f * Time.deltaTime
+        );
+    }
+
+    private void HandleFPSCamera(bool inElevator)
+    {
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
@@ -159,27 +157,35 @@ public class CameraMovement : MonoBehaviour
 
         transform.rotation = Quaternion.Euler(xRotation, target.eulerAngles.y, 0f);
         transform.position = target.position + firstPersonOffset;
-
-        HandleCursor(inElevator);
     }
 
     private void HandleCursor(bool inElevator)
     {
         if (settingsLocked)
         {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
+            SetCursor(true);
+            return;
         }
-        else if (inElevator)
+
+        if (state == State.Menu)
         {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
+            SetCursor(true);
+            return;
         }
-        else
+
+        if (inElevator)
         {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+            SetCursor(true);
+            return;
         }
+
+        SetCursor(false);
+    }
+
+    private void SetCursor(bool free)
+    {
+        Cursor.lockState = free ? CursorLockMode.None : CursorLockMode.Locked;
+        Cursor.visible = free;
     }
 
     public void ResetCameraToMenu()
