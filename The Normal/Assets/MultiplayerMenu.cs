@@ -402,7 +402,7 @@ public class MultiplayerMenu : MonoBehaviour
                 return;
 
             var player = FindFirstObjectByType<PlayerCubeController>();
-            bool inElevator = player != null && player.inElevator;
+            bool inElevator = player != null && player.inElevator.Value;
 
             bool isOpen = SettingsGroup.activeSelf;
 
@@ -946,6 +946,9 @@ public class MultiplayerMenu : MonoBehaviour
 
         if (cameraMovement != null)
             cameraMovement.settingsLocked = true;
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
     public void CloseSettingsMenu()
@@ -960,17 +963,18 @@ public class MultiplayerMenu : MonoBehaviour
             cameraMovement.settingsLocked = false;
 
         var player = FindFirstObjectByType<PlayerCubeController>();
-        bool inElevator = player != null && player.inElevator;
+        bool inElevator = player != null && player.inElevator.Value;
 
-        if (inElevator)
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
-        else
+        // FIX: NIET FORCEREN ALS CAMERA HET AL DOET
+        if (!inElevator)
         {
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
         }
     }
 
