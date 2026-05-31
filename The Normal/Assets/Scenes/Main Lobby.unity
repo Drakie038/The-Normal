@@ -5460,14 +5460,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   ShowTopMostFoldoutHeaderGroup: 1
+  gameplaySceneName: GamePlay
   playerCountText: {fileID: 107567067}
   centerPoint: {fileID: 1100157946}
   exitPoint: {fileID: 526016747}
   moveSpeed: 2
   rotationSpeed: 80
-  maxPlayers: 3
+  maxPlayers: 2
   lockCollider: {fileID: 1100157949}
-  fullTimerDuration: 10
+  fullTimerDuration: 5
   elevatorPlatform: {fileID: 1017573877}
   elevatorMoveSpeed: 2
   startPosition: {x: 0, y: -3, z: 15}
@@ -6722,7 +6723,7 @@ MonoBehaviour:
   inputLocked: 0
   elevatorLocked: 0
   settingsLocked: 0
-  menu: {fileID: 238958201}
+  menu: {fileID: 0}
 --- !u!1 &1433961681
 GameObject:
   m_ObjectHideFlags: 0

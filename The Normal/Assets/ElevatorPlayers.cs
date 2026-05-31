@@ -3,9 +3,19 @@ using Unity.Netcode;
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
+using System.Linq;
 
 public class ElevatorPlayers : NetworkBehaviour
 {
+    [SerializeField] private string gameplaySceneName = "GamePlay";
+
+    private HashSet<ulong> playersGoingToGame = new HashSet<ulong>();
+
+    private List<ulong> elevatorPassengers = new List<ulong>();
+
+    private bool elevatorBusy;
+
     public static ElevatorPlayers Instance;
 
     [Header("UI")]
@@ -195,11 +205,27 @@ public class ElevatorPlayers : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void TriggerElevatorStartServerRpc()
     {
+        if (elevatorBusy)
+            return;
+
+        elevatorPassengers.Clear();
+
+        foreach (ulong id in playersInside)
+        {
+            elevatorPassengers.Add(id);
+        }
+
         StartCoroutine(MoveElevatorDown());
     }
 
     private IEnumerator MoveElevatorDown()
     {
+        elevatorBusy = true;
+
+        // spelers vastleggen die meegaan
+        List<ulong> elevatorPassengers =
+            new List<ulong>(playersInside);
+
         Vector3 target = endPosition;
 
         while (Vector3.Distance(elevatorPlatform.position, target) > 0.01f)
@@ -216,11 +242,17 @@ public class ElevatorPlayers : NetworkBehaviour
         elevatorPlatform.position = target;
 
         StopFullTimerClientRpc();
-
         HideLeaveButtonClientRpc();
 
-        if (ElevatorMenu.Instance != null)
-            ElevatorMenu.Instance.ForceResetUI();
+        // kleine delay zodat iedereen gesynchroniseerd is
+        yield return new WaitForSeconds(0.25f);
+
+        // ALLEEN spelers die in de lift stonden
+        StartGameplayForElevatorPlayersClientRpc(
+            elevatorPassengers.ToArray()
+        );
+
+        elevatorBusy = false;
     }
 
     [ClientRpc]
@@ -395,5 +427,36 @@ public class ElevatorPlayers : NetworkBehaviour
 
         if (ElevatorMenu.Instance != null)
             ElevatorMenu.Instance.ForceResetUI();
+    }
+
+    [ClientRpc]
+    private void LoadGameplaySceneClientRpc(ulong targetClientId)
+    {
+        if (NetworkManager.Singleton.LocalClientId != targetClientId)
+            return;
+
+        SceneManager.LoadScene("GamePlay");
+    }
+
+    [ClientRpc]
+    private void StartGameplayForElevatorPlayersClientRpc(ulong[] passengerIds)
+    {
+        ulong localId = NetworkManager.Singleton.LocalClientId;
+
+        bool shouldLoad = false;
+
+        foreach (ulong id in passengerIds)
+        {
+            if (id == localId)
+            {
+                shouldLoad = true;
+                break;
+            }
+        }
+
+        if (!shouldLoad)
+            return;
+
+        SceneManager.LoadScene(gameplaySceneName);
     }
 }
