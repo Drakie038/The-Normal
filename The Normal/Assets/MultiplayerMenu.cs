@@ -145,9 +145,6 @@ public class MultiplayerMenu : MonoBehaviour
 
         StartServerLoop();
         SetupMenu();
-
-        // 🔥 BELANGRIJK: disable auto spawn NGO
-        networkManager.NetworkConfig.PlayerPrefab = null;
     }
 
     private void SetupMenu()
@@ -1148,52 +1145,13 @@ public class MultiplayerMenu : MonoBehaviour
         if (networkManager == null)
             return;
 
+        // eerst alles clean verwijderen
         networkManager.OnClientDisconnectCallback -= HandleClientDisconnect;
         networkManager.OnClientDisconnectCallback -= OnClientDisconnect;
-        networkManager.OnClientConnectedCallback -= OnClientConnected;
 
+        // opnieuw registreren
         networkManager.OnClientDisconnectCallback += HandleClientDisconnect;
         networkManager.OnClientDisconnectCallback += OnClientDisconnect;
-        networkManager.OnClientConnectedCallback += OnClientConnected;
-    }
-
-    private void OnClientConnected(ulong clientId)
-    {
-        if (networkManager == null)
-            return;
-
-        if (!networkManager.IsServer)
-            return;
-
-        SpawnPlayer(clientId);
-    }
-
-    private void SpawnPlayer(ulong clientId)
-    {
-        if (playerPrefab == null)
-        {
-            Debug.LogError("PlayerPrefab is missing!");
-            return;
-        }
-
-        GameObject playerObj = Instantiate(playerPrefab);
-
-        NetworkObject netObj = playerObj.GetComponent<NetworkObject>();
-
-        if (netObj == null)
-        {
-            Debug.LogError("PlayerPrefab has no NetworkObject!");
-            return;
-        }
-
-        // optioneel spawnpositie
-        Vector3 spawnPos = Vector3.zero;
-
-        playerObj.transform.position = spawnPos;
-
-        netObj.SpawnAsPlayerObject(clientId, true);
-
-        Debug.Log($"Player spawned for client {clientId}");
     }
 
 

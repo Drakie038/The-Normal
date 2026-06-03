@@ -4,13 +4,16 @@ using TMPro;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
+using System.Linq;
 
 public class ElevatorPlayers : NetworkBehaviour
 {
     [SerializeField] private string gameplaySceneName = "GamePlay";
 
     private HashSet<ulong> playersGoingToGame = new HashSet<ulong>();
+
     private List<ulong> elevatorPassengers = new List<ulong>();
+
     private bool elevatorBusy;
 
     public static ElevatorPlayers Instance;
@@ -56,13 +59,11 @@ public class ElevatorPlayers : NetworkBehaviour
     private bool[] spawnOccupied;
 
     private bool timerRunning;
+
     private HashSet<ulong> playersInside = new HashSet<ulong>();
 
     private NetworkVariable<int> syncedPlayerCount =
         new NetworkVariable<int>(0);
-
-    // 🔥 ONLY ADDITION (NO REMOVALS)
-    private ulong[] cachedGameplayIds;
 
     public override void OnNetworkSpawn()
     {
@@ -79,6 +80,7 @@ public class ElevatorPlayers : NetworkBehaviour
         }
 
         syncedPlayerCount.OnValueChanged += OnPlayerCountChanged;
+
         UpdateUI(syncedPlayerCount.Value);
         UpdateLockCollider();
 
@@ -110,6 +112,7 @@ public class ElevatorPlayers : NetworkBehaviour
             syncedPlayerCount.Value = playersInside.Count;
             UpdateUI(syncedPlayerCount.Value);
             UpdateLockCollider();
+            CheckFullState();
         }
     }
 
@@ -126,7 +129,10 @@ public class ElevatorPlayers : NetworkBehaviour
         bool isAtStart = Vector3.Distance(elevatorPlatform.position, startPosition) < 0.01f;
         bool isFull = playersInside.Count >= maxPlayers;
 
-        lockCollider.enabled = !isAtStart || isFull;
+        // LOCK = aan als NIET op start OR vol
+        bool shouldLock = !isAtStart || isFull;
+
+        lockCollider.enabled = shouldLock;
     }
 
     private void OnTriggerEnter(Collider other)
@@ -181,6 +187,8 @@ public class ElevatorPlayers : NetworkBehaviour
         else
         {
             timerRunning = false;
+
+            // 🔥 FIX: alleen timer stoppen, NIET UI forceren resetten
             StopFullTimerClientRpc();
         }
     }
@@ -195,6 +203,7 @@ public class ElevatorPlayers : NetworkBehaviour
     [ClientRpc]
     private void StopFullTimerClientRpc()
     {
+        // 🔥 FIX: GEEN HideLeaveButton meer hier
         if (ElevatorMenu.Instance != null)
             ElevatorMenu.Instance.StopTimer();
     }
@@ -202,12 +211,15 @@ public class ElevatorPlayers : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void TriggerElevatorStartServerRpc()
     {
-        if (elevatorBusy) return;
+        if (elevatorBusy)
+            return;
 
         elevatorPassengers.Clear();
 
         foreach (ulong id in playersInside)
+        {
             elevatorPassengers.Add(id);
+        }
 
         StartCoroutine(MoveElevatorDown());
     }
@@ -220,6 +232,7 @@ public class ElevatorPlayers : NetworkBehaviour
 
         Vector3 target = endPosition;
 
+        // --- SMOOTH DOWN ---
         while (Vector3.Distance(elevatorPlatform.position, target) > 0.01f)
         {
             elevatorPlatform.position = Vector3.MoveTowards(
@@ -228,7 +241,8 @@ public class ElevatorPlayers : NetworkBehaviour
                 elevatorMoveSpeed * Time.deltaTime
             );
 
-            UpdateLockCollider();
+            UpdateLockCollider(); // 🔥 live update
+
             yield return null;
         }
 
@@ -239,84 +253,30 @@ public class ElevatorPlayers : NetworkBehaviour
 
         yield return new WaitForSeconds(0.25f);
 
-        // 🔥 ONLY ADDITION (NO LOGIC CHANGE)
-        cachedGameplayIds = passengers.ToArray();
-        PrepareGameplayClientRpc(passengers.ToArray());
-
-        yield return new WaitForSeconds(0.2f);
-
-        StartGameplaySceneClientRpc(passengers.ToArray());
+        // --- LOAD GAMEPLAY ONLY FOR PASSENGERS ---
+        StartGameplayForElevatorPlayersClientRpc(passengers.ToArray());
 
         yield return new WaitForSeconds(0.5f);
 
+        // --- DESPAWN PLAYERS ---
         foreach (ulong clientId in passengers)
         {
             if (NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out var client))
             {
                 if (client.PlayerObject != null)
+                {
                     client.PlayerObject.Despawn(true);
+                }
             }
         }
 
         yield return new WaitForSeconds(0.1f);
 
+        // --- GO BACK UP SMOOTH ---
         StartCoroutine(ReturnElevatorToStart());
 
         elevatorBusy = false;
     }
-
-    [ClientRpc]
-    private void PrepareGameplayClientRpc(ulong[] ids)
-    {
-        ulong localId = NetworkManager.Singleton.LocalClientId;
-
-        foreach (ulong id in ids)
-        {
-            if (id == localId)
-            {
-                var cam = FindFirstObjectByType<CameraMovement>();
-                if (cam != null)
-                {
-                    cam.inputLocked = true;
-                    cam.elevatorLocked = true;
-                }
-                return;
-            }
-        }
-    }
-
-    [ClientRpc]
-    private void StartGameplaySceneClientRpc(ulong[] ids)
-    {
-        ulong localId = NetworkManager.Singleton.LocalClientId;
-
-        foreach (ulong id in ids)
-        {
-            if (id == localId)
-            {
-                NetworkManager.Singleton.SceneManager.LoadScene(
-                    gameplaySceneName,
-                    UnityEngine.SceneManagement.LoadSceneMode.Single
-                );
-
-                // 🔥 HIER TOEVOEGEN:
-                StartCoroutine(WaitBeforeGameplayAssign());
-
-                return;
-            }
-        }
-    }
-    private IEnumerator WaitBeforeGameplayAssign()
-    {
-        yield return new WaitForSeconds(1.5f);
-
-        if (NetworkManager.Singleton != null &&
-            GameplaySeatSpawner.Instance != null)
-        {
-            GameplaySeatSpawner.Instance.AssignAllPlayers();
-        }
-    }
-
 
     [ClientRpc]
     private void HideLeaveButtonClientRpc()
@@ -325,69 +285,29 @@ public class ElevatorPlayers : NetworkBehaviour
             ElevatorMenu.Instance.ShowLeaveButton(false);
     }
 
-    private IEnumerator ReturnElevatorToStart()
+    [ServerRpc(RequireOwnership = false)]
+    public void RequestLeaveElevatorServerRpc(ulong clientId)
     {
-        Vector3 target = startPosition;
-
-        while (Vector3.Distance(elevatorPlatform.position, target) > 0.01f)
+        if (playersInside.Remove(clientId))
         {
-            elevatorPlatform.position = Vector3.MoveTowards(
-                elevatorPlatform.position,
-                target,
-                elevatorMoveSpeed * Time.deltaTime
-            );
-
+            syncedPlayerCount.Value = playersInside.Count;
+            UpdateUI(syncedPlayerCount.Value);
             UpdateLockCollider();
-            yield return null;
+            CheckFullState();
         }
 
-        elevatorPlatform.position = target;
-
-        ResetElevatorAfterTrip();
-    }
-
-    private void ResetElevatorAfterTrip()
-    {
-        timerRunning = false;
-        playersInside.Clear();
-        elevatorPassengers.Clear();
-        syncedPlayerCount.Value = 0;
-        playerSpawnIndex.Clear();
-
-        if (spawnOccupied != null)
+        foreach (var client in NetworkManager.Singleton.ConnectedClientsList)
         {
-            for (int i = 0; i < spawnOccupied.Length; i++)
-                spawnOccupied[i] = false;
+            if (client.ClientId != clientId) continue;
+
+            PlayerCubeController player =
+                client.PlayerObject.GetComponent<PlayerCubeController>();
+
+            if (player != null)
+                StartCoroutine(SmoothExitElevator(player));
+
+            break;
         }
-
-        UpdateUI(0);
-        UpdateLockCollider();
-    }
-
-    public void ResetElevatorState()
-    {
-        if (!IsServer) return;
-
-        elevatorPlatform.position = startPosition;
-
-        timerRunning = false;
-        elevatorBusy = false;
-
-        playersInside.Clear();
-        elevatorPassengers.Clear();
-
-        syncedPlayerCount.Value = 0;
-
-        playerSpawnIndex.Clear();
-
-        if (spawnOccupied != null)
-        {
-            for (int i = 0; i < spawnOccupied.Length; i++)
-                spawnOccupied[i] = false;
-        }
-
-        UpdateUI(0);
-        UpdateLockCollider();
     }
 
     private IEnumerator SmoothEnterElevator(PlayerCubeController player)
@@ -421,7 +341,8 @@ public class ElevatorPlayers : NetworkBehaviour
                 spawnPoints[index].position.z
             );
 
-        Quaternion targetRot = Quaternion.Euler(0f, 180f, 0f);
+        Quaternion targetRot =
+            Quaternion.Euler(0f, 180f, 0f);
 
         while (true)
         {
@@ -443,31 +364,6 @@ public class ElevatorPlayers : NetworkBehaviour
         player.SetCurrentElevator(this);
 
         ShowElevatorUIClientRpc(player.OwnerClientId);
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    public void RequestLeaveElevatorServerRpc(ulong clientId)
-    {
-        if (playersInside.Remove(clientId))
-        {
-            syncedPlayerCount.Value = playersInside.Count;
-            UpdateUI(syncedPlayerCount.Value);
-            UpdateLockCollider();
-            CheckFullState();
-        }
-
-        foreach (var client in NetworkManager.Singleton.ConnectedClientsList)
-        {
-            if (client.ClientId != clientId) continue;
-
-            PlayerCubeController player =
-                client.PlayerObject.GetComponent<PlayerCubeController>();
-
-            if (player != null)
-                StartCoroutine(SmoothExitElevator(player));
-
-            break;
-        }
     }
 
     private IEnumerator SmoothExitElevator(PlayerCubeController player)
@@ -536,5 +432,118 @@ public class ElevatorPlayers : NetworkBehaviour
         {
             ElevatorMenu.Instance.ShowLeaveButton(false);
         }
+    }
+
+    private void ResetElevatorAfterTrip()
+    {
+        if (!IsServer)
+            return;
+
+        timerRunning = false;
+
+        playersInside.Clear();
+        elevatorPassengers.Clear();
+
+        syncedPlayerCount.Value = 0;
+
+        playerSpawnIndex.Clear();
+
+        if (spawnOccupied != null)
+        {
+            for (int i = 0; i < spawnOccupied.Length; i++)
+            {
+                spawnOccupied[i] = false;
+            }
+        }
+
+        UpdateUI(0);
+
+        // 🔥 BELANGRIJK: opnieuw correct state checken
+        UpdateLockCollider();
+    }
+
+    [ClientRpc]
+    private void LoadGameplaySceneClientRpc(ulong targetClientId)
+    {
+        if (NetworkManager.Singleton.LocalClientId != targetClientId)
+            return;
+
+        SceneManager.LoadScene("GamePlay");
+    }
+
+    [ClientRpc]
+    private void StartGameplayForElevatorPlayersClientRpc(ulong[] passengerIds)
+    {
+        ulong localId = NetworkManager.Singleton.LocalClientId;
+
+        bool shouldLoad = false;
+
+        foreach (ulong id in passengerIds)
+        {
+            if (id == localId)
+            {
+                shouldLoad = true;
+                break;
+            }
+        }
+
+        if (!shouldLoad)
+            return;
+
+        SceneManager.LoadScene(gameplaySceneName);
+    }
+
+    public void ResetElevatorState()
+    {
+        if (!IsServer)
+            return;
+
+        elevatorPlatform.position = startPosition;
+
+        timerRunning = false;
+        elevatorBusy = false;
+
+        playersInside.Clear();
+        elevatorPassengers.Clear();
+
+        syncedPlayerCount.Value = 0;
+
+        playerSpawnIndex.Clear();
+
+        if (spawnOccupied != null)
+        {
+            for (int i = 0; i < spawnOccupied.Length; i++)
+            {
+                spawnOccupied[i] = false;
+            }
+        }
+
+        UpdateUI(0);
+        UpdateLockCollider();
+
+        if (ElevatorMenu.Instance != null)
+            ElevatorMenu.Instance.ForceResetUI();
+    }
+
+    private IEnumerator ReturnElevatorToStart()
+    {
+        Vector3 target = startPosition;
+
+        while (Vector3.Distance(elevatorPlatform.position, target) > 0.01f)
+        {
+            elevatorPlatform.position = Vector3.MoveTowards(
+                elevatorPlatform.position,
+                target,
+                elevatorMoveSpeed * Time.deltaTime
+            );
+
+            UpdateLockCollider(); // 🔥 live update
+
+            yield return null;
+        }
+
+        elevatorPlatform.position = target;
+
+        ResetElevatorAfterTrip();
     }
 }
