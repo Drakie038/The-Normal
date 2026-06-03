@@ -41,6 +41,7 @@ public class CameraMovement : MonoBehaviour
         menuRot = transform.rotation;
     }
 
+    // 🔥 NORMAL (LOBBY = cinematic blijft)
     public void SetTarget(Transform newTarget, PlayerCubeController newPlayer)
     {
         target = newTarget;
@@ -48,6 +49,23 @@ public class CameraMovement : MonoBehaviour
 
         StopAllCoroutines();
         StartCoroutine(Cinematic());
+    }
+
+    // 🔥 NEW: GAMEPLAY = DIRECT FPS (NO cinematic)
+    public void SetInstantTarget(Transform newTarget, PlayerCubeController newPlayer)
+    {
+        StopAllCoroutines();
+
+        target = newTarget;
+        player = newPlayer;
+
+        state = State.FPS;
+        inputLocked = false;
+
+        xRotation = 0f;
+
+        player.SetFrozen(false);
+        player.EnableMovement();
     }
 
     private IEnumerator Cinematic()
@@ -223,5 +241,21 @@ public class CameraMovement : MonoBehaviour
 
         transform.position = menuPos;
         transform.rotation = menuRot;
+    }
+
+    public void SetDirectFPS(Transform newTarget, PlayerCubeController newPlayer)
+    {
+        StopAllCoroutines();
+
+        target = newTarget;
+        player = newPlayer;
+
+        state = State.FPS;
+        inputLocked = false;
+
+        xRotation = 0f;
+
+        player.SetFrozen(false);
+        player.EnableMovement();
     }
 }

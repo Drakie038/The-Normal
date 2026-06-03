@@ -2123,7 +2123,7 @@ MonoBehaviour:
   NetworkConfig:
     ProtocolVersion: 0
     NetworkTransport: {fileID: 508421486}
-    PlayerPrefab: {fileID: 4191171319641374825, guid: 773a8dc1c98081243bb5f4b59de0a768, type: 3}
+    PlayerPrefab: {fileID: 0}
     Prefabs:
       NetworkPrefabsLists:
       - {fileID: 11400000, guid: 5d3769ac0c2ba22408dc1ecf6b317d35, type: 2}
@@ -5464,8 +5464,8 @@ MonoBehaviour:
   playerCountText: {fileID: 107567067}
   centerPoint: {fileID: 1100157946}
   exitPoint: {fileID: 526016747}
-  moveSpeed: 2
-  rotationSpeed: 80
+  moveSpeed: 1.2
+  rotationSpeed: 60
   maxPlayers: 2
   lockCollider: {fileID: 1100157949}
   fullTimerDuration: 5
@@ -6723,7 +6723,7 @@ MonoBehaviour:
   inputLocked: 0
   elevatorLocked: 0
   settingsLocked: 0
-  menu: {fileID: 0}
+  menu: {fileID: 238958201}
 --- !u!1 &1433961681
 GameObject:
   m_ObjectHideFlags: 0
