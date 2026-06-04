@@ -126,22 +126,12 @@ public class CameraMovement : MonoBehaviour
     {
         xRotation = 0f;
 
-        transform.position = Vector3.Lerp(
-            transform.position,
-            target.position + firstPersonOffset,
-            12f * Time.deltaTime
-        );
+        transform.position = target.position + firstPersonOffset;
 
-        Quaternion targetRot = Quaternion.Euler(
+        transform.rotation = Quaternion.Euler(
             inElevator ? elevatorCameraRotation.x : 0f,
             target.eulerAngles.y,
             inElevator ? elevatorCameraRotation.z : 0f
-        );
-
-        transform.rotation = Quaternion.Slerp(
-            transform.rotation,
-            targetRot,
-            12f * Time.deltaTime
         );
     }
 
