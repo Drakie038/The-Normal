@@ -60,12 +60,23 @@ public class ElevatorPlayers : NetworkBehaviour
     private NetworkVariable<int> syncedPlayerCount =
         new NetworkVariable<int>(0);
 
+    private ClientRpcParams GetPassengersRpcParams()
+    {
+        return new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = playersInside.ToArray()
+            }
+        };
+    }
+
     public override void OnNetworkSpawn()
     {
+        Instance = this;
+
         if (IsServer)
         {
-            Instance = this;
-
             playersInside.Clear();
             syncedPlayerCount.Value = 0;
 
@@ -176,29 +187,36 @@ public class ElevatorPlayers : NetworkBehaviour
             if (!timerRunning)
             {
                 timerRunning = true;
-                StartFullTimerClientRpc(fullTimerDuration);
+
+                StartFullTimerClientRpc(
+                    fullTimerDuration,
+                    GetPassengersRpcParams()
+                );
             }
         }
         else
         {
             timerRunning = false;
 
-            // 🔥 FIX: alleen timer stoppen, NIET UI forceren resetten
-            StopFullTimerClientRpc();
+            StopFullTimerClientRpc(
+                GetPassengersRpcParams()
+            );
         }
     }
 
     [ClientRpc]
-    private void StartFullTimerClientRpc(float duration)
+    private void StartFullTimerClientRpc(
+        float duration,
+        ClientRpcParams rpcParams = default)
     {
         if (ElevatorMenu.Instance != null)
             ElevatorMenu.Instance.StartTimer(duration);
     }
 
     [ClientRpc]
-    private void StopFullTimerClientRpc()
+    private void StopFullTimerClientRpc(
+        ClientRpcParams rpcParams = default)
     {
-        // 🔥 FIX: GEEN HideLeaveButton meer hier
         if (ElevatorMenu.Instance != null)
             ElevatorMenu.Instance.StopTimer();
     }
@@ -241,8 +259,13 @@ public class ElevatorPlayers : NetworkBehaviour
 
         elevatorPlatform.position = target;
 
-        StopFullTimerClientRpc();
-        HideLeaveButtonClientRpc();
+        StopFullTimerClientRpc(
+            GetPassengersRpcParams()
+        );
+
+        HideLeaveButtonClientRpc(
+            GetPassengersRpcParams()
+        );
 
         yield return new WaitForSeconds(0.2f);
 
@@ -274,7 +297,8 @@ public class ElevatorPlayers : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void HideLeaveButtonClientRpc()
+    private void HideLeaveButtonClientRpc(
+        ClientRpcParams rpcParams = default)
     {
         if (ElevatorMenu.Instance != null)
             ElevatorMenu.Instance.ShowLeaveButton(false);
@@ -485,6 +509,15 @@ public class ElevatorPlayers : NetworkBehaviour
         UpdateUI(0);
         UpdateLockCollider();
 
+        ForceResetUIClientRpc(
+            GetPassengersRpcParams()
+        );
+    }
+
+    [ClientRpc]
+    private void ForceResetUIClientRpc(
+    ClientRpcParams rpcParams = default)
+    {
         if (ElevatorMenu.Instance != null)
             ElevatorMenu.Instance.ForceResetUI();
     }
