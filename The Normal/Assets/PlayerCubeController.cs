@@ -11,7 +11,50 @@ public class PlayerCubeController : NetworkBehaviour
     public float moveSpeed = 5f;
     public float gravity = -9.81f;
 
+    private Transform elevatorFollowTarget;
+    private Coroutine followRoutine;
+
     private CharacterController controller;
+
+    public void SetElevatorFollow(Transform platform)
+    {
+        elevatorFollowTarget = platform;
+
+        if (followRoutine != null)
+            StopCoroutine(followRoutine);
+
+        followRoutine = StartCoroutine(FollowElevator());
+    }
+
+    private IEnumerator FollowElevator()
+    {
+        while (inElevator.Value && elevatorFollowTarget != null)
+        {
+            Vector3 pos = transform.position;
+            pos.y = elevatorFollowTarget.position.y;
+            transform.position = pos;
+
+            yield return null;
+        }
+    }
+
+    private IEnumerator FollowElevator(Transform platform)
+    {
+        while (inElevator.Value)
+        {
+            if (platform == null)
+                yield break;
+
+            // force sync position (SERVER SIDE AUTHORITATIVE)
+            transform.position = new Vector3(
+                transform.position.x,
+                platform.position.y,
+                transform.position.z
+            );
+
+            yield return null;
+        }
+    }
     private Vector3 velocity;
     private Vector2 moveInput;
 
@@ -204,6 +247,7 @@ public class PlayerCubeController : NetworkBehaviour
         if (menu != null && menu.IsSettingsOpen())
             return;
 
+        // 🔥 ALS IN ELEVATOR → NO INPUT
         if (inElevator.Value)
         {
             moveInput = Vector2.zero;
@@ -222,11 +266,18 @@ public class PlayerCubeController : NetworkBehaviour
             return;
 
         var menu = FindObjectOfType<MultiplayerMenu>();
-
         if (menu != null && menu.IsSettingsOpen())
             return;
 
         MoveServerRpc(moveInput, Time.fixedDeltaTime);
+
+        // 🔥 BELANGRIJK: follow elevator physics
+        if (inElevator.Value && elevatorFollowTarget != null)
+        {
+            Vector3 pos = transform.position;
+            pos.y = elevatorFollowTarget.position.y;
+            transform.position = pos;
+        }
     }
 
     [ServerRpc]

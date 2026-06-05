@@ -1,39 +1,79 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using Unity.Netcode;
 using UnityEngine;
+using Unity.Netcode;
 
-public class SecondElevator : NetworkBehaviour
+public class SecondElevator : MonoBehaviour
 {
     [Header("Platform")]
     [SerializeField] private Transform elevatorPlatform;
 
     [Header("Movement")]
-    [SerializeField] private Vector3 endPosition;
     [SerializeField] private float moveSpeed = 2f;
 
     [Header("Spawn Points")]
     [SerializeField] private Transform[] spawnPoints;
 
-    [Header("Trigger")]
-    [SerializeField] private Collider elevatorTrigger;
+    [Header("Drop Distance (Y only)")]
+    [SerializeField] private float dropDistance = 20f;
 
     private Vector3 startPosition;
+    private bool startCaptured;
 
-    public override void OnNetworkSpawn()
+    private void Awake()
     {
-        if (IsServer && elevatorPlatform != null)
-        {
-            startPosition = elevatorPlatform.position; // 🔥 BELANGRIJK
-        }
+        startPosition = elevatorPlatform.position;
     }
 
     public void StartSecondElevator(List<ulong> passengers)
     {
-        if (!IsServer) return;
+        // 🔥 BELANGRIJK: pak EXACT scene positie op moment van starten
+        startPosition = elevatorPlatform.position;
+        startCaptured = true;
 
+        StartCoroutine(RunElevator(passengers));
+    }
+
+    private IEnumerator RunElevator(List<ulong> passengers)
+    {
         TeleportPlayers(passengers);
-        StartCoroutine(MoveElevator(passengers));
+
+        Vector3 target = new Vector3(
+            startPosition.x,
+            startPosition.y - dropDistance,
+            startPosition.z
+        );
+
+        while (Vector3.Distance(elevatorPlatform.position, target) > 0.01f)
+        {
+            elevatorPlatform.position = Vector3.MoveTowards(
+                elevatorPlatform.position,
+                target,
+                moveSpeed * Time.deltaTime
+            );
+
+            // 🔥 FORCE PLAYERS MEETRACKEN
+            foreach (ulong id in passengers)
+            {
+                if (!NetworkManager.Singleton.ConnectedClients.TryGetValue(id, out var client))
+                    continue;
+
+                var player = client.PlayerObject.GetComponent<PlayerCubeController>();
+
+                if (player != null)
+                {
+                    Vector3 pos = player.transform.position;
+                    pos.y = elevatorPlatform.position.y;
+                    player.transform.position = pos;
+                }
+            }
+
+            yield return null;
+        }
+
+        elevatorPlatform.position = target;
+
+        ReleasePlayers(passengers);
     }
 
     private void TeleportPlayers(List<ulong> passengers)
@@ -45,8 +85,11 @@ public class SecondElevator : NetworkBehaviour
             if (!NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out var client))
                 continue;
 
-            PlayerCubeController player = client.PlayerObject.GetComponent<PlayerCubeController>();
-            if (player == null) continue;
+            PlayerCubeController player =
+                client.PlayerObject.GetComponent<PlayerCubeController>();
+
+            if (player == null)
+                continue;
 
             int index = Mathf.Clamp(i, 0, spawnPoints.Length - 1);
 
@@ -57,34 +100,16 @@ public class SecondElevator : NetworkBehaviour
             CharacterController cc = player.GetComponent<CharacterController>();
             if (cc != null) cc.enabled = false;
 
-            player.transform.position = spawnPoints[index].position;
+            Vector3 spawnPos = spawnPoints[index].position;
+
+            player.transform.SetParent(null);
+            player.transform.position = spawnPos;
             player.transform.rotation = Quaternion.identity;
 
             if (cc != null) cc.enabled = true;
 
-            player.transform.SetParent(elevatorPlatform);
+            player.SetElevatorFollow(elevatorPlatform);
         }
-    }
-
-    private IEnumerator MoveElevator(List<ulong> passengers)
-    {
-        while (Vector3.Distance(elevatorPlatform.position, endPosition) > 0.01f)
-        {
-            elevatorPlatform.position = Vector3.MoveTowards(
-                elevatorPlatform.position,
-                endPosition,
-                moveSpeed * Time.deltaTime
-            );
-
-            yield return null;
-        }
-
-        elevatorPlatform.position = endPosition;
-
-        if (elevatorTrigger != null)
-            elevatorTrigger.enabled = false;
-
-        ReleasePlayers(passengers);
     }
 
     private void ReleasePlayers(List<ulong> passengers)
@@ -94,8 +119,11 @@ public class SecondElevator : NetworkBehaviour
             if (!NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out var client))
                 continue;
 
-            PlayerCubeController player = client.PlayerObject.GetComponent<PlayerCubeController>();
-            if (player == null) continue;
+            PlayerCubeController player =
+                client.PlayerObject.GetComponent<PlayerCubeController>();
+
+            if (player == null)
+                continue;
 
             player.transform.SetParent(null);
 

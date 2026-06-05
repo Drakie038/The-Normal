@@ -246,22 +246,29 @@ public class ElevatorPlayers : NetworkBehaviour
 
         yield return new WaitForSeconds(0.2f);
 
-        // 🔥 GET TARGET GAME (Game1 of nieuwe GameX)
+        // 🔥 pak game
         GameInstanceManager.GameInstance instance =
             GameInstanceManager.Instance.GetNextTargetGame();
 
-        GameObject nextGame = instance.gameObject;
+        if (instance == null || instance.gameObject == null)
+        {
+            Debug.LogError("No game instance found!");
+            yield break;
+        }
 
-        // game meteen sluiten zodat volgende groep nieuwe krijgt
         GameInstanceManager.Instance.CloseGame(instance);
 
-        SecondElevator second =
-            nextGame.GetComponentInChildren<SecondElevator>();
+        // 🔥 DIRECT scene reference
+        SecondElevator second = instance.GetSecondElevator();
 
-        if (second != null)
+        if (second == null)
         {
-            second.StartSecondElevator(passengers);
+            Debug.LogError("SecondElevator NOT FOUND in " + instance.gameObject.name);
+            yield break;
         }
+
+        // 🔥 BELANGRIJK: GEEN ServerRpc meer nodig
+        second.StartSecondElevator(new List<ulong>(passengers));
 
         StartCoroutine(ReturnFirstElevatorToStart());
     }
@@ -347,7 +354,7 @@ public class ElevatorPlayers : NetworkBehaviour
         t.position = targetPos;
         t.rotation = targetRot;
 
-        t.SetParent(elevatorPlatform);
+        player.SetElevatorFollow(elevatorPlatform);
 
         player.SetCurrentElevator(this);
 

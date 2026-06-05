@@ -1,14 +1,12 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using Unity.Netcode;
 
 public class GameInstanceManager : MonoBehaviour
 {
     public static GameInstanceManager Instance;
 
-    [Header("Game Prefab (Game1 base)")]
-    [SerializeField] private GameObject gamePrefab;
-
-    [Header("Existing Game1 in Scene")]
+    [Header("Game1 TEMPLATE (NOT USED AS INSTANCE)")]
     [SerializeField] private GameObject game1Instance;
 
     [Header("Spacing")]
@@ -20,10 +18,17 @@ public class GameInstanceManager : MonoBehaviour
     public class GameInstance
     {
         public GameObject gameObject;
-        public bool isOpen;
+        public List<ulong> allowedClients = new List<ulong>();
+        public bool isAvailable = true;
+        public bool isOccupied = false;
+
+        public SecondElevator GetSecondElevator()
+        {
+            if (gameObject == null) return null;
+            return gameObject.GetComponentInChildren<SecondElevator>(true);
+        }
     }
 
-    [Header("Debug - All Games")]
     [SerializeField] private List<GameInstance> spawnedGames = new List<GameInstance>();
 
     private void Awake()
@@ -31,55 +36,34 @@ public class GameInstanceManager : MonoBehaviour
         Instance = this;
     }
 
-    private void Start()
-    {
-        RegisterInitialGame();
-    }
-
-    // Game1 bestaat al → meteen registreren
-    private void RegisterInitialGame()
-    {
-        if (game1Instance == null)
-        {
-            Debug.LogError("Game1 instance not assigned!");
-            return;
-        }
-
-        spawnedGames.Add(new GameInstance
-        {
-            gameObject = game1Instance,
-            isOpen = true
-        });
-
-        gameIndex = 1;
-    }
-
-    // 🔥 BELANGRIJK: volgende beschikbare game zoeken
     public GameInstance GetNextTargetGame()
     {
         for (int i = 0; i < spawnedGames.Count; i++)
         {
-            if (spawnedGames[i].isOpen)
+            if (spawnedGames[i].isAvailable && !spawnedGames[i].isOccupied)
                 return spawnedGames[i];
         }
 
         return CreateNextGameInstance();
     }
 
-    // 🔥 Nieuwe game clonen
     public GameInstance CreateNextGameInstance()
     {
         gameIndex++;
 
-        Vector3 pos = new Vector3((gameIndex - 1) * xOffset, 0f, 0f);
+        GameObject newGame = Instantiate(game1Instance);
 
-        GameObject newGame = Instantiate(gamePrefab, pos, Quaternion.identity);
         newGame.name = $"Game{gameIndex}";
+
+        newGame.transform.position =
+            game1Instance.transform.position +
+            new Vector3(xOffset * (gameIndex - 1), 0f, 0f);
 
         GameInstance instance = new GameInstance
         {
             gameObject = newGame,
-            isOpen = true
+            isAvailable = true,
+            isOccupied = false
         };
 
         spawnedGames.Add(instance);
@@ -87,20 +71,38 @@ public class GameInstanceManager : MonoBehaviour
         return instance;
     }
 
+    // 🔥 BELANGRIJK: ASSIGN PLAYERS
+    public void AssignPlayersToInstance(GameInstance instance, List<ulong> clients)
+    {
+        instance.allowedClients.Clear();
+        instance.allowedClients.AddRange(clients);
+
+        ApplyVisibility();
+    }
+
+    // 🔥 HACK VISIBILITY SYSTEM (NO NEW SCRIPTS)
+    public void ApplyVisibility()
+    {
+        ulong localClient = NetworkManager.Singleton.LocalClientId;
+
+        for (int i = 0; i < spawnedGames.Count; i++)
+        {
+            GameInstance inst = spawnedGames[i];
+
+            bool shouldBeVisible =
+                inst.allowedClients.Count == 0 ||
+                inst.allowedClients.Contains(localClient);
+
+            if (inst.gameObject != null)
+                inst.gameObject.SetActive(shouldBeVisible);
+        }
+    }
+
     public void CloseGame(GameInstance instance)
     {
-        if (instance != null)
-            instance.isOpen = false;
-    }
+        if (instance == null) return;
 
-    public void OpenGame(GameInstance instance)
-    {
-        if (instance != null)
-            instance.isOpen = true;
-    }
-
-    public List<GameInstance> GetAllGames()
-    {
-        return spawnedGames;
+        instance.isAvailable = false;
+        instance.isOccupied = true;
     }
 }
