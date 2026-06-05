@@ -11,59 +11,15 @@ public class PlayerCubeController : NetworkBehaviour
     public float moveSpeed = 5f;
     public float gravity = -9.81f;
 
-    private Transform elevatorFollowTarget;
-    private Coroutine followRoutine;
-
     private CharacterController controller;
 
-    public void SetElevatorFollow(Transform platform)
-    {
-        elevatorFollowTarget = platform;
-
-        if (followRoutine != null)
-            StopCoroutine(followRoutine);
-
-        followRoutine = StartCoroutine(FollowElevator());
-    }
-
-    private IEnumerator FollowElevator()
-    {
-        while (inElevator.Value && elevatorFollowTarget != null)
-        {
-            Vector3 pos = transform.position;
-            pos.y = elevatorFollowTarget.position.y;
-            transform.position = pos;
-
-            yield return null;
-        }
-    }
-
-    private IEnumerator FollowElevator(Transform platform)
-    {
-        while (inElevator.Value)
-        {
-            if (platform == null)
-                yield break;
-
-            // force sync position (SERVER SIDE AUTHORITATIVE)
-            transform.position = new Vector3(
-                transform.position.x,
-                platform.position.y,
-                transform.position.z
-            );
-
-            yield return null;
-        }
-    }
     private Vector3 velocity;
     private Vector2 moveInput;
 
     private bool canMove;
     private bool frozen;
 
-    // 🔥 FIX: was bool → nu NetworkVariable
-    public NetworkVariable<bool> inElevator =
-        new NetworkVariable<bool>(false);
+    public NetworkVariable<bool> inElevator = new NetworkVariable<bool>(false);
 
     [Header("Camera Pivot")]
     public Transform cameraPivot;
@@ -76,9 +32,12 @@ public class PlayerCubeController : NetworkBehaviour
         new NetworkVariable<FixedString32Bytes>();
 
     [SerializeField] private TMP_Text nameText;
-
-    [Header("Name Billboard")]
     [SerializeField] private Transform nameCanvas;
+
+    // ===== ELEVATOR FIX =====
+    private Transform elevatorFollowTarget;
+    private Vector3 lastPlatformPos;
+    private Coroutine followRoutine;
 
     private NetworkObjectReference currentElevator;
 
@@ -102,13 +61,9 @@ public class PlayerCubeController : NetworkBehaviour
             cam = FindObjectOfType<CameraMovement>();
 
             if (cam != null)
-                cam.SetTarget(
-                    cameraPivot != null ? cameraPivot : transform,
-                    this
-                );
+                cam.SetTarget(cameraPivot != null ? cameraPivot : transform, this);
 
             var menu = FindObjectOfType<MultiplayerMenu>();
-
             if (menu != null)
                 SetNameServerRpc(menu.GetPlayerName());
         }
@@ -130,40 +85,33 @@ public class PlayerCubeController : NetworkBehaviour
             nameText.text = string.IsNullOrEmpty(playerName) ? "Player" : playerName;
     }
 
-    private void LateUpdate()
+    // =========================
+    // ELEVATOR FIX CORE
+    // =========================
+
+    public void SetElevatorFollow(Transform platform)
     {
-        if (IsOwner)
-            return;
+        elevatorFollowTarget = platform;
+        lastPlatformPos = platform.position;
 
-        if (nameCanvas == null)
-            return;
+        if (followRoutine != null)
+            StopCoroutine(followRoutine);
 
-        Camera cam = Camera.main;
-        if (cam == null)
-            return;
-
-        Vector3 dir = nameCanvas.position - cam.transform.position;
-
-        if (dir.sqrMagnitude < 0.0001f)
-            return;
-
-        nameCanvas.rotation = Quaternion.LookRotation(dir);
+        followRoutine = StartCoroutine(FollowElevator());
     }
 
-    public void EnableMovement()
+    private IEnumerator FollowElevator()
     {
-        canMove = true;
-    }
-
-    public void SetFrozen(bool value)
-    {
-        frozen = value;
-
-        if (value)
+        while (inElevator.Value && elevatorFollowTarget != null)
         {
-            moveInput = Vector2.zero;
-            velocity = Vector3.zero;
-            Input.ResetInputAxes();
+            Vector3 delta = elevatorFollowTarget.position - lastPlatformPos;
+
+            // BELANGRIJK: CharacterController move i.p.v. transform.position
+            controller.Move(delta);
+
+            lastPlatformPos = elevatorFollowTarget.position;
+
+            yield return null;
         }
     }
 
@@ -174,6 +122,7 @@ public class PlayerCubeController : NetworkBehaviour
         if (value)
         {
             moveInput = Vector2.zero;
+            velocity = Vector3.zero;
             Input.ResetInputAxes();
         }
     }
@@ -183,71 +132,15 @@ public class PlayerCubeController : NetworkBehaviour
         currentElevator = elevator.NetworkObject;
     }
 
-    public void LeaveElevator()
-    {
-        if (!IsOwner)
-            return;
-
-        if (ElevatorMenu.Instance != null)
-            ElevatorMenu.Instance.ShowLeaveButton(false);
-
-        RequestLeaveElevatorServerRpc();
-    }
-
-    [ServerRpc]
-    private void RequestLeaveElevatorServerRpc()
-    {
-        if (!currentElevator.TryGet(out NetworkObject obj))
-            return;
-
-        ElevatorPlayers elevator = obj.GetComponent<ElevatorPlayers>();
-
-        if (elevator == null)
-            return;
-
-        elevator.RequestLeaveElevatorServerRpc(OwnerClientId);
-    }
-
-    public void SetCameraLocked(bool value)
-    {
-        if (!IsOwner) return;
-
-        if (cam == null)
-            cam = FindObjectOfType<CameraMovement>();
-
-        if (cam != null)
-        {
-            cam.inputLocked = value;
-            cam.elevatorLocked = value;
-        }
-    }
-
-    [ClientRpc]
-    public void SetCameraLockedClientRpc(bool value)
-    {
-        if (!IsOwner) return;
-
-        if (cam == null)
-            cam = FindObjectOfType<CameraMovement>();
-
-        if (cam != null)
-        {
-            cam.inputLocked = value;
-            cam.elevatorLocked = value;
-        }
-    }
-
     private void Update()
     {
         if (!IsOwner || !canMove || frozen)
             return;
 
         var menu = FindObjectOfType<MultiplayerMenu>();
-
         if (menu != null && menu.IsSettingsOpen())
             return;
 
-        // 🔥 ALS IN ELEVATOR → NO INPUT
         if (inElevator.Value)
         {
             moveInput = Vector2.zero;
@@ -270,14 +163,6 @@ public class PlayerCubeController : NetworkBehaviour
             return;
 
         MoveServerRpc(moveInput, Time.fixedDeltaTime);
-
-        // 🔥 BELANGRIJK: follow elevator physics
-        if (inElevator.Value && elevatorFollowTarget != null)
-        {
-            Vector3 pos = transform.position;
-            pos.y = elevatorFollowTarget.position.y;
-            transform.position = pos;
-        }
     }
 
     [ServerRpc]
@@ -317,43 +202,73 @@ public class PlayerCubeController : NetworkBehaviour
         transform.Rotate(Vector3.up * mouseX);
     }
 
+    public void SetFrozen(bool value)
+    {
+        frozen = value;
+
+        if (value)
+        {
+            moveInput = Vector2.zero;
+            velocity = Vector3.zero;
+            Input.ResetInputAxes();
+        }
+    }
+
     [ServerRpc]
     public void SetNameServerRpc(string name)
     {
         PlayerName.Value = new FixedString32Bytes(name);
     }
 
-    public void ForceRotation(Quaternion rot)
+    public void EnableMovement()
     {
-        transform.rotation = rot;
+        canMove = true;
     }
 
-    public void TeleportFromServer(Vector3 pos)
+    public void LeaveElevator()
     {
-        StartCoroutine(TeleportRoutine(pos));
+        if (!IsOwner)
+            return;
+
+        if (ElevatorMenu.Instance != null)
+            ElevatorMenu.Instance.ShowLeaveButton(false);
+
+        RequestLeaveElevatorServerRpc();
     }
 
-    private IEnumerator TeleportRoutine(Vector3 pos)
+    [ClientRpc]
+    public void SetCameraLockedClientRpc(bool value)
     {
-        controller.enabled = false;
-        transform.position = pos;
-        yield return null;
-        controller.enabled = true;
-    }
+        if (!IsOwner) return;
 
-    [ServerRpc(RequireOwnership = false)]
-    public void RequestExitElevatorServerRpc(Vector3 exitPos)
-    {
-        StartCoroutine(TeleportRoutine(exitPos));
+        if (cam == null)
+            cam = FindObjectOfType<CameraMovement>();
 
-        SetInElevator(false);
-        SetFrozen(false);
-
-        SetCameraLockedClientRpc(false);
+        if (cam != null)
+        {
+            cam.inputLocked = value;
+            cam.elevatorLocked = value;
+        }
     }
 
     public void ResetVelocity()
     {
         velocity = Vector3.zero;
+    }
+
+    [ServerRpc]
+    private void RequestLeaveElevatorServerRpc(ServerRpcParams rpcParams = default)
+    {
+        ulong clientId = rpcParams.Receive.SenderClientId;
+
+        if (!currentElevator.TryGet(out NetworkObject obj))
+            return;
+
+        ElevatorPlayers elevator = obj.GetComponent<ElevatorPlayers>();
+
+        if (elevator == null)
+            return;
+
+        elevator.RequestLeaveElevatorServerRpc(clientId);
     }
 }
