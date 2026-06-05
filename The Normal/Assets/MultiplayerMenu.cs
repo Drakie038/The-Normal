@@ -473,6 +473,7 @@ public class MultiplayerMenu : MonoBehaviour
         quickJoinButton.gameObject.SetActive(false);
         browserRoomsButton.gameObject.SetActive(false);
         menuCreateServerButton.gameObject.SetActive(false);
+        backButton.gameObject.SetActive(false);
 
         StopSearchingButton.gameObject.SetActive(true);
 
@@ -552,8 +553,6 @@ public class MultiplayerMenu : MonoBehaviour
 
             await Task.Delay(1000);
         }
-
-        ResetQuickJoinUI();
     }
 
     private async Task CreateServer()
@@ -1644,6 +1643,7 @@ public class MultiplayerMenu : MonoBehaviour
         quickJoinButton.gameObject.SetActive(true);
         browserRoomsButton.gameObject.SetActive(true);
         menuCreateServerButton.gameObject.SetActive(true);
+        backButton.gameObject.SetActive(true);
 
         HideDebug();
     }

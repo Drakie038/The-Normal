@@ -2,14 +2,11 @@
 using UnityEngine;
 using Unity.Netcode;
 
-public class GameInstanceManager : MonoBehaviour
+public class GameInstanceManager : NetworkBehaviour
 {
     public static GameInstanceManager Instance;
 
-    [Header("Game1 TEMPLATE (NOT USED AS INSTANCE)")]
     [SerializeField] private GameObject game1Instance;
-
-    [Header("Spacing")]
     [SerializeField] private float xOffset = 50f;
 
     private int gameIndex = 1;
@@ -17,10 +14,10 @@ public class GameInstanceManager : MonoBehaviour
     [System.Serializable]
     public class GameInstance
     {
+        public NetworkObject networkObject;
         public GameObject gameObject;
-        public List<ulong> allowedClients = new List<ulong>();
-        public bool isAvailable = true;
-        public bool isOccupied = false;
+        public bool isAvailable;
+        public bool isOccupied;
 
         public SecondElevator GetSecondElevator()
         {
@@ -29,39 +26,44 @@ public class GameInstanceManager : MonoBehaviour
         }
     }
 
-    [SerializeField] private List<GameInstance> spawnedGames = new List<GameInstance>();
+    [SerializeField] private List<GameInstance> spawnedGames = new();
 
     private void Awake()
     {
         Instance = this;
     }
 
-    public GameInstance GetNextTargetGame()
-    {
-        for (int i = 0; i < spawnedGames.Count; i++)
-        {
-            if (spawnedGames[i].isAvailable && !spawnedGames[i].isOccupied)
-                return spawnedGames[i];
-        }
-
-        return CreateNextGameInstance();
-    }
-
     public GameInstance CreateNextGameInstance()
     {
+        if (!IsServer)
+        {
+            Debug.LogError("Only server can spawn game instances!");
+            return null;
+        }
+
         gameIndex++;
 
-        GameObject newGame = Instantiate(game1Instance);
+        Vector3 pos = game1Instance.transform.position +
+                      new Vector3(xOffset * (gameIndex - 1), 0f, 0f);
 
-        newGame.name = $"Game{gameIndex}";
+        GameObject obj = Instantiate(game1Instance, pos, Quaternion.identity);
 
-        newGame.transform.position =
-            game1Instance.transform.position +
-            new Vector3(xOffset * (gameIndex - 1), 0f, 0f);
+        NetworkObject netObj = obj.GetComponent<NetworkObject>();
 
-        GameInstance instance = new GameInstance
+        if (netObj == null)
         {
-            gameObject = newGame,
+            Debug.LogError("Prefab has no NetworkObject!");
+            return null;
+        }
+
+        netObj.Spawn(true); // 🔥 THIS FIXES EVERYTHING
+
+        obj.name = $"Game{gameIndex}";
+
+        var instance = new GameInstance
+        {
+            networkObject = netObj,
+            gameObject = obj,
             isAvailable = true,
             isOccupied = false
         };
@@ -71,31 +73,15 @@ public class GameInstanceManager : MonoBehaviour
         return instance;
     }
 
-    // 🔥 BELANGRIJK: ASSIGN PLAYERS
-    public void AssignPlayersToInstance(GameInstance instance, List<ulong> clients)
+    public GameInstance GetNextTargetGame()
     {
-        instance.allowedClients.Clear();
-        instance.allowedClients.AddRange(clients);
-
-        ApplyVisibility();
-    }
-
-    // 🔥 HACK VISIBILITY SYSTEM (NO NEW SCRIPTS)
-    public void ApplyVisibility()
-    {
-        ulong localClient = NetworkManager.Singleton.LocalClientId;
-
-        for (int i = 0; i < spawnedGames.Count; i++)
+        foreach (var g in spawnedGames)
         {
-            GameInstance inst = spawnedGames[i];
-
-            bool shouldBeVisible =
-                inst.allowedClients.Count == 0 ||
-                inst.allowedClients.Contains(localClient);
-
-            if (inst.gameObject != null)
-                inst.gameObject.SetActive(shouldBeVisible);
+            if (g.isAvailable && !g.isOccupied)
+                return g;
         }
+
+        return CreateNextGameInstance();
     }
 
     public void CloseGame(GameInstance instance)
