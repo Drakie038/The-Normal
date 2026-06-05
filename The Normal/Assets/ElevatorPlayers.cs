@@ -60,18 +60,6 @@ public class ElevatorPlayers : NetworkBehaviour
     private NetworkVariable<int> syncedPlayerCount =
         new NetworkVariable<int>(0);
 
-    [Header("Second Elevator")]
-    [SerializeField] private Transform secondElevatorPlatform;
-
-    [SerializeField] private Vector3 secondStartPosition;
-    [SerializeField] private Vector3 secondEndPosition;
-
-    [SerializeField] private float secondElevatorSpeed = 2f;
-
-    [SerializeField] private Transform[] secondElevatorSpawnPoints;
-
-    [SerializeField] private Collider secondElevatorTrigger;
-
     public override void OnNetworkSpawn()
     {
         if (IsServer)
@@ -82,11 +70,6 @@ public class ElevatorPlayers : NetworkBehaviour
             syncedPlayerCount.Value = 0;
 
             elevatorPlatform.position = startPosition;
-
-            if (secondElevatorPlatform != null)
-            {
-                secondElevatorPlatform.position = secondStartPosition;
-            }
 
             spawnOccupied = new bool[spawnPoints.Length];
         }
@@ -244,7 +227,6 @@ public class ElevatorPlayers : NetworkBehaviour
 
         Vector3 target = endPosition;
 
-        // --- LIFT 1 GAAT NAAR BENEDEN ---
         while (Vector3.Distance(elevatorPlatform.position, target) > 0.01f)
         {
             elevatorPlatform.position = Vector3.MoveTowards(
@@ -264,117 +246,24 @@ public class ElevatorPlayers : NetworkBehaviour
 
         yield return new WaitForSeconds(0.2f);
 
-        // --- TELEPORT NAAR LIFT 2 ---
-        TeleportPlayersToSecondElevator(passengers);
+        // 🔥 GET TARGET GAME (Game1 of nieuwe GameX)
+        GameInstanceManager.GameInstance instance =
+            GameInstanceManager.Instance.GetNextTargetGame();
 
-        // --- START LIFT 2 ---
-        StartCoroutine(MoveSecondElevatorDown(passengers));
+        GameObject nextGame = instance.gameObject;
 
-        // --- LIFT 1 TERUG NAAR START ---
+        // game meteen sluiten zodat volgende groep nieuwe krijgt
+        GameInstanceManager.Instance.CloseGame(instance);
+
+        SecondElevator second =
+            nextGame.GetComponentInChildren<SecondElevator>();
+
+        if (second != null)
+        {
+            second.StartSecondElevator(passengers);
+        }
+
         StartCoroutine(ReturnFirstElevatorToStart());
-    }
-
-    private void TeleportPlayersToSecondElevator(List<ulong> passengers)
-    {
-        if (secondElevatorPlatform == null)
-            return;
-
-        for (int i = 0; i < passengers.Count; i++)
-        {
-            ulong clientId = passengers[i];
-
-            if (!NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out var client))
-                continue;
-
-            PlayerCubeController player =
-                client.PlayerObject.GetComponent<PlayerCubeController>();
-
-            if (player == null)
-                continue;
-
-            int spawnIndex = Mathf.Clamp(i, 0, secondElevatorSpawnPoints.Length - 1);
-
-            // 🔥 HARD LOCK
-            player.SetFrozen(true);
-            player.SetInElevator(true);
-            player.SetCameraLockedClientRpc(true);
-
-            // detach first
-            player.transform.SetParent(null);
-
-            // instant teleport
-            CharacterController cc = player.GetComponent<CharacterController>();
-            if (cc != null) cc.enabled = false;
-
-            player.transform.position = secondElevatorSpawnPoints[spawnIndex].position;
-            player.transform.rotation = Quaternion.identity;
-
-            if (cc != null) cc.enabled = true;
-
-            // attach to second elevator
-            player.transform.SetParent(secondElevatorPlatform);
-        }
-    }
-
-    private IEnumerator InstantTeleport(PlayerCubeController player, Vector3 pos)
-    {
-        CharacterController cc = player.GetComponent<CharacterController>();
-
-        if (cc != null)
-            cc.enabled = false;
-
-        // HARD SNAP (geen lerp, geen movement)
-        player.transform.position = pos;
-        player.transform.rotation = Quaternion.identity;
-
-        yield return null;
-
-        if (cc != null)
-            cc.enabled = true;
-
-        player.transform.SetParent(secondElevatorPlatform);
-    }
-
-    private IEnumerator MoveSecondElevatorDown(List<ulong> passengers)
-    {
-        Vector3 target = secondEndPosition;
-
-        while (Vector3.Distance(secondElevatorPlatform.position, target) > 0.01f)
-        {
-            secondElevatorPlatform.position = Vector3.MoveTowards(
-                secondElevatorPlatform.position,
-                target,
-                secondElevatorSpeed * Time.deltaTime
-            );
-
-            yield return null;
-        }
-
-        secondElevatorPlatform.position = target;
-
-        if (secondElevatorTrigger != null)
-            secondElevatorTrigger.enabled = false;
-
-        // --- RELEASE PLAYERS ---
-        foreach (ulong clientId in passengers)
-        {
-            if (!NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out var client))
-                continue;
-
-            PlayerCubeController player =
-                client.PlayerObject.GetComponent<PlayerCubeController>();
-
-            if (player == null)
-                continue;
-
-            player.transform.SetParent(null);
-
-            player.SetInElevator(false);
-            player.SetFrozen(false);
-            player.ResetVelocity();
-
-            player.SetCameraLockedClientRpc(false);
-        }
     }
 
     [ClientRpc]
