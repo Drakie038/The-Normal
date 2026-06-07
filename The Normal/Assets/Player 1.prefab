@@ -230,7 +230,11 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   moveSpeed: 5
   gravity: -9.81
-  inElevator: 0
+  inElevator:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 0
   cameraPivot: {fileID: 0}
   cam: {fileID: 0}
   PlayerName:

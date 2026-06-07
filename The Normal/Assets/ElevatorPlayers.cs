@@ -43,9 +43,10 @@ public class ElevatorPlayers : NetworkBehaviour
     [Header("Elevator Movement")]
     [SerializeField] private float elevatorMoveSpeed = 2f;
 
-    [Header("Start & End Positions")]
-    [SerializeField] private Vector3 startPosition;
-    [SerializeField] private Vector3 endPosition;
+    [Header("Height Settings")]
+    [SerializeField] private float bottomY = -10f;
+
+    private Vector3 startPosition;
 
     [Header("Spawn Points")]
     [SerializeField] private Transform[] spawnPoints;
@@ -77,10 +78,10 @@ public class ElevatorPlayers : NetworkBehaviour
 
         if (IsServer)
         {
+            startPosition = elevatorPlatform.position;
+
             playersInside.Clear();
             syncedPlayerCount.Value = 0;
-
-            elevatorPlatform.position = startPosition;
 
             spawnOccupied = new bool[spawnPoints.Length];
         }
@@ -243,7 +244,11 @@ public class ElevatorPlayers : NetworkBehaviour
 
         List<ulong> passengers = new List<ulong>(playersInside);
 
-        Vector3 target = endPosition;
+        Vector3 target = new Vector3(
+            startPosition.x,
+            bottomY,
+            startPosition.z
+        );
 
         while (Vector3.Distance(elevatorPlatform.position, target) > 0.01f)
         {
@@ -269,7 +274,6 @@ public class ElevatorPlayers : NetworkBehaviour
 
         yield return new WaitForSeconds(0.2f);
 
-        // 🔥 pak game
         GameInstanceManager.GameInstance instance =
             GameInstanceManager.Instance.GetNextTargetGame();
 
@@ -281,7 +285,6 @@ public class ElevatorPlayers : NetworkBehaviour
 
         GameInstanceManager.Instance.CloseGame(instance);
 
-        // 🔥 DIRECT scene reference
         SecondElevator second = instance.GetSecondElevator();
 
         if (second == null)
@@ -290,7 +293,6 @@ public class ElevatorPlayers : NetworkBehaviour
             yield break;
         }
 
-        // 🔥 BELANGRIJK: GEEN ServerRpc meer nodig
         second.StartSecondElevator(new List<ulong>(passengers));
 
         StartCoroutine(ReturnFirstElevatorToStart());
@@ -522,47 +524,23 @@ public class ElevatorPlayers : NetworkBehaviour
             ElevatorMenu.Instance.ForceResetUI();
     }
 
-    private IEnumerator ReturnElevatorToStart()
-    {
-        Vector3 target = startPosition;
-
-        while (Vector3.Distance(elevatorPlatform.position, target) > 0.01f)
-        {
-            elevatorPlatform.position = Vector3.MoveTowards(
-                elevatorPlatform.position,
-                target,
-                elevatorMoveSpeed * Time.deltaTime
-            );
-
-            UpdateLockCollider(); // 🔥 live update
-
-            yield return null;
-        }
-
-        elevatorPlatform.position = target;
-
-        ResetElevatorAfterTrip();
-    }
-
     private IEnumerator ReturnFirstElevatorToStart()
     {
-        Vector3 target = startPosition;
-
-        while (Vector3.Distance(elevatorPlatform.position, target) > 0.01f)
+        while (Vector3.Distance(elevatorPlatform.position, startPosition) > 0.01f)
         {
             elevatorPlatform.position = Vector3.MoveTowards(
                 elevatorPlatform.position,
-                target,
+                startPosition,
                 elevatorMoveSpeed * Time.deltaTime
             );
 
             UpdateLockCollider();
+
             yield return null;
         }
 
-        elevatorPlatform.position = target;
+        elevatorPlatform.position = startPosition;
 
-        // reset state zodat hij opnieuw gebruikt kan worden
         ResetElevatorAfterTrip();
         elevatorBusy = false;
     }

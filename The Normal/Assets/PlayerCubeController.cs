@@ -271,4 +271,20 @@ public class PlayerCubeController : NetworkBehaviour
 
         elevator.RequestLeaveElevatorServerRpc(clientId);
     }
+
+    private void LateUpdate()
+    {
+        if (nameCanvas == null)
+            return;
+
+        Camera cam = Camera.main;
+
+        if (cam == null)
+            return;
+
+        nameCanvas.LookAt(
+            nameCanvas.position + cam.transform.rotation * Vector3.forward,
+            cam.transform.rotation * Vector3.up
+        );
+    }
 }

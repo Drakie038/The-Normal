@@ -2459,6 +2459,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 756dc2b4788672b4f94b0113d74e2730, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  ShowTopMostFoldoutHeaderGroup: 1
   game1Instance: {fileID: 7514483543975225078, guid: cb8079e97f42a044b8906bb04e63490e, type: 3}
   xOffset: 50
   spawnedGames: []
@@ -5544,8 +5545,7 @@ MonoBehaviour:
   fullTimerDuration: 5
   elevatorPlatform: {fileID: 1017573877}
   elevatorMoveSpeed: 2
-  startPosition: {x: 0, y: -3, z: 15}
-  endPosition: {x: 0, y: -6.5, z: 15}
+  bottomY: -6.5
   spawnPoints:
   - {fileID: 1994318359}
   - {fileID: 1397051050}
