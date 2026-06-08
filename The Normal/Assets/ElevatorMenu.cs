@@ -16,6 +16,9 @@ public class ElevatorMenu : MonoBehaviour
     private Coroutine timerRoutine;
     private float currentTimer;
 
+    [Header("Start Elevator Button")]
+    [SerializeField] private Button startElevatorButton;
+
     private void Awake()
     {
         Instance = this;
@@ -26,8 +29,24 @@ public class ElevatorMenu : MonoBehaviour
             leaveButton.onClick.AddListener(OnClickLeave);
         }
 
+        // 👇 HIER KOMT JE START BUTTON CODE
+        if (startElevatorButton != null)
+        {
+            startElevatorButton.gameObject.SetActive(false);
+            startElevatorButton.onClick.AddListener(OnClickStartElevator);
+        }
+
         if (timerText != null)
             timerText.gameObject.SetActive(false);
+    }
+
+    public void UpdateStartButton(bool isSeatOne, bool isInElevator, bool isNotFull)
+    {
+        if (startElevatorButton == null) return;
+
+        bool shouldShow = isSeatOne && isInElevator && isNotFull;
+
+        startElevatorButton.gameObject.SetActive(shouldShow);
     }
 
     public void ShowLeaveButton(bool value)
@@ -60,6 +79,11 @@ public class ElevatorMenu : MonoBehaviour
         {
             timerText.text = "";
             timerText.gameObject.SetActive(false);
+        }
+
+        if (startElevatorButton != null)
+        {
+            startElevatorButton.gameObject.SetActive(false);
         }
     }
 
@@ -141,5 +165,13 @@ public class ElevatorMenu : MonoBehaviour
                 break;
             }
         }
+    }
+
+    private void OnClickStartElevator()
+    {
+        if (startElevatorButton != null)
+            startElevatorButton.gameObject.SetActive(false);
+
+        ElevatorPlayers.Instance?.ForceStartElevatorServerRpc();
     }
 }

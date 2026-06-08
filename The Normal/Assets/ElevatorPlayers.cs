@@ -48,6 +48,8 @@ public class ElevatorPlayers : NetworkBehaviour
 
     private Vector3 startPosition;
 
+    private bool elevatorForceStarted;
+
     [Header("Spawn Points")]
     [SerializeField] private Transform[] spawnPoints;
 
@@ -127,6 +129,22 @@ public class ElevatorPlayers : NetworkBehaviour
     {
         if (playerCountText != null)
             playerCountText.text = $"{count}/{maxPlayers}";
+
+        bool isFull = playersInside.Count >= maxPlayers;
+
+        foreach (var client in playersInside)
+        {
+            if (NetworkManager.Singleton.LocalClientId == client)
+            {
+                bool isSeatOne = playersInside.First() == client;
+
+                ElevatorMenu.Instance?.UpdateStartButton(
+                    isSeatOne,
+                    true,
+                    !isFull
+                );
+            }
+        }
     }
 
     private void UpdateLockCollider()
@@ -183,7 +201,7 @@ public class ElevatorPlayers : NetworkBehaviour
 
     private void CheckFullState()
     {
-        if (playersInside.Count >= maxPlayers)
+        if (!elevatorForceStarted && playersInside.Count >= maxPlayers)
         {
             if (!timerRunning)
             {
@@ -527,7 +545,10 @@ public class ElevatorPlayers : NetworkBehaviour
     ClientRpcParams rpcParams = default)
     {
         if (ElevatorMenu.Instance != null)
+        {
             ElevatorMenu.Instance.ForceResetUI();
+            ElevatorMenu.Instance.ShowLeaveButton(false);
+        }
     }
 
     private IEnumerator ReturnFirstElevatorToStart()
@@ -549,5 +570,24 @@ public class ElevatorPlayers : NetworkBehaviour
 
         ResetElevatorAfterTrip();
         elevatorBusy = false;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void ForceStartElevatorServerRpc()
+    {
+        if (elevatorBusy) return;
+        if (timerRunning) return;
+
+        elevatorForceStarted = true;
+
+        if (!timerRunning)
+        {
+            timerRunning = true;
+
+            StartFullTimerClientRpc(
+                fullTimerDuration,
+                GetPassengersRpcParams()
+            );
+        }
     }
 }
