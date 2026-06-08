@@ -247,7 +247,20 @@ public class ElevatorPlayers : NetworkBehaviour
             elevatorPassengers.Add(id);
         }
 
+        // 👇 HIER PLAATSEN
+        HideAllElevatorUIClientRpc(GetPassengersRpcParams());
+
         StartCoroutine(MoveElevatorDown());
+    }
+
+    [ClientRpc]
+    private void HideAllElevatorUIClientRpc(ClientRpcParams rpcParams = default)
+    {
+        if (ElevatorMenu.Instance == null)
+            return;
+
+        ElevatorMenu.Instance.ShowLeaveButton(false);
+        ElevatorMenu.Instance.UpdateStartButton(false);
     }
 
     private IEnumerator MoveElevatorDown()
@@ -623,5 +636,15 @@ public class ElevatorPlayers : NetworkBehaviour
         ElevatorMenu.Instance?.ShowLeaveButton(true);
 
         ElevatorMenu.Instance?.UpdateStartButton(true);
+    }
+
+    [ClientRpc]
+    private void HideAllElevatorUIClientRpc()
+    {
+        if (ElevatorMenu.Instance == null)
+            return;
+
+        ElevatorMenu.Instance.ShowLeaveButton(false);
+        ElevatorMenu.Instance.UpdateStartButton(false);
     }
 }

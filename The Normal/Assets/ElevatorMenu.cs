@@ -103,6 +103,9 @@ public class ElevatorMenu : MonoBehaviour
 
     private IEnumerator TimerCountdown()
     {
+        ElevatorMenu.Instance?.ShowLeaveButton(false);
+        ElevatorMenu.Instance?.UpdateStartButton(false);
+
         bool doorsClosedTriggered = false;
 
         while (currentTimer > 0f)
@@ -173,10 +176,13 @@ public class ElevatorMenu : MonoBehaviour
         if (startElevatorButton != null)
             startElevatorButton.gameObject.SetActive(false);
 
+        if (leaveButton != null)
+            leaveButton.gameObject.SetActive(false);
+
         ElevatorPlayers.Instance?.ForceStartElevatorServerRpc();
     }
 
-public void RefreshButtonsAfterCinematic()
+    public void RefreshButtonsAfterCinematic()
 {
     PlayerCubeController player =
         FindObjectOfType<PlayerCubeController>();
