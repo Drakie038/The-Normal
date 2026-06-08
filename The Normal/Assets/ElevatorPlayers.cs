@@ -63,6 +63,8 @@ public class ElevatorPlayers : NetworkBehaviour
     private NetworkVariable<int> syncedPlayerCount =
         new NetworkVariable<int>(0);
 
+    private bool elevatorLocked;
+
     private ClientRpcParams GetPassengersRpcParams()
     {
         return new ClientRpcParams
@@ -158,6 +160,8 @@ public class ElevatorPlayers : NetworkBehaviour
     {
         if (!IsServer) return;
 
+        if (elevatorLocked) return; // 🔥 NIEUW
+
         PlayerCubeController player = other.GetComponent<PlayerCubeController>();
         if (player == null) return;
 
@@ -248,13 +252,13 @@ public class ElevatorPlayers : NetworkBehaviour
         }
 
         // 👇 HIER PLAATSEN
-        HideAllElevatorUIClientRpc(GetPassengersRpcParams());
+        HideAllElevatorUIClientRpc();
 
         StartCoroutine(MoveElevatorDown());
     }
 
     [ClientRpc]
-    private void HideAllElevatorUIClientRpc(ClientRpcParams rpcParams = default)
+    private void HideAllElevatorUIClientRpc()
     {
         if (ElevatorMenu.Instance == null)
             return;
@@ -538,6 +542,9 @@ public class ElevatorPlayers : NetworkBehaviour
 
         // 🔥 BELANGRIJK: opnieuw correct state checken
         UpdateLockCollider();
+
+        elevatorLocked = false;
+        elevatorForceStarted = false;
     }
 
     public void ResetElevatorState()
@@ -612,6 +619,11 @@ public class ElevatorPlayers : NetworkBehaviour
         if (timerRunning) return;
 
         elevatorForceStarted = true;
+        elevatorLocked = true; // 🔥 BELANGRIJK
+
+        lockCollider.enabled = true; // 🔒 direct dicht
+
+        HideAllElevatorUIClientRpc(); // 👈 UI direct weg
 
         if (!timerRunning)
         {
@@ -636,15 +648,5 @@ public class ElevatorPlayers : NetworkBehaviour
         ElevatorMenu.Instance?.ShowLeaveButton(true);
 
         ElevatorMenu.Instance?.UpdateStartButton(true);
-    }
-
-    [ClientRpc]
-    private void HideAllElevatorUIClientRpc()
-    {
-        if (ElevatorMenu.Instance == null)
-            return;
-
-        ElevatorMenu.Instance.ShowLeaveButton(false);
-        ElevatorMenu.Instance.UpdateStartButton(false);
     }
 }
