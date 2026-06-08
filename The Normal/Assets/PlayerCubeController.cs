@@ -117,6 +117,13 @@ public class PlayerCubeController : NetworkBehaviour
 
     public void SetInElevator(bool value)
     {
+
+        if (!value && followRoutine != null)
+        {
+            StopCoroutine(followRoutine);
+            followRoutine = null;
+        }
+
         inElevator.Value = value;
 
         if (value)
@@ -286,5 +293,18 @@ public class PlayerCubeController : NetworkBehaviour
             nameCanvas.position + cam.transform.rotation * Vector3.forward,
             cam.transform.rotation * Vector3.up
         );
+    }
+
+    public void ForceEnterExitState()
+    {
+        frozen = true;
+        canMove = false;
+
+        moveInput = Vector2.zero;
+        velocity = Vector3.zero;
+
+        inElevator.Value = false;
+
+        SetCameraLockedClientRpc(true);
     }
 }

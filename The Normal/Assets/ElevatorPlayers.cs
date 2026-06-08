@@ -401,19 +401,27 @@ public class ElevatorPlayers : NetworkBehaviour
             playerSpawnIndex.Remove(id);
         }
 
+        // 🔥 FORCE LOCK FIRST
+        player.ForceEnterExitState();
+
         Vector3 targetPos =
             new Vector3(exitPoint.position.x, t.position.y, exitPoint.position.z);
 
         Quaternion targetRot = Quaternion.Euler(0f, 180f, 0f);
 
-        while (true)
+        while (Vector3.Distance(t.position, targetPos) > 0.02f)
         {
-            t.position = Vector3.MoveTowards(t.position, targetPos, moveSpeed * Time.deltaTime);
-            t.rotation = Quaternion.RotateTowards(t.rotation, targetRot, rotationSpeed * Time.deltaTime);
+            t.position = Vector3.MoveTowards(
+                t.position,
+                targetPos,
+                moveSpeed * Time.deltaTime
+            );
 
-            if (Vector3.Distance(t.position, targetPos) < 0.03f &&
-                Quaternion.Angle(t.rotation, targetRot) < 1f)
-                break;
+            t.rotation = Quaternion.RotateTowards(
+                t.rotation,
+                targetRot,
+                rotationSpeed * Time.deltaTime
+            );
 
             yield return null;
         }
@@ -421,11 +429,9 @@ public class ElevatorPlayers : NetworkBehaviour
         t.position = targetPos;
         t.rotation = targetRot;
 
-        t.SetParent(null);
-
-        player.SetInElevator(false);
+        // 🔥 CLEAN STATE RESET
         player.SetFrozen(false);
-
+        player.EnableMovement();
         player.SetCameraLockedClientRpc(false);
 
         HideElevatorUIClientRpc(player.OwnerClientId);

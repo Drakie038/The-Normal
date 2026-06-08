@@ -48,15 +48,36 @@ public class ElevatorMenu : MonoBehaviour
         timerRoutine = StartCoroutine(TimerCountdown());
     }
 
-    public void StopTimer()
+    public void CancelCooldownInstant()
     {
-        if (timerRoutine != null)
-            StopCoroutine(timerRoutine);
+        StopTimer();
 
-        timerRoutine = null;
+        ShowLeaveButton(false);
+
+        currentTimer = 0f;
 
         if (timerText != null)
+        {
+            timerText.text = "";
             timerText.gameObject.SetActive(false);
+        }
+    }
+
+    public void StopTimer()
+    {
+        currentTimer = 0f; // 🔥 BELANGRIJK: hard reset
+
+        if (timerRoutine != null)
+        {
+            StopCoroutine(timerRoutine);
+            timerRoutine = null;
+        }
+
+        if (timerText != null)
+        {
+            timerText.text = "";
+            timerText.gameObject.SetActive(false);
+        }
     }
 
     private IEnumerator TimerCountdown()
@@ -84,7 +105,11 @@ public class ElevatorMenu : MonoBehaviour
 
         StopTimer();
 
-        ElevatorPlayers.Instance?.TriggerElevatorStartServerRpc();
+        if (currentTimer <= 0f)
+        {
+            StopTimer();
+            ElevatorPlayers.Instance?.TriggerElevatorStartServerRpc();
+        }
     }
 
     public void ForceResetUI()
@@ -103,6 +128,8 @@ public class ElevatorMenu : MonoBehaviour
 
     private void OnClickLeave()
     {
+        CancelCooldownInstant(); // 🔥 DIRECT UI + cooldown kill
+
         PlayerCubeController[] players =
             FindObjectsOfType<PlayerCubeController>();
 
