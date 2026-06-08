@@ -39,13 +39,11 @@ public class ElevatorMenu : MonoBehaviour
             timerText.gameObject.SetActive(false);
     }
 
-    public void UpdateStartButton(bool isSeatOne, bool isInElevator, bool isNotFull)
+    public void UpdateStartButton(bool isInElevator)
     {
         if (startElevatorButton == null) return;
 
-        bool shouldShow = isSeatOne && isInElevator && isNotFull;
-
-        startElevatorButton.gameObject.SetActive(shouldShow);
+        startElevatorButton.gameObject.SetActive(isInElevator);
     }
 
     public void ShowLeaveButton(bool value)
@@ -176,5 +174,27 @@ public class ElevatorMenu : MonoBehaviour
             startElevatorButton.gameObject.SetActive(false);
 
         ElevatorPlayers.Instance?.ForceStartElevatorServerRpc();
+    }
+
+public void RefreshButtonsAfterCinematic()
+{
+    PlayerCubeController player =
+        FindObjectOfType<PlayerCubeController>();
+
+    if (player == null || !player.IsOwner)
+        return;
+
+    bool inElevator = player.inElevator.Value;
+
+        UpdateStartButton(inElevator);
+}
+
+    public void ShowElevatorButtonsAfterCinematic(
+    bool showStartButton)
+    {
+        ShowLeaveButton(true);
+
+        if (startElevatorButton != null)
+            startElevatorButton.gameObject.SetActive(showStartButton);
     }
 }

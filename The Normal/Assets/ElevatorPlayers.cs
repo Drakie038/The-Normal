@@ -136,13 +136,7 @@ public class ElevatorPlayers : NetworkBehaviour
         {
             if (NetworkManager.Singleton.LocalClientId == client)
             {
-                bool isSeatOne = playersInside.First() == client;
-
-                ElevatorMenu.Instance?.UpdateStartButton(
-                    isSeatOne,
-                    true,
-                    !isFull
-                );
+                ElevatorMenu.Instance?.UpdateStartButton(true);
             }
         }
     }
@@ -402,7 +396,22 @@ public class ElevatorPlayers : NetworkBehaviour
 
         player.SetCurrentElevator(this);
 
-        ShowElevatorUIClientRpc(player.OwnerClientId);
+        bool isSeatOne = playersInside.First() == player.OwnerClientId;
+        bool isNotFull = playersInside.Count < maxPlayers;
+
+        ShowElevatorButtonsClientRpc(
+            player.OwnerClientId,
+            isSeatOne,
+            isNotFull
+        );
+    }
+
+    public bool IsSeatOne(ulong clientId)
+    {
+        if (playersInside.Count == 0)
+            return false;
+
+        return playersInside.First() == clientId;
     }
 
     private IEnumerator SmoothExitElevator(PlayerCubeController player)
@@ -456,15 +465,26 @@ public class ElevatorPlayers : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void ShowElevatorUIClientRpc(ulong targetClientId)
+    private void ShowElevatorUIClientRpc(
+        ulong targetClientId,
+        bool isSeatOne)
     {
         if (NetworkManager.Singleton.LocalClientId != targetClientId)
             return;
 
-        if (ElevatorMenu.Instance != null)
-        {
-            ElevatorMenu.Instance.ShowLeaveButton(true);
-        }
+        StartCoroutine(WaitForElevatorCinematic(isSeatOne));
+    }
+
+    private IEnumerator WaitForElevatorCinematic(bool isSeatOne)
+    {
+        CameraMovement cam = FindObjectOfType<CameraMovement>();
+
+        while (cam != null && cam.inElevatorTransition)
+            yield return null;
+
+        ElevatorMenu.Instance?.ShowElevatorButtonsAfterCinematic(
+            isSeatOne
+        );
     }
 
     [ClientRpc]
@@ -589,5 +609,19 @@ public class ElevatorPlayers : NetworkBehaviour
                 GetPassengersRpcParams()
             );
         }
+    }
+
+    [ClientRpc]
+    private void ShowElevatorButtonsClientRpc(
+    ulong targetClientId,
+    bool isSeatOne,
+    bool isNotFull)
+    {
+        if (NetworkManager.Singleton.LocalClientId != targetClientId)
+            return;
+
+        ElevatorMenu.Instance?.ShowLeaveButton(true);
+
+        ElevatorMenu.Instance?.UpdateStartButton(true);
     }
 }

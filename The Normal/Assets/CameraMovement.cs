@@ -36,7 +36,7 @@ public class CameraMovement : MonoBehaviour
     public MultiplayerMenu menu;
 
     private Coroutine elevatorTransitionRoutine;
-    private bool inElevatorTransition;
+    public bool inElevatorTransition;
 
     private void Start()
     {
@@ -61,7 +61,7 @@ public class CameraMovement : MonoBehaviour
         Quaternion startRot = transform.rotation;
 
         float t = 0f;
-        float duration = 0.6f; // kort cinematic feel
+        float duration = 0.6f;
 
         while (t < duration)
         {
@@ -71,19 +71,30 @@ public class CameraMovement : MonoBehaviour
             float c = curve.Evaluate(n);
 
             Vector3 targetPos = playerTarget.position + firstPersonOffset;
+
             Quaternion targetRot = Quaternion.Euler(
                 elevatorCameraRotation.x,
                 playerTarget.eulerAngles.y,
                 elevatorCameraRotation.z
             );
 
-            transform.position = Vector3.Lerp(startPos, targetPos, c);
-            transform.rotation = Quaternion.Slerp(startRot, targetRot, c);
+            transform.position = Vector3.Lerp(
+                startPos,
+                targetPos,
+                c
+            );
+
+            transform.rotation = Quaternion.Slerp(
+                startRot,
+                targetRot,
+                c
+            );
 
             yield return null;
         }
 
         transform.position = playerTarget.position + firstPersonOffset;
+
         transform.rotation = Quaternion.Euler(
             elevatorCameraRotation.x,
             playerTarget.eulerAngles.y,
@@ -91,7 +102,7 @@ public class CameraMovement : MonoBehaviour
         );
 
         inElevatorTransition = false;
-        elevatorLocked = true; // pas NA cinematic lock
+        elevatorLocked = true;
     }
 
     public void SetTarget(Transform newTarget, PlayerCubeController newPlayer)
