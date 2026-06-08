@@ -363,7 +363,7 @@ public class ElevatorPlayers : NetworkBehaviour
             );
 
         Quaternion targetRot =
-            Quaternion.Euler(0f, 180f, 0f);
+            Quaternion.Euler(0f, 90f, 0f);
 
         while (true)
         {
@@ -407,7 +407,7 @@ public class ElevatorPlayers : NetworkBehaviour
         Vector3 targetPos =
             new Vector3(exitPoint.position.x, t.position.y, exitPoint.position.z);
 
-        Quaternion targetRot = Quaternion.Euler(0f, 180f, 0f);
+        Quaternion targetRot = Quaternion.Euler(0f, 90f, 0f);
 
         while (Vector3.Distance(t.position, targetPos) > 0.02f)
         {
