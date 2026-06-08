@@ -3,11 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
 
-public class SecondElevator : MonoBehaviour
+public class SecondElevator : NetworkBehaviour
 {
-    [Header("Platform")]
-    [SerializeField] private Transform elevatorPlatform;
-
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 2f;
 
@@ -18,7 +15,6 @@ public class SecondElevator : MonoBehaviour
     [SerializeField] private float dropDistance = 20f;
 
     private Vector3 startPosition;
-    private bool startCaptured;
 
     [Header("Doors")]
     [SerializeField] private Transform doorLeft;
@@ -27,17 +23,19 @@ public class SecondElevator : MonoBehaviour
     [SerializeField] private float doorMoveDistance = 1f;
     [SerializeField] private float doorMoveSpeed = 2f;
 
-    private void Awake()
+    public override void OnNetworkSpawn()
     {
-        startPosition = elevatorPlatform.position;
+        if (IsServer)
+        {
+            startPosition = transform.position;
+        }
     }
 
     public void StartSecondElevator(List<ulong> passengers)
     {
-        // 🔥 BELANGRIJK: pak EXACT scene positie op moment van starten
-        startPosition = elevatorPlatform.position;
-        startCaptured = true;
+        if (!IsServer) return;
 
+        startPosition = transform.position;
         StartCoroutine(RunElevator(passengers));
     }
 
@@ -51,39 +49,20 @@ public class SecondElevator : MonoBehaviour
             startPosition.z
         );
 
-        while (Vector3.Distance(elevatorPlatform.position, target) > 0.01f)
+        while (Vector3.Distance(transform.position, target) > 0.01f)
         {
-            elevatorPlatform.position = Vector3.MoveTowards(
-                elevatorPlatform.position,
+            transform.position = Vector3.MoveTowards(
+                transform.position,
                 target,
                 moveSpeed * Time.deltaTime
             );
 
-            // 🔥 FORCE PLAYERS MEETRACKEN
-            foreach (ulong id in passengers)
-            {
-                if (!NetworkManager.Singleton.ConnectedClients.TryGetValue(id, out var client))
-                    continue;
-
-                var player = client.PlayerObject.GetComponent<PlayerCubeController>();
-
-                if (player != null)
-                {
-                    Vector3 pos = player.transform.position;
-                    pos.y = elevatorPlatform.position.y;
-                    player.transform.position = pos;
-                }
-            }
-
             yield return null;
         }
 
-        elevatorPlatform.position = target;
+        transform.position = target;
 
-        // 🚪 deuren openen zodra elevator beneden is
         StartCoroutine(OpenDoors());
-
-        // 👥 spelers loslaten
         ReleasePlayers(passengers);
     }
 
@@ -111,15 +90,13 @@ public class SecondElevator : MonoBehaviour
             CharacterController cc = player.GetComponent<CharacterController>();
             if (cc != null) cc.enabled = false;
 
-            Vector3 spawnPos = spawnPoints[index].position;
-
-            player.transform.SetParent(null);
-            player.transform.position = spawnPos;
+            player.transform.position = spawnPoints[index].position;
             player.transform.rotation = Quaternion.identity;
 
             if (cc != null) cc.enabled = true;
 
-            player.SetElevatorFollow(elevatorPlatform);
+            // 👇 BELANGRIJK: laat players volgen via network-safe logic
+            player.SetElevatorFollow(transform);
         }
     }
 
@@ -136,12 +113,9 @@ public class SecondElevator : MonoBehaviour
             if (player == null)
                 continue;
 
-            player.transform.SetParent(null);
-
             player.SetInElevator(false);
             player.SetFrozen(false);
             player.ResetVelocity();
-
             player.SetCameraLockedClientRpc(false);
         }
     }
