@@ -253,8 +253,15 @@ public class PlayerCubeController : NetworkBehaviour
 
         if (cam != null)
         {
-            cam.inputLocked = value;
-            cam.elevatorLocked = value;
+            if (value)
+            {
+                cam.PlayElevatorEnterCinematic(transform);
+            }
+            else
+            {
+                cam.inputLocked = false;
+                cam.elevatorLocked = false;
+            }
         }
     }
 

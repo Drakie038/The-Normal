@@ -35,10 +35,63 @@ public class CameraMovement : MonoBehaviour
 
     public MultiplayerMenu menu;
 
+    private Coroutine elevatorTransitionRoutine;
+    private bool inElevatorTransition;
+
     private void Start()
     {
         menuPos = transform.position;
         menuRot = transform.rotation;
+    }
+
+    public void PlayElevatorEnterCinematic(Transform playerTarget)
+    {
+        if (elevatorTransitionRoutine != null)
+            StopCoroutine(elevatorTransitionRoutine);
+
+        elevatorTransitionRoutine = StartCoroutine(ElevatorEnterRoutine(playerTarget));
+    }
+
+    private IEnumerator ElevatorEnterRoutine(Transform playerTarget)
+    {
+        inElevatorTransition = true;
+        inputLocked = true;
+
+        Vector3 startPos = transform.position;
+        Quaternion startRot = transform.rotation;
+
+        float t = 0f;
+        float duration = 0.6f; // kort cinematic feel
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+
+            float n = Mathf.Clamp01(t / duration);
+            float c = curve.Evaluate(n);
+
+            Vector3 targetPos = playerTarget.position + firstPersonOffset;
+            Quaternion targetRot = Quaternion.Euler(
+                elevatorCameraRotation.x,
+                playerTarget.eulerAngles.y,
+                elevatorCameraRotation.z
+            );
+
+            transform.position = Vector3.Lerp(startPos, targetPos, c);
+            transform.rotation = Quaternion.Slerp(startRot, targetRot, c);
+
+            yield return null;
+        }
+
+        transform.position = playerTarget.position + firstPersonOffset;
+        transform.rotation = Quaternion.Euler(
+            elevatorCameraRotation.x,
+            playerTarget.eulerAngles.y,
+            elevatorCameraRotation.z
+        );
+
+        inElevatorTransition = false;
+        elevatorLocked = true; // pas NA cinematic lock
     }
 
     public void SetTarget(Transform newTarget, PlayerCubeController newPlayer)
@@ -110,6 +163,12 @@ public class CameraMovement : MonoBehaviour
             elevatorLocked ||
             settingsLocked ||
             inElevator;
+
+        if (inElevatorTransition)
+        {
+            HandleCursor(inElevator);
+            return;
+        }
 
         if (lockCamera)
         {
