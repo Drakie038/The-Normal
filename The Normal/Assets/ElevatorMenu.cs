@@ -29,7 +29,6 @@ public class ElevatorMenu : MonoBehaviour
             leaveButton.onClick.AddListener(OnClickLeave);
         }
 
-        // 👇 HIER KOMT JE START BUTTON CODE
         if (startElevatorButton != null)
         {
             startElevatorButton.gameObject.SetActive(false);
@@ -89,7 +88,7 @@ public class ElevatorMenu : MonoBehaviour
 
     public void StopTimer()
     {
-        currentTimer = 0f; // 🔥 BELANGRIJK: hard reset
+        currentTimer = 0f;
 
         if (timerRoutine != null)
         {
@@ -106,6 +105,8 @@ public class ElevatorMenu : MonoBehaviour
 
     private IEnumerator TimerCountdown()
     {
+        bool doorsClosedTriggered = false;
+
         while (currentTimer > 0f)
         {
             currentTimer -= Time.deltaTime;
@@ -115,10 +116,15 @@ public class ElevatorMenu : MonoBehaviour
             if (timerText != null)
                 timerText.text = secondsLeft.ToString();
 
-            // 🔥 FIX: leave button verdwijnt bij <= 1 seconde
-            if (secondsLeft <= 1)
+            // 🚪 3 seconden voor einde: leave button weg + deuren dicht
+            if (!doorsClosedTriggered && currentTimer <= 3f)
             {
+                doorsClosedTriggered = true;
+
                 ShowLeaveButton(false);
+
+                // 🚪 deuren sluiten starten
+                FindObjectOfType<OpenDoorEntrance>()?.StartDoorSequence();
             }
 
             yield return null;
@@ -129,11 +135,8 @@ public class ElevatorMenu : MonoBehaviour
 
         StopTimer();
 
-        if (currentTimer <= 0f)
-        {
-            StopTimer();
-            ElevatorPlayers.Instance?.TriggerElevatorStartServerRpc();
-        }
+        // 🚀 elevator start bij 0
+        ElevatorPlayers.Instance?.TriggerElevatorStartServerRpc();
     }
 
     public void ForceResetUI()
@@ -152,7 +155,7 @@ public class ElevatorMenu : MonoBehaviour
 
     private void OnClickLeave()
     {
-        CancelCooldownInstant(); // 🔥 DIRECT UI + cooldown kill
+        CancelCooldownInstant();
 
         PlayerCubeController[] players =
             FindObjectsOfType<PlayerCubeController>();

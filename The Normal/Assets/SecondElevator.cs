@@ -20,6 +20,13 @@ public class SecondElevator : MonoBehaviour
     private Vector3 startPosition;
     private bool startCaptured;
 
+    [Header("Doors")]
+    [SerializeField] private Transform doorLeft;
+    [SerializeField] private Transform doorRight;
+
+    [SerializeField] private float doorMoveDistance = 1f;
+    [SerializeField] private float doorMoveSpeed = 2f;
+
     private void Awake()
     {
         startPosition = elevatorPlatform.position;
@@ -73,6 +80,10 @@ public class SecondElevator : MonoBehaviour
 
         elevatorPlatform.position = target;
 
+        // 🚪 deuren openen zodra elevator beneden is
+        StartCoroutine(OpenDoors());
+
+        // 👥 spelers loslaten
         ReleasePlayers(passengers);
     }
 
@@ -133,5 +144,35 @@ public class SecondElevator : MonoBehaviour
 
             player.SetCameraLockedClientRpc(false);
         }
+    }
+
+    private IEnumerator OpenDoors()
+    {
+        Vector3 leftStart = doorLeft.position;
+        Vector3 rightStart = doorRight.position;
+
+        Vector3 leftTarget = leftStart + Vector3.right * doorMoveDistance;
+        Vector3 rightTarget = rightStart + Vector3.left * doorMoveDistance;
+
+        while (Vector3.Distance(doorLeft.position, leftTarget) > 0.01f ||
+               Vector3.Distance(doorRight.position, rightTarget) > 0.01f)
+        {
+            doorLeft.position = Vector3.MoveTowards(
+                doorLeft.position,
+                leftTarget,
+                doorMoveSpeed * Time.deltaTime
+            );
+
+            doorRight.position = Vector3.MoveTowards(
+                doorRight.position,
+                rightTarget,
+                doorMoveSpeed * Time.deltaTime
+            );
+
+            yield return null;
+        }
+
+        doorLeft.position = leftTarget;
+        doorRight.position = rightTarget;
     }
 }
