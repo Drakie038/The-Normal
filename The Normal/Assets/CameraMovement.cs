@@ -38,6 +38,11 @@ public class CameraMovement : MonoBehaviour
     private Coroutine elevatorTransitionRoutine;
     public bool inElevatorTransition;
 
+    [Header("Door Detection")]
+    public float doorDetectDistance = 3f;
+
+    private DoorHallway currentDoor;
+
     private void Start()
     {
         menuPos = transform.position;
@@ -178,6 +183,7 @@ public class CameraMovement : MonoBehaviour
         if (inElevatorTransition)
         {
             HandleCursor(inElevator);
+            DetectDoor();
             return;
         }
 
@@ -185,11 +191,14 @@ public class CameraMovement : MonoBehaviour
         {
             HandleLockedCamera(inElevator);
             HandleCursor(inElevator);
+            DetectDoor();
             return;
         }
 
         HandleFPSCamera(inElevator);
         HandleCursor(inElevator);
+
+        DetectDoor();
     }
 
     private void HandleLockedCamera(bool inElevator)
@@ -283,5 +292,35 @@ public class CameraMovement : MonoBehaviour
 
         transform.position = menuPos;
         transform.rotation = menuRot;
+    }
+
+    private void DetectDoor()
+    {
+        Ray ray = new Ray(transform.position, transform.forward);
+
+        if (Physics.Raycast(ray, out RaycastHit hit, doorDetectDistance))
+        {
+            DoorHallway door = hit.collider.GetComponent<DoorHallway>();
+
+            if (door != null)
+            {
+                if (currentDoor != door)
+                {
+                    if (currentDoor != null)
+                        currentDoor.SetHighlight(false);
+
+                    currentDoor = door;
+                    currentDoor.SetHighlight(true);
+                }
+
+                return;
+            }
+        }
+
+        if (currentDoor != null)
+        {
+            currentDoor.SetHighlight(false);
+            currentDoor = null;
+        }
     }
 }
