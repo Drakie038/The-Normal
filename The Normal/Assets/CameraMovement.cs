@@ -21,6 +21,11 @@ public class CameraMovement : MonoBehaviour
     private Transform target;
     private PlayerCubeController player;
 
+    [Header("Door Detection")]
+    public float doorDetectDistance = 3f;
+
+    private DoorHallway currentDoor;
+
     private enum State { Menu, Cinematic, FPS }
     private State state;
 
@@ -37,22 +42,19 @@ public class CameraMovement : MonoBehaviour
 
     private Coroutine elevatorTransitionRoutine;
     public bool inElevatorTransition;
-
-    [Header("Door Detection")]
-    public float doorDetectDistance = 3f;
-
-    private DoorHallway currentDoor;
-
+    
     private float doorLean;
-
     public void SetDoorLean(float value)
     {
-        doorLean = value;
+        doorLeanTarget = value;
     }
+    public float GetDoorLean() => doorLean;
 
-    public float GetDoorLean()
+    private float doorLeanTarget;
+
+    public void SetDoorLeanTarget(float value)
     {
-        return doorLean;
+        doorLeanTarget = value;
     }
 
     private void Start()
@@ -184,12 +186,6 @@ public class CameraMovement : MonoBehaviour
         if (state != State.FPS)
             return;
 
-        if (player != null && player.frozen)
-        {
-            HandleCursor(false);
-            return;
-        }
-
         bool inElevator = player != null && player.inElevator.Value;
 
         bool lockCamera =
@@ -201,7 +197,7 @@ public class CameraMovement : MonoBehaviour
         if (inElevatorTransition)
         {
             HandleCursor(inElevator);
-            DetectDoor();
+            DetectDoor(); // ✅ ADD
             return;
         }
 
@@ -209,14 +205,14 @@ public class CameraMovement : MonoBehaviour
         {
             HandleLockedCamera(inElevator);
             HandleCursor(inElevator);
-            DetectDoor();
+            DetectDoor(); // ✅ ADD
             return;
         }
 
         HandleFPSCamera(inElevator);
         HandleCursor(inElevator);
 
-        DetectDoor();
+        DetectDoor(); // ✅ ADD (dit was weg)
     }
 
     private void HandleLockedCamera(bool inElevator)
@@ -241,6 +237,8 @@ public class CameraMovement : MonoBehaviour
 
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, -maxLookAngle, maxLookAngle);
+
+        doorLean = Mathf.Lerp(doorLean, doorLeanTarget, Time.deltaTime * 8f);
 
         transform.rotation = Quaternion.Euler(
             xRotation,
@@ -339,7 +337,7 @@ public class CameraMovement : MonoBehaviour
                     currentDoor.SetCurrentPlayer(player);
                 }
 
-                // 🔥 BELANGRIJK: altijd collider doorgeven
+                // 🔥 CRUCIAL: geef collider door
                 currentDoor.SetFromCollider(hit.collider);
 
                 return;

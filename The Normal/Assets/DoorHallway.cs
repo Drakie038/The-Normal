@@ -1,80 +1,88 @@
 ﻿using UnityEngine;
+using Unity.Netcode;
 
-public class DoorHallway : MonoBehaviour
+public class DoorHallway : NetworkBehaviour
 {
+    [Header("Door Colliders (CHILDREN)")]
+    public Collider frontCollider;
+    public Collider backCollider;
+
     [Header("Door Settings")]
     public float openAngle = 90f;
-    public float peekAngleMultiplier = 0.35f;
+    public float peekAngleMultiplier = 0.5f;
     public float openSpeed = 6f;
 
     [Header("Camera Lean")]
     public float cameraLeanAngle = 8f;
-    public float cameraLeanSpeed = 6f;
 
     [Header("Highlight")]
     public Color highlightColor = Color.yellow;
     [Range(0f, 2f)] public float intensity = 0.3f;
 
-    [Header("Colliders")]
-    public Collider frontCollider;
-    public Collider backCollider;
-
     private Renderer rend;
     private Material mat;
-
-    private bool isHighlighted;
-
-    private bool isPeeking;
-    private bool isOpen;
-
-    private float holdTimer;
-    private const float holdThreshold = 0.25f;
-    private bool holding;
-
-    private Quaternion targetRotation;
 
     private PlayerCubeController currentPlayer;
     private CameraMovement currentCamera;
 
-    private bool isTransitioning;
+    private bool isHighlighted;
+    private float holdTimer;
+    private const float holdThreshold = 0.25f;
+    private bool holding;
 
-    // 🔥 direction
-    private int sideSign = 1;
+    private Quaternion closedRotation;
+    private Quaternion openRotation;
+    private Quaternion peekRotation;
 
-    // 🔥 base rotation Y
-    private float baseY;
+    // ================= NETWORK STATE =================
+
+    private enum DoorState : byte
+    {
+        Closed,
+        Open,
+        Peek
+    }
+
+    private NetworkVariable<DoorState> netState =
+        new NetworkVariable<DoorState>(
+            DoorState.Closed,
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Server
+        );
+
+    private NetworkVariable<float> netDirection =
+        new NetworkVariable<float>(
+            1f,
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Server
+        );
 
     private void Awake()
     {
         rend = GetComponentInChildren<Renderer>();
+        if (rend != null) mat = rend.material;
 
-        if (rend != null)
-            mat = rend.material;
+        closedRotation = transform.rotation;
+    }
 
-        baseY = transform.eulerAngles.y;
-
-        targetRotation = transform.rotation;
+    public override void OnNetworkSpawn()
+    {
+        if (IsServer)
+        {
+            netState.Value = DoorState.Closed;
+            netDirection.Value = 1f;
+        }
     }
 
     private void Update()
     {
         HandleInput();
-
-        transform.rotation = Quaternion.Slerp(
-            transform.rotation,
-            targetRotation,
-            Time.deltaTime * openSpeed
-        );
-
-        // 🔥 NEW: transition finish detect
-        if (Quaternion.Angle(transform.rotation, targetRotation) < 0.5f)
-        {
-            transform.rotation = targetRotation;
-            isTransitioning = false;
-        }
-
+        UpdateRotationsFromState();
+        HandleRotation();
         HandleCameraLean();
     }
+
+    // ================= INPUT =================
 
     private void HandleInput()
     {
@@ -91,84 +99,126 @@ public class DoorHallway : MonoBehaviour
         {
             holdTimer += Time.deltaTime;
 
-            if (holdTimer >= holdThreshold && !isPeeking)
+            if (holdTimer >= holdThreshold && netState.Value != DoorState.Peek)
             {
-                StartPeek();
+                RequestStartPeekServerRpc();
             }
         }
 
         if (Input.GetKeyUp(KeyCode.E))
         {
             holding = false;
-            holdTimer = 0f;
 
-            if (isPeeking || isTransitioning)
+            if (netState.Value == DoorState.Peek)
             {
-                ForceClose();
+                RequestCloseDoorServerRpc();
                 return;
             }
 
-            ToggleDoor();
+            if (holdTimer < holdThreshold)
+            {
+                RequestToggleDoorServerRpc();
+            }
+
+            holdTimer = 0f;
         }
     }
 
-    private void ToggleDoor()
+    // ================= ROTATIONS =================
+
+    private void UpdateRotationsFromState()
     {
-        if (isTransitioning) return;
+        float angle = openAngle * netDirection.Value;
 
-        isTransitioning = true;
+        openRotation = closedRotation * Quaternion.Euler(0f, angle, 0f);
+        peekRotation = closedRotation * Quaternion.Euler(0f, angle * peekAngleMultiplier, 0f);
+    }
 
-        isOpen = !isOpen;
+    private void HandleRotation()
+    {
+        Quaternion target = netState.Value switch
+        {
+            DoorState.Open => openRotation,
+            DoorState.Peek => peekRotation,
+            _ => closedRotation
+        };
 
-        float dir = sideSign;
-
-        float y = baseY + (isOpen ? openAngle * dir : 0f);
-
-        targetRotation = Quaternion.Euler(
-            0f,
-            y,
-            0f
+        transform.rotation = Quaternion.Slerp(
+            transform.rotation,
+            target,
+            Time.deltaTime * openSpeed
         );
     }
 
-    private void StartPeek()
-    {
-        if (isTransitioning) return;
+    // ================= FRONT / BACK =================
 
-        isTransitioning = true;
-        isPeeking = true;
+    public void SetFromCollider(Collider hitCollider)
+    {
+        float dir = (hitCollider == frontCollider) ? 1f : -1f;
+        RequestSetDirectionServerRpc(dir);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void RequestSetDirectionServerRpc(float dir)
+    {
+        netDirection.Value = dir;
+    }
+
+    // ================= SERVER ACTIONS =================
+
+    [ServerRpc(RequireOwnership = false)]
+    private void RequestToggleDoorServerRpc()
+    {
+        netState.Value =
+            (netState.Value == DoorState.Open)
+                ? DoorState.Closed
+                : DoorState.Open;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void RequestStartPeekServerRpc()
+    {
+        netState.Value = DoorState.Peek;
 
         if (currentPlayer != null)
             currentPlayer.SetFrozen(true);
-
-        float dir = sideSign;
-
-        float y = baseY + (openAngle * peekAngleMultiplier * dir);
-
-        targetRotation = Quaternion.Euler(
-            0f,
-            y,
-            0f
-        );
     }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void RequestCloseDoorServerRpc()
+    {
+        netState.Value = DoorState.Closed;
+
+        if (currentPlayer != null)
+            currentPlayer.SetFrozen(false);
+
+        if (currentCamera != null)
+            currentCamera.SetDoorLeanTarget(0f);
+    }
+
+    // ================= CAMERA =================
 
     private void HandleCameraLean()
     {
         if (currentCamera == null)
             return;
 
-        float targetLean = isPeeking ? cameraLeanAngle : 0f;
+        float lean = (netState.Value == DoorState.Peek)
+            ? cameraLeanAngle * netDirection.Value
+            : 0f;
 
-        currentCamera.SetDoorLean(
-            Mathf.Lerp(currentCamera.GetDoorLean(), targetLean, Time.deltaTime * cameraLeanSpeed)
-        );
+        currentCamera.SetDoorLean(lean);
     }
+
+    // ================= PLAYER =================
 
     public void SetCurrentPlayer(PlayerCubeController player)
     {
         currentPlayer = player;
-        currentCamera = FindObjectOfType<CameraMovement>();
+        currentCamera = Camera.main.GetComponent<CameraMovement>();
     }
+
+    // ================= HIGHLIGHT =================
 
     public void SetHighlight(bool active)
     {
@@ -186,32 +236,5 @@ public class DoorHallway : MonoBehaviour
             mat.DisableKeyword("_EMISSION");
             mat.SetColor("_EmissionColor", Color.black);
         }
-    }
-
-    private void ForceClose()
-    {
-        isPeeking = false;
-        isOpen = false;
-        holding = false;
-        holdTimer = 0f;
-
-        if (currentPlayer != null)
-            currentPlayer.SetFrozen(false);
-
-        targetRotation = Quaternion.Euler(0f, baseY, 0f);
-
-        if (currentCamera != null)
-            currentCamera.SetDoorLean(0f);
-
-        isTransitioning = true;
-    }
-
-    // 🔥 called from camera
-    public void SetFromCollider(Collider hitCollider)
-    {
-        if (hitCollider == frontCollider)
-            sideSign = 1;
-        else if (hitCollider == backCollider)
-            sideSign = -1;
     }
 }
