@@ -17,7 +17,7 @@ public class PlayerCubeController : NetworkBehaviour
     private Vector2 moveInput;
 
     private bool canMove;
-    private bool frozen;
+    public bool frozen;
 
     public NetworkVariable<bool> inElevator = new NetworkVariable<bool>(false);
 

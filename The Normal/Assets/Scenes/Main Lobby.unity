@@ -205,7 +205,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DoorHallway
   doorDirection: 1
   openAngle: 90
+  peekAngleMultiplier: 0.45
   openSpeed: 3
+  cameraLeanAngle: 8
+  cameraLeanSpeed: 6
   highlightColor: {r: 1, g: 1, b: 1, a: 1}
   intensity: 0.05
 --- !u!65 &44919845
@@ -7470,7 +7473,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DoorHallway
   doorDirection: 0
   openAngle: 90
+  peekAngleMultiplier: 0.45
   openSpeed: 3
+  cameraLeanAngle: 8
+  cameraLeanSpeed: 6
   highlightColor: {r: 1, g: 1, b: 1, a: 1}
   intensity: 0.05
 --- !u!65 &1623721983

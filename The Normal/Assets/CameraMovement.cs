@@ -43,6 +43,18 @@ public class CameraMovement : MonoBehaviour
 
     private DoorHallway currentDoor;
 
+    private float doorLean;
+
+    public void SetDoorLean(float value)
+    {
+        doorLean = value;
+    }
+
+    public float GetDoorLean()
+    {
+        return doorLean;
+    }
+
     private void Start()
     {
         menuPos = transform.position;
@@ -172,6 +184,12 @@ public class CameraMovement : MonoBehaviour
         if (state != State.FPS)
             return;
 
+        if (player != null && player.frozen)
+        {
+            HandleCursor(false);
+            return;
+        }
+
         bool inElevator = player != null && player.inElevator.Value;
 
         bool lockCamera =
@@ -224,7 +242,11 @@ public class CameraMovement : MonoBehaviour
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, -maxLookAngle, maxLookAngle);
 
-        transform.rotation = Quaternion.Euler(xRotation, target.eulerAngles.y, 0f);
+        transform.rotation = Quaternion.Euler(
+            xRotation,
+            target.eulerAngles.y,
+            doorLean
+        );
         transform.position = target.position + firstPersonOffset;
     }
 
@@ -307,10 +329,16 @@ public class CameraMovement : MonoBehaviour
                 if (currentDoor != door)
                 {
                     if (currentDoor != null)
+                    {
                         currentDoor.SetHighlight(false);
+                        currentDoor.SetCurrentPlayer(null);
+                    }
 
                     currentDoor = door;
                     currentDoor.SetHighlight(true);
+
+                    // ✅ koppelt de huidige speler aan de deur
+                    currentDoor.SetCurrentPlayer(player);
                 }
 
                 return;
@@ -320,6 +348,7 @@ public class CameraMovement : MonoBehaviour
         if (currentDoor != null)
         {
             currentDoor.SetHighlight(false);
+            currentDoor.SetCurrentPlayer(null);
             currentDoor = null;
         }
     }
