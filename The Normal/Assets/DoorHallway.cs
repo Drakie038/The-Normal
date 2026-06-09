@@ -2,15 +2,7 @@
 
 public class DoorHallway : MonoBehaviour
 {
-    public enum DoorDirection
-    {
-        Left,
-        Right
-    }
-
     [Header("Door Settings")]
-    public DoorDirection doorDirection = DoorDirection.Left;
-
     public float openAngle = 90f;
     public float peekAngleMultiplier = 0.35f;
     public float openSpeed = 6f;
@@ -22,6 +14,10 @@ public class DoorHallway : MonoBehaviour
     [Header("Highlight")]
     public Color highlightColor = Color.yellow;
     [Range(0f, 2f)] public float intensity = 0.3f;
+
+    [Header("Colliders")]
+    public Collider frontCollider;
+    public Collider backCollider;
 
     private Renderer rend;
     private Material mat;
@@ -35,15 +31,19 @@ public class DoorHallway : MonoBehaviour
     private const float holdThreshold = 0.25f;
     private bool holding;
 
-    private Quaternion closedRotation;
-    private Quaternion openRotation;
-    private Quaternion peekRotation;
     private Quaternion targetRotation;
 
     private PlayerCubeController currentPlayer;
     private CameraMovement currentCamera;
 
     private bool isTransitioning;
+
+    // 🔥 direction
+    private int sideSign = 1;
+
+    // 🔥 base rotation Y
+    private float baseY;
+
     private void Awake()
     {
         rend = GetComponentInChildren<Renderer>();
@@ -51,49 +51,27 @@ public class DoorHallway : MonoBehaviour
         if (rend != null)
             mat = rend.material;
 
-        closedRotation = transform.rotation;
+        baseY = transform.eulerAngles.y;
 
-        float dir = (doorDirection == DoorDirection.Left) ? -1f : 1f;
-
-        openRotation = closedRotation * Quaternion.Euler(0f, openAngle * dir, 0f);
-        peekRotation = closedRotation * Quaternion.Euler(0f, openAngle * peekAngleMultiplier * dir, 0f);
-
-        targetRotation = closedRotation;
+        targetRotation = transform.rotation;
     }
 
     private void Update()
     {
         HandleInput();
 
-        if (isTransitioning)
-        {
-            transform.rotation = Quaternion.Slerp(
-                transform.rotation,
-                targetRotation,
-                Time.deltaTime * openSpeed
-            );
-
-            if (Quaternion.Angle(transform.rotation, targetRotation) < 0.5f)
-            {
-                transform.rotation = targetRotation;
-                isTransitioning = false;
-            }
-
-            HandleCameraLean();
-            return;
-        }
-
-        if (!isPeeking && !holding)
-        {
-            // allow normal door motion to finish quickly
-            isTransitioning = false;
-        }
-
         transform.rotation = Quaternion.Slerp(
             transform.rotation,
             targetRotation,
             Time.deltaTime * openSpeed
         );
+
+        // 🔥 NEW: transition finish detect
+        if (Quaternion.Angle(transform.rotation, targetRotation) < 0.5f)
+        {
+            transform.rotation = targetRotation;
+            isTransitioning = false;
+        }
 
         HandleCameraLean();
     }
@@ -103,19 +81,16 @@ public class DoorHallway : MonoBehaviour
         if (!isHighlighted)
             return;
 
-        // START HOLD
         if (Input.GetKeyDown(KeyCode.E))
         {
             holding = true;
             holdTimer = 0f;
         }
 
-        // HOLDING
         if (holding)
         {
             holdTimer += Time.deltaTime;
 
-            // 🔥 PEek ACTIVE zodra threshold bereikt is (TIJDENS hold)
             if (holdTimer >= holdThreshold && !isPeeking)
             {
                 StartPeek();
@@ -127,7 +102,6 @@ public class DoorHallway : MonoBehaviour
             holding = false;
             holdTimer = 0f;
 
-            // 🔥 ALS E WORDT LOSGELATEN: ALTIJD DIRECT CLOSE OVERRIDE
             if (isPeeking || isTransitioning)
             {
                 ForceClose();
@@ -145,7 +119,16 @@ public class DoorHallway : MonoBehaviour
         isTransitioning = true;
 
         isOpen = !isOpen;
-        targetRotation = isOpen ? openRotation : closedRotation;
+
+        float dir = sideSign;
+
+        float y = baseY + (isOpen ? openAngle * dir : 0f);
+
+        targetRotation = Quaternion.Euler(
+            0f,
+            y,
+            0f
+        );
     }
 
     private void StartPeek()
@@ -153,31 +136,20 @@ public class DoorHallway : MonoBehaviour
         if (isTransitioning) return;
 
         isTransitioning = true;
-
         isPeeking = true;
 
         if (currentPlayer != null)
             currentPlayer.SetFrozen(true);
 
-        targetRotation = peekRotation;
-    }
+        float dir = sideSign;
 
-    private void StopPeek()
-    {
-        if (isTransitioning) return;
+        float y = baseY + (openAngle * peekAngleMultiplier * dir);
 
-        isTransitioning = true;
-
-        isPeeking = false;
-
-        if (currentPlayer != null)
-            currentPlayer.SetFrozen(false);
-
-        // 🔥 altijd terug naar dicht
-        targetRotation = closedRotation;
-
-        if (currentCamera != null)
-            currentCamera.SetDoorLean(0f);
+        targetRotation = Quaternion.Euler(
+            0f,
+            y,
+            0f
+        );
     }
 
     private void HandleCameraLean()
@@ -226,11 +198,20 @@ public class DoorHallway : MonoBehaviour
         if (currentPlayer != null)
             currentPlayer.SetFrozen(false);
 
-        targetRotation = closedRotation;
+        targetRotation = Quaternion.Euler(0f, baseY, 0f);
 
         if (currentCamera != null)
             currentCamera.SetDoorLean(0f);
 
         isTransitioning = true;
+    }
+
+    // 🔥 called from camera
+    public void SetFromCollider(Collider hitCollider)
+    {
+        if (hitCollider == frontCollider)
+            sideSign = 1;
+        else if (hitCollider == backCollider)
+            sideSign = -1;
     }
 }

@@ -1,5 +1,111 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1764897294820752270
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8320132049398557171}
+  - component: {fileID: 3588451487905315553}
+  m_Layer: 0
+  m_Name: Back
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8320132049398557171
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1764897294820752270}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8637377910917836450}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &3588451487905315553
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1764897294820752270}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.1, y: 2.191922, z: 1.0851648}
+  m_Center: {x: -0.2, y: -0.06651938, z: -0.5165453}
+--- !u!1 &8532043165693029503
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 659089351900396273}
+  - component: {fileID: 622373080408580903}
+  m_Layer: 0
+  m_Name: Front
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &659089351900396273
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8532043165693029503}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8637377910917836450}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &622373080408580903
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8532043165693029503}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.1, y: 2.191922, z: 1.0851648}
+  m_Center: {x: -0.1, y: -0.06651938, z: -0.5165453}
 --- !u!1001 &8094261620578797897
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -54,11 +160,17 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: e4174440c0bd6814982e3bcb794b4b42, type: 2}
     - target: {fileID: 919132149155446097, guid: 4e31d82346c1ee044a4bd07ee31f4c6e, type: 3}
       propertyPath: m_Name
-      value: door left hallway
+      value: door lhallway
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 4e31d82346c1ee044a4bd07ee31f4c6e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 659089351900396273}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 4e31d82346c1ee044a4bd07ee31f4c6e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8320132049398557171}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 4e31d82346c1ee044a4bd07ee31f4c6e, type: 3}
       insertIndex: -1
@@ -69,10 +181,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 4e31d82346c1ee044a4bd07ee31f4c6e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4769889432272601365}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 4e31d82346c1ee044a4bd07ee31f4c6e, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 5450640501453610131}
   m_SourcePrefab: {fileID: 100100000, guid: 4e31d82346c1ee044a4bd07ee31f4c6e, type: 3}
+--- !u!4 &8637377910917836450 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 4e31d82346c1ee044a4bd07ee31f4c6e, type: 3}
+  m_PrefabInstance: {fileID: 8094261620578797897}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &8977347371803374616 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 4e31d82346c1ee044a4bd07ee31f4c6e, type: 3}
@@ -90,10 +204,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7753a7c051613a64dac214046cd793fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  doorDirection: 0
+  frontCollider: {fileID: 622373080408580903}
+  backCollider: {fileID: 3588451487905315553}
   openAngle: 90
   peekAngleMultiplier: 0.45
   openSpeed: 3
+  cameraLeanAngle: 8
+  cameraLeanSpeed: 6
   highlightColor: {r: 1, g: 1, b: 1, a: 1}
   intensity: 0.05
 --- !u!114 &-8989680979247559511
@@ -167,24 +284,3 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
---- !u!65 &5450640501453610131
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8977347371803374616}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.63678277, y: 2.191922, z: 1.0851648}
-  m_Center: {x: -0.14451478, y: -0.06651938, z: -0.5165453}

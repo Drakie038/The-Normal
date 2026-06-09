@@ -322,7 +322,7 @@ public class CameraMovement : MonoBehaviour
 
         if (Physics.Raycast(ray, out RaycastHit hit, doorDetectDistance))
         {
-            DoorHallway door = hit.collider.GetComponent<DoorHallway>();
+            DoorHallway door = hit.collider.GetComponentInParent<DoorHallway>();
 
             if (door != null)
             {
@@ -336,10 +336,11 @@ public class CameraMovement : MonoBehaviour
 
                     currentDoor = door;
                     currentDoor.SetHighlight(true);
-
-                    // ✅ koppelt de huidige speler aan de deur
                     currentDoor.SetCurrentPlayer(player);
                 }
+
+                // 🔥 BELANGRIJK: altijd collider doorgeven
+                currentDoor.SetFromCollider(hit.collider);
 
                 return;
             }
