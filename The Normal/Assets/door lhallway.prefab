@@ -53,6 +53,68 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.1, y: 2.191922, z: 1.0851648}
   m_Center: {x: -0.2, y: -0.06651938, z: -0.5165453}
+--- !u!1 &3692333032392079477
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5839400712511853595}
+  m_Layer: 0
+  m_Name: For
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5839400712511853595
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3692333032392079477}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.2009995, y: -1.2170001, z: -0.64554965}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8637377910917836450}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &4894860146935488684
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8499408209816967089}
+  m_Layer: 0
+  m_Name: Back
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8499408209816967089
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4894860146935488684}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.401999, y: -1.2170001, z: -0.64554965}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8637377910917836450}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8532043165693029503
 GameObject:
   m_ObjectHideFlags: 0
@@ -171,6 +233,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 4e31d82346c1ee044a4bd07ee31f4c6e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8320132049398557171}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 4e31d82346c1ee044a4bd07ee31f4c6e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5839400712511853595}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 4e31d82346c1ee044a4bd07ee31f4c6e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8499408209816967089}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 4e31d82346c1ee044a4bd07ee31f4c6e, type: 3}
       insertIndex: -1
@@ -204,8 +272,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7753a7c051613a64dac214046cd793fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  frontCollider: {fileID: 622373080408580903}
-  backCollider: {fileID: 3588451487905315553}
   openAngle: 90
   peekAngleMultiplier: 0.45
   openSpeed: 3
@@ -213,6 +279,8 @@ MonoBehaviour:
   cameraLeanSpeed: 6
   highlightColor: {r: 1, g: 1, b: 1, a: 1}
   intensity: 0.05
+  frontCollider: {fileID: 622373080408580903}
+  backCollider: {fileID: 3588451487905315553}
 --- !u!114 &-8989680979247559511
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -225,7 +293,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 2576936388
+  GlobalObjectIdHash: 245112725
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1

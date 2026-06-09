@@ -3862,6 +3862,10 @@ PrefabInstance:
       propertyPath: InScenePlacedSourceGlobalObjectIdHash
       value: 2576936388
       objectReference: {fileID: 0}
+    - target: {fileID: -4580585452320009264, guid: c8a7e7a40786c0d4a8f2d89b0bf08c63, type: 3}
+      propertyPath: cameraLeanAngle
+      value: 25
+      objectReference: {fileID: 0}
     - target: {fileID: 8637377910917836450, guid: c8a7e7a40786c0d4a8f2d89b0bf08c63, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.064370304
