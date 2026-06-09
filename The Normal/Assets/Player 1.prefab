@@ -228,8 +228,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCubeController
   ShowTopMostFoldoutHeaderGroup: 1
-  moveSpeed: 3
+  moveSpeed: 5
   gravity: -9.81
+  frozen: 0
   inElevator:
     UpdateTraits:
       MinSecondsBetweenUpdates: 0

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using Unity.Netcode;
+using System.Collections;
 
 public class DoorHallway : NetworkBehaviour
 {
@@ -33,6 +34,36 @@ public class DoorHallway : NetworkBehaviour
     private Quaternion closedRotation;
     private Quaternion openRotation;
     private Quaternion peekRotation;
+
+    [Header("Front / Back Targets")]
+    public Transform frontPoint;
+    public Transform backPoint;
+
+    [Header("Exit Targets (after peek)")]
+    public Transform front2;
+    public Transform back2;
+
+    private DoorState prevState;
+
+    private void HandlePlayerPeekMovement()
+    {
+        if (currentPlayer == null)
+            return;
+
+        if (netState.Value != DoorState.Peek)
+            return;
+
+        Transform target = (netDirection.Value > 0f) ? frontPoint : backPoint;
+
+        if (target == null)
+            return;
+
+        currentPlayer.transform.position = Vector3.MoveTowards(
+            currentPlayer.transform.position,
+            target.position,
+            openSpeed * Time.deltaTime
+        );
+    }
 
     // ================= NETWORK STATE =================
 
@@ -80,6 +111,15 @@ public class DoorHallway : NetworkBehaviour
         UpdateRotationsFromState();
         HandleRotation();
         HandleCameraLean();
+
+        HandlePlayerPeekMovement();
+
+        if (prevState == DoorState.Peek && netState.Value == DoorState.Closed)
+        {
+            StartCoroutine(MovePlayerToExitPoint());
+        }
+
+        prevState = netState.Value;
     }
 
     // ================= INPUT =================
@@ -236,5 +276,34 @@ public class DoorHallway : NetworkBehaviour
             mat.DisableKeyword("_EMISSION");
             mat.SetColor("_EmissionColor", Color.black);
         }
+    }
+
+    private IEnumerator MovePlayerToExitPoint()
+    {
+        if (currentPlayer == null)
+            yield break;
+
+        Transform target =
+            (netDirection.Value > 0f) ? front2 : back2;
+
+        if (target == null)
+            yield break;
+
+        currentPlayer.SetFrozen(true);
+
+        while (Vector3.Distance(currentPlayer.transform.position, target.position) > 0.05f)
+        {
+            currentPlayer.transform.position = Vector3.MoveTowards(
+                currentPlayer.transform.position,
+                target.position,
+                openSpeed * Time.deltaTime
+            );
+
+            yield return null;
+        }
+
+        currentPlayer.transform.position = target.position;
+
+        currentPlayer.SetFrozen(false);
     }
 }
