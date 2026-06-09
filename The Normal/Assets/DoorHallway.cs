@@ -39,11 +39,50 @@ public class DoorHallway : NetworkBehaviour
     public Transform frontPoint;
     public Transform backPoint;
 
-    [Header("Exit Targets (after peek)")]
+    [Header("Front / Back Exit Targets")]
     public Transform front2;
     public Transform back2;
 
-    private DoorState prevState;
+    private bool isTransitioning;
+
+
+    // ================= NETWORK STATE =================
+
+    public enum DoorState : byte
+    {
+        Closed,
+        Open,
+        Peek
+    }
+
+    private IEnumerator MovePlayerToExitPoint()
+    {
+        if (currentPlayer == null)
+            yield break;
+
+        Transform target = (netDirection.Value > 0f) ? front2 : back2;
+
+        if (target == null)
+            yield break;
+
+        currentPlayer.SetFrozen(true);
+
+        while (Vector3.Distance(currentPlayer.transform.position, target.position) > 0.05f)
+        {
+            currentPlayer.transform.position = Vector3.MoveTowards(
+                currentPlayer.transform.position,
+                target.position,
+                openSpeed * Time.deltaTime
+            );
+
+            yield return null;
+        }
+
+        currentPlayer.transform.position = target.position;
+
+        // ✅ BELANGRIJK: speler weer vrijgeven
+        currentPlayer.SetFrozen(false);
+    }
 
     private void HandlePlayerPeekMovement()
     {
@@ -63,15 +102,6 @@ public class DoorHallway : NetworkBehaviour
             target.position,
             openSpeed * Time.deltaTime
         );
-    }
-
-    // ================= NETWORK STATE =================
-
-    private enum DoorState : byte
-    {
-        Closed,
-        Open,
-        Peek
     }
 
     private NetworkVariable<DoorState> netState =
@@ -94,6 +124,12 @@ public class DoorHallway : NetworkBehaviour
         if (rend != null) mat = rend.material;
 
         closedRotation = transform.rotation;
+
+        // ❗ FIX: detach targets zodat ze niet mee roteren
+        if (frontPoint != null) frontPoint.SetParent(null);
+        if (backPoint != null) backPoint.SetParent(null);
+        if (front2 != null) front2.SetParent(null);
+        if (back2 != null) back2.SetParent(null);
     }
 
     public override void OnNetworkSpawn()
@@ -112,20 +148,27 @@ public class DoorHallway : NetworkBehaviour
         HandleRotation();
         HandleCameraLean();
 
+
         HandlePlayerPeekMovement();
-
-        if (prevState == DoorState.Peek && netState.Value == DoorState.Closed)
-        {
-            StartCoroutine(MovePlayerToExitPoint());
-        }
-
-        prevState = netState.Value;
     }
 
     // ================= INPUT =================
 
     private void HandleInput()
     {
+        // ================= ALWAYS EXIT PEek =================
+        if (Input.GetKeyUp(KeyCode.E))
+        {
+            holding = false;
+            holdTimer = 0f;
+
+            if (netState.Value == DoorState.Peek)
+            {
+                RequestCloseDoorServerRpc();
+            }
+        }
+
+        // ================= ONLY START INTERACTION IF HIGHLIGHTED =================
         if (!isHighlighted)
             return;
 
@@ -139,7 +182,7 @@ public class DoorHallway : NetworkBehaviour
         {
             holdTimer += Time.deltaTime;
 
-            if (holdTimer >= holdThreshold && netState.Value != DoorState.Peek)
+            if (holdTimer >= holdThreshold && netState.Value == DoorState.Closed)
             {
                 RequestStartPeekServerRpc();
             }
@@ -149,19 +192,16 @@ public class DoorHallway : NetworkBehaviour
         {
             holding = false;
 
-            if (netState.Value == DoorState.Peek)
-            {
-                RequestCloseDoorServerRpc();
-                return;
-            }
-
-            if (holdTimer < holdThreshold)
+            if (netState.Value != DoorState.Peek && holdTimer < holdThreshold)
             {
                 RequestToggleDoorServerRpc();
             }
 
             holdTimer = 0f;
         }
+
+        if (isTransitioning)
+            return;
     }
 
     // ================= ROTATIONS =================
@@ -201,6 +241,9 @@ public class DoorHallway : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     private void RequestSetDirectionServerRpc(float dir)
     {
+        if (netState.Value != DoorState.Closed)
+            return; // ❗ lock direction while open/peek
+
         netDirection.Value = dir;
     }
 
@@ -209,15 +252,32 @@ public class DoorHallway : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     private void RequestToggleDoorServerRpc()
     {
+        if (isTransitioning)
+            return;
+
+        isTransitioning = true;
+
         netState.Value =
             (netState.Value == DoorState.Open)
                 ? DoorState.Closed
                 : DoorState.Open;
+
+        StartCoroutine(UnlockAfterDelay());
+    }
+
+    private IEnumerator UnlockAfterDelay()
+    {
+        yield return new WaitForSeconds(0.6f); // match openSpeed gevoel
+
+        isTransitioning = false;
     }
 
     [ServerRpc(RequireOwnership = false)]
     private void RequestStartPeekServerRpc()
     {
+        if (netState.Value != DoorState.Closed)
+            return;
+
         netState.Value = DoorState.Peek;
 
         if (currentPlayer != null)
@@ -227,13 +287,58 @@ public class DoorHallway : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     private void RequestCloseDoorServerRpc()
     {
+        if (netState.Value != DoorState.Peek)
+        {
+            netState.Value = DoorState.Closed;
+            return;
+        }
+
         netState.Value = DoorState.Closed;
 
+        // ❗ ALWAYS FORCE EXIT POSITION
         if (currentPlayer != null)
-            currentPlayer.SetFrozen(false);
+        {
+            StartCoroutine(ForceExitPeek());
+        }
 
         if (currentCamera != null)
+        {
             currentCamera.SetDoorLeanTarget(0f);
+        }
+    }
+
+    private IEnumerator ForceExitPeek()
+    {
+        // ❗ snapshot meteen (belangrijk!)
+        PlayerCubeController player = currentPlayer;
+
+        if (player == null)
+            yield break;
+
+        Transform target = (netDirection.Value > 0f) ? front2 : back2;
+
+        if (target == null)
+            yield break;
+
+        player.SetFrozen(true);
+
+        while (player != null &&
+               Vector3.Distance(player.transform.position, target.position) > 0.05f)
+        {
+            player.transform.position = Vector3.MoveTowards(
+                player.transform.position,
+                target.position,
+                openSpeed * Time.deltaTime
+            );
+
+            yield return null;
+        }
+
+        if (player != null)
+            player.transform.position = target.position;
+
+        if (player != null)
+            player.SetFrozen(false);
     }
 
     // ================= CAMERA =================
@@ -278,32 +383,8 @@ public class DoorHallway : NetworkBehaviour
         }
     }
 
-    private IEnumerator MovePlayerToExitPoint()
+    public bool IsPeeking()
     {
-        if (currentPlayer == null)
-            yield break;
-
-        Transform target =
-            (netDirection.Value > 0f) ? front2 : back2;
-
-        if (target == null)
-            yield break;
-
-        currentPlayer.SetFrozen(true);
-
-        while (Vector3.Distance(currentPlayer.transform.position, target.position) > 0.05f)
-        {
-            currentPlayer.transform.position = Vector3.MoveTowards(
-                currentPlayer.transform.position,
-                target.position,
-                openSpeed * Time.deltaTime
-            );
-
-            yield return null;
-        }
-
-        currentPlayer.transform.position = target.position;
-
-        currentPlayer.SetFrozen(false);
+        return netState.Value == DoorState.Peek;
     }
 }

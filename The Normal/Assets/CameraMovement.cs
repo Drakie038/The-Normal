@@ -26,6 +26,11 @@ public class CameraMovement : MonoBehaviour
 
     private DoorHallway currentDoor;
 
+    private bool IsPeeking()
+    {
+        return currentDoor != null && currentDoor.IsPeeking();
+    }
+
     private enum State { Menu, Cinematic, FPS }
     private State state;
 
@@ -325,12 +330,20 @@ public class CameraMovement : MonoBehaviour
 
             if (door != null)
             {
+                // ❌ BLOCK: geen re-detect tijdens peek op huidige deur
+                if (currentDoor != null && currentDoor.IsPeeking())
+                {
+                    return;
+                }
+
+                // ================= SWITCH DOOR =================
                 if (currentDoor != door)
                 {
                     if (currentDoor != null)
                     {
                         currentDoor.SetHighlight(false);
-                        currentDoor.SetCurrentPlayer(null);
+                        // alleen highlight reset, GEEN player nullen
+                        currentDoor.SetHighlight(false);
                     }
 
                     currentDoor = door;
@@ -351,7 +364,7 @@ public class CameraMovement : MonoBehaviour
 
                 if (Input.GetKeyDown(KeyCode.E))
                 {
-                    lever.TryActivate(); // 🔥 ONE TIME SWITCH
+                    lever.TryActivate();
                 }
 
                 return;
@@ -360,6 +373,12 @@ public class CameraMovement : MonoBehaviour
 
         // ================= CLEANUP =================
 
+        // ❌ geen cleanup tijdens peek
+        if (currentDoor != null && currentDoor.IsPeeking())
+        {
+            return;
+        }
+
         if (currentDoor != null)
         {
             currentDoor.SetHighlight(false);
@@ -367,7 +386,6 @@ public class CameraMovement : MonoBehaviour
             currentDoor = null;
         }
 
-        // (optioneel netjes)
         Lever oldLever = FindObjectOfType<Lever>();
         if (oldLever != null)
         {
