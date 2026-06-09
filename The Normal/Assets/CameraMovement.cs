@@ -320,6 +320,7 @@ public class CameraMovement : MonoBehaviour
 
         if (Physics.Raycast(ray, out RaycastHit hit, doorDetectDistance))
         {
+            // ================= DOOR =================
             DoorHallway door = hit.collider.GetComponentInParent<DoorHallway>();
 
             if (door != null)
@@ -337,18 +338,40 @@ public class CameraMovement : MonoBehaviour
                     currentDoor.SetCurrentPlayer(player);
                 }
 
-                // 🔥 CRUCIAL: geef collider door
                 currentDoor.SetFromCollider(hit.collider);
+                return;
+            }
+
+            // ================= LEVER =================
+            Lever lever = hit.collider.GetComponentInParent<Lever>();
+
+            if (lever != null)
+            {
+                lever.SetHighlight(true);
+
+                if (Input.GetKeyDown(KeyCode.E))
+                {
+                    lever.TryActivate(); // 🔥 ONE TIME SWITCH
+                }
 
                 return;
             }
         }
+
+        // ================= CLEANUP =================
 
         if (currentDoor != null)
         {
             currentDoor.SetHighlight(false);
             currentDoor.SetCurrentPlayer(null);
             currentDoor = null;
+        }
+
+        // (optioneel netjes)
+        Lever oldLever = FindObjectOfType<Lever>();
+        if (oldLever != null)
+        {
+            oldLever.SetHighlight(false);
         }
     }
 }
