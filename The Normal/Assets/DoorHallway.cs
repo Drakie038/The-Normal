@@ -49,6 +49,13 @@ public class DoorHallway : NetworkBehaviour
 
     private bool isTransitioning;
 
+    private NetworkVariable<ulong> peekOwnerClientId =
+    new NetworkVariable<ulong>(
+        ulong.MaxValue,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server
+    );
+
     public float GetLean()
     {
         // ❌ NO LEAN unless actively peeking
@@ -285,6 +292,9 @@ public class DoorHallway : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     private void RequestSetDirectionServerRpc(float dir)
     {
+        if (peekOwnerClientId.Value != ulong.MaxValue)
+            return;
+
         if (netState.Value != DoorState.Closed)
             return; // ❗ lock direction while open/peek
 
@@ -296,6 +306,9 @@ public class DoorHallway : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     private void RequestToggleDoorServerRpc()
     {
+        if (peekOwnerClientId.Value != ulong.MaxValue)
+            return;
+
         if (isTransitioning)
             return;
 
@@ -317,11 +330,16 @@ public class DoorHallway : NetworkBehaviour
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void RequestStartPeekServerRpc()
+    private void RequestStartPeekServerRpc(ServerRpcParams rpcParams = default)
     {
         if (netState.Value != DoorState.Closed)
             return;
 
+        // ❌ ALREADY IN USE
+        if (peekOwnerClientId.Value != ulong.MaxValue)
+            return;
+
+        peekOwnerClientId.Value = rpcParams.Receive.SenderClientId;
         netState.Value = DoorState.Peek;
 
         if (currentPlayer != null)
@@ -338,6 +356,7 @@ public class DoorHallway : NetworkBehaviour
         }
 
         netState.Value = DoorState.Closed;
+        peekOwnerClientId.Value = ulong.MaxValue;
 
         if (currentPlayer != null)
         {
