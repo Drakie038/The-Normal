@@ -91,4 +91,28 @@ public class GameInstanceManager : NetworkBehaviour
         instance.isAvailable = false;
         instance.isOccupied = true;
     }
+
+    public void ResetAllInstances()
+    {
+        if (!IsServer) return;
+
+        foreach (var g in spawnedGames)
+        {
+            if (g == null) continue;
+
+            if (g.networkObject != null && g.networkObject.IsSpawned)
+            {
+                g.networkObject.Despawn(true);
+            }
+            else if (g.gameObject != null)
+            {
+                Destroy(g.gameObject);
+            }
+        }
+
+        spawnedGames.Clear();
+        gameIndex = 1;
+
+        Debug.Log("GameInstanceManager fully reset");
+    }
 }

@@ -30,6 +30,8 @@ public class OpenDoorEntrance : MonoBehaviour
     private Vector3 elevLeftOpen;
     private Vector3 elevRightOpen;
 
+    private Coroutine runningRoutine;
+
     private void Awake()
     {
         leftClosed = doorLeft.position;
@@ -49,7 +51,7 @@ public class OpenDoorEntrance : MonoBehaviour
         if (doorsAreOpen) return;     // 🔥 al open → niets doen
         if (isRunning) return;
 
-        StartCoroutine(DoorRoutine());
+        runningRoutine = StartCoroutine(DoorRoutine());
     }
 
     private IEnumerator DoorRoutine()
@@ -98,10 +100,14 @@ public class OpenDoorEntrance : MonoBehaviour
         isRunning = false;
     }
 
-    // 🔥 pas alleen aan bij nieuwe elevator trip
     public void ResetDoorState()
     {
-        StopAllCoroutines();   // 🔥 belangrijk
+        if (runningRoutine != null)
+        {
+            StopCoroutine(runningRoutine);
+            runningRoutine = null;
+        }
+
         isRunning = false;
         doorsAreOpen = false;
 

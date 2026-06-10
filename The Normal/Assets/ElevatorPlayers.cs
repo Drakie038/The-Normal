@@ -595,14 +595,17 @@ public class ElevatorPlayers : NetworkBehaviour
         if (!IsServer)
             return;
 
-        elevatorPlatform.position = startPosition;
+        StopAllCoroutines(); // 🔥 CRUCIAL FIX
 
-        timerRunning = false;
         elevatorBusy = false;
+        elevatorLocked = false;
+        elevatorForceStarted = false;
+        timerRunning = false;
+
+        elevatorPlatform.position = startPosition;
 
         playersInside.Clear();
         elevatorPassengers.Clear();
-
         syncedPlayerCount.Value = 0;
 
         playerSpawnIndex.Clear();
@@ -610,17 +613,13 @@ public class ElevatorPlayers : NetworkBehaviour
         if (spawnOccupied != null)
         {
             for (int i = 0; i < spawnOccupied.Length; i++)
-            {
                 spawnOccupied[i] = false;
-            }
         }
 
         UpdateUI(0);
         UpdateLockCollider();
 
-        ForceResetUIClientRpc(
-            GetPassengersRpcParams()
-        );
+        ForceResetUIClientRpc(GetPassengersRpcParams());
     }
 
     [ClientRpc]

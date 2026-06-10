@@ -1493,6 +1493,9 @@ public class MultiplayerMenu : MonoBehaviour
 
         try
         {
+            // -----------------------------
+            // 0. STOP ALL ACTIVITY FIRST
+            // -----------------------------
             forceCancelled = true;
             searching = false;
             isJoining = false;
@@ -1500,8 +1503,40 @@ public class MultiplayerMenu : MonoBehaviour
             sessionId++;
             joinSessionId++;
 
+            Time.timeScale = 1f;
+
             // -----------------------------
-            // 1. LOBBY CLEANUP
+            // 1. HARD GAME SYSTEM RESET (BEFORE NGO SHUTDOWN)
+            // -----------------------------
+
+            if (ElevatorPlayers.Instance != null)
+            {
+                ElevatorPlayers.Instance.ResetElevatorState();
+            }
+
+            if (GameInstanceManager.Instance != null)
+            {
+                GameInstanceManager.Instance.ResetAllInstances();
+            }
+
+            var door = FindFirstObjectByType<OpenDoorEntrance>();
+            if (door != null)
+            {
+                door.ResetDoorState();
+            }
+
+            if (ElevatorMenu.Instance != null)
+            {
+                ElevatorMenu.Instance.ForceResetUI();
+            }
+
+            // -----------------------------
+            // 2. CLEAN LOCAL PLAYERS (SAFE BEFORE SHUTDOWN)
+            // -----------------------------
+            CleanupAllPlayers();
+
+            // -----------------------------
+            // 3. LOBBY CLEANUP
             // -----------------------------
             if (!string.IsNullOrEmpty(currentLobbyId))
             {
@@ -1529,13 +1564,11 @@ public class MultiplayerMenu : MonoBehaviour
                 }
             }
 
-            // BELANGRIJK:
-            // PAS NA succesvolle cleanup resetten
             currentLobby = null;
             currentLobbyId = "";
 
             // -----------------------------
-            // 2. NGO SHUTDOWN
+            // 4. NGO SHUTDOWN
             // -----------------------------
             if (networkManager != null)
             {
@@ -1551,7 +1584,6 @@ public class MultiplayerMenu : MonoBehaviour
                     networkManager.Shutdown();
 
                     float timeout = 0f;
-
                     while (networkManager.IsListening && timeout < 5f)
                     {
                         await Task.Delay(100);
@@ -1561,7 +1593,7 @@ public class MultiplayerMenu : MonoBehaviour
             }
 
             // -----------------------------
-            // 3. TRANSPORT RESET
+            // 5. TRANSPORT RESET
             // -----------------------------
             var transport = networkManager.GetComponent<UnityTransport>();
 
@@ -1570,20 +1602,13 @@ public class MultiplayerMenu : MonoBehaviour
                 Debug.Log("Shutdown Transport...");
 
                 transport.Shutdown();
-
                 transport.SetConnectionData("0.0.0.0", 7777);
             }
 
-            // kleine delay zodat Relay echt sluit
-            await Task.Delay(500);
+            await Task.Delay(300);
 
             // -----------------------------
-            // 4. CLEAN PLAYERS
-            // -----------------------------
-            CleanupAllPlayers();
-
-            // -----------------------------
-            // 5. RESET STATE
+            // 6. RESET STATE
             // -----------------------------
             isHost = false;
             inMatch = false;
@@ -1594,34 +1619,34 @@ public class MultiplayerMenu : MonoBehaviour
             currentServerName = "";
 
             // -----------------------------
-            // 6. UI RESET
+            // 7. UI RESET
             // -----------------------------
             ClearButtons();
 
-            if (ElevatorPlayers.Instance != null)
-            {
-                ElevatorPlayers.Instance.ResetElevatorState();
-            }
+            CloseSettingsMenu();
 
             if (cameraMovement != null)
             {
                 cameraMovement.ResetCameraToMenu();
             }
 
-            CloseSettingsMenu();
-
-            // 🔥 FORCE ELEVATOR UI RESET
-            if (ElevatorMenu.Instance != null)
-            {
-                ElevatorMenu.Instance.ForceResetUI();
-            }
-
             ShowStartMenuOnly();
 
+            if (statusText != null)
+                statusText.gameObject.SetActive(false);
+
+            if (debugText != null)
+                debugText.gameObject.SetActive(false);
+
+            // -----------------------------
+            // 8. CURSOR RESET
+            // -----------------------------
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
 
-            // callbacks opnieuw registreren
+            // -----------------------------
+            // 9. CALLBACKS HERREGISTREREN
+            // -----------------------------
             RegisterCallbacks();
 
             Debug.Log("=== LEAVE EVERYTHING DONE ===");
