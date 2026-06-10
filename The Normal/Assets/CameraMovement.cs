@@ -26,6 +26,17 @@ public class CameraMovement : MonoBehaviour
 
     private DoorHallway currentDoor;
 
+    [Header("Peek")]
+    public float maxPeekYaw = 40f;
+
+    private float peekYawOffset;
+    private float peekStartYaw;
+
+    [Header("Lean")]
+    public float leanSmoothSpeed = 4f;
+
+    private float leanVelocity;
+
     private bool IsPeeking()
     {
         return currentDoor != null && currentDoor.IsPeeking();
@@ -47,7 +58,7 @@ public class CameraMovement : MonoBehaviour
 
     private Coroutine elevatorTransitionRoutine;
     public bool inElevatorTransition;
-    
+
     private float doorLean;
     public void SetDoorLean(float value)
     {
@@ -238,16 +249,47 @@ public class CameraMovement : MonoBehaviour
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
-        player.SendLookInputServerRpc(mouseX);
+        if (IsPeeking())
+        {
+            peekYawOffset += mouseX;
+            peekYawOffset = Mathf.Clamp(
+                peekYawOffset,
+                -maxPeekYaw,
+                maxPeekYaw
+            );
+        }
+        else
+        {
+            player.SendLookInputServerRpc(mouseX);
+        }
 
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, -maxLookAngle, maxLookAngle);
 
-        doorLean = Mathf.Lerp(doorLean, doorLeanTarget, Time.deltaTime * 8f);
+        float targetLean = 0f;
+
+        if (currentDoor != null)
+        {
+            targetLean = currentDoor.GetLean();
+        }
+
+        doorLean = Mathf.SmoothDamp(
+            doorLean,
+            targetLean,
+            ref leanVelocity,
+            0.25f
+        );
+
+        float yaw = target.eulerAngles.y;
+
+        if (IsPeeking())
+        {
+            yaw += peekYawOffset;
+        }
 
         transform.rotation = Quaternion.Euler(
             xRotation,
-            target.eulerAngles.y,
+            yaw,
             doorLean
         );
         transform.position = target.position + firstPersonOffset;
@@ -330,19 +372,19 @@ public class CameraMovement : MonoBehaviour
 
             if (door != null)
             {
-                // ❌ BLOCK: geen re-detect tijdens peek op huidige deur
-                if (currentDoor != null && currentDoor.IsPeeking())
+                // Alleen blokkeren als we momenteel aan het peeken zijn
+                // op een ANDERE deur.
+                if (currentDoor != null &&
+                    currentDoor.IsPeeking() &&
+                    door != currentDoor)
                 {
                     return;
                 }
 
-                // ================= SWITCH DOOR =================
                 if (currentDoor != door)
                 {
                     if (currentDoor != null)
                     {
-                        currentDoor.SetHighlight(false);
-                        // alleen highlight reset, GEEN player nullen
                         currentDoor.SetHighlight(false);
                     }
 
@@ -373,9 +415,9 @@ public class CameraMovement : MonoBehaviour
 
         // ================= CLEANUP =================
 
-        // ❌ geen cleanup tijdens peek
         if (currentDoor != null && currentDoor.IsPeeking())
         {
+            currentDoor.SetCurrentPlayer(player);
             return;
         }
 
@@ -391,5 +433,16 @@ public class CameraMovement : MonoBehaviour
         {
             oldLever.SetHighlight(false);
         }
+    }
+
+    public void BeginPeek()
+    {
+        peekStartYaw = target.eulerAngles.y;
+        peekYawOffset = 0f;
+    }
+
+    public void EndPeek()
+    {
+        peekYawOffset = 0f;
     }
 }

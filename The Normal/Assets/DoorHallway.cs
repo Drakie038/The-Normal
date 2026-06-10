@@ -43,7 +43,35 @@ public class DoorHallway : NetworkBehaviour
     public Transform front2;
     public Transform back2;
 
+    private Vector3 playerVelocity;
+    private bool isMovingPlayer;
+    private Transform playerMoveTarget;
+
     private bool isTransitioning;
+
+    public float GetLean()
+    {
+        // ❌ NO LEAN unless actively peeking
+        if (netState.Value != DoorState.Peek)
+            return 0f;
+
+        float currentAngle = Quaternion.Angle(
+            closedRotation,
+            transform.rotation
+        );
+
+        float targetPeekAngle = openAngle * peekAngleMultiplier;
+
+        float progress = Mathf.InverseLerp(
+            0f,
+            targetPeekAngle,
+            currentAngle
+        );
+
+        return cameraLeanAngle *
+               progress *
+               netDirection.Value;
+    }
 
 
     // ================= NETWORK STATE =================
@@ -87,20 +115,31 @@ public class DoorHallway : NetworkBehaviour
     private void HandlePlayerPeekMovement()
     {
         if (currentPlayer == null)
+        {
+            currentPlayer = FindObjectOfType<PlayerCubeController>();
+        }
+
+        if (currentPlayer == null)
             return;
 
         if (netState.Value != DoorState.Peek)
+        {
+            isMovingPlayer = false;
+            return;
+        }
+
+        playerMoveTarget = (netDirection.Value > 0f) ? frontPoint : backPoint;
+
+        if (playerMoveTarget == null)
             return;
 
-        Transform target = (netDirection.Value > 0f) ? frontPoint : backPoint;
+        isMovingPlayer = true;
 
-        if (target == null)
-            return;
-
-        currentPlayer.transform.position = Vector3.MoveTowards(
+        currentPlayer.transform.position = Vector3.SmoothDamp(
             currentPlayer.transform.position,
-            target.position,
-            openSpeed * Time.deltaTime
+            playerMoveTarget.position,
+            ref playerVelocity,
+            0.25f
         );
     }
 
@@ -146,8 +185,6 @@ public class DoorHallway : NetworkBehaviour
         HandleInput();
         UpdateRotationsFromState();
         HandleRotation();
-        HandleCameraLean();
-
 
         HandlePlayerPeekMovement();
     }
@@ -156,6 +193,13 @@ public class DoorHallway : NetworkBehaviour
 
     private void HandleInput()
     {
+        // ❌ BLOCK OTHER PLAYERS WHILE SOMEONE IS PEEKING
+        if (netState.Value == DoorState.Peek)
+        {
+            if (currentPlayer == null || !currentPlayer.IsOwner)
+                return;
+        }
+
         // ================= ALWAYS EXIT PEek =================
         if (Input.GetKeyUp(KeyCode.E))
         {
@@ -295,21 +339,14 @@ public class DoorHallway : NetworkBehaviour
 
         netState.Value = DoorState.Closed;
 
-        // ❗ ALWAYS FORCE EXIT POSITION
         if (currentPlayer != null)
         {
             StartCoroutine(ForceExitPeek());
-        }
-
-        if (currentCamera != null)
-        {
-            currentCamera.SetDoorLeanTarget(0f);
         }
     }
 
     private IEnumerator ForceExitPeek()
     {
-        // ❗ snapshot meteen (belangrijk!)
         PlayerCubeController player = currentPlayer;
 
         if (player == null)
@@ -322,13 +359,20 @@ public class DoorHallway : NetworkBehaviour
 
         player.SetFrozen(true);
 
-        while (player != null &&
-               Vector3.Distance(player.transform.position, target.position) > 0.05f)
+        Vector3 velocity = Vector3.zero;
+
+        while (player != null)
         {
-            player.transform.position = Vector3.MoveTowards(
+            float dist = Vector3.Distance(player.transform.position, target.position);
+
+            if (dist < 0.05f)
+                break;
+
+            player.transform.position = Vector3.SmoothDamp(
                 player.transform.position,
                 target.position,
-                openSpeed * Time.deltaTime
+                ref velocity,
+                0.3f
             );
 
             yield return null;
@@ -339,20 +383,6 @@ public class DoorHallway : NetworkBehaviour
 
         if (player != null)
             player.SetFrozen(false);
-    }
-
-    // ================= CAMERA =================
-
-    private void HandleCameraLean()
-    {
-        if (currentCamera == null)
-            return;
-
-        float lean = (netState.Value == DoorState.Peek)
-            ? cameraLeanAngle * netDirection.Value
-            : 0f;
-
-        currentCamera.SetDoorLean(lean);
     }
 
     // ================= PLAYER =================
