@@ -133,14 +133,6 @@ public class ElevatorPlayers : NetworkBehaviour
             playerCountText.text = $"{count}/{maxPlayers}";
 
         bool isFull = playersInside.Count >= maxPlayers;
-
-        foreach (var client in playersInside)
-        {
-            if (NetworkManager.Singleton.LocalClientId == client)
-            {
-                ElevatorMenu.Instance?.UpdateStartButton(true);
-            }
-        }
     }
 
     private void UpdateLockCollider()
