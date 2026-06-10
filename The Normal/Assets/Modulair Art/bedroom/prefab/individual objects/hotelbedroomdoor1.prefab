@@ -529,8 +529,8 @@ MonoBehaviour:
   frontCollider: {fileID: 1241945086144561407}
   backCollider: {fileID: 6227019825402617044}
   openAngle: -90
-  peekAngleMultiplier: 0.5
-  openSpeed: 6
+  peekAngleMultiplier: 0.65
+  openSpeed: 3
   cameraLeanAngle: 8
   highlightColor: {r: 1, g: 1, b: 1, a: 1}
   intensity: 0.05

@@ -65,10 +65,23 @@ public class ElevatorPlayers : NetworkBehaviour
 
     private bool elevatorLocked;
 
-    [ClientRpc]
-    private void ShowFadeClientRpc(float autoHideTime)
+    private float serverTimerStart;
+    private float serverDuration;
+
+    private bool isOpening;
+
+    private void Update()
     {
-        CameraFade.Instance?.ShowFade(autoHideTime);
+        if (!IsServer) return;
+        if (!timerRunning) return;
+
+        float elapsed = (float)(NetworkManager.ServerTime.Time - serverTimerStart);
+
+        if (elapsed >= serverDuration - 3f)
+        {
+            timerRunning = false;
+            DoorSequenceClientRpc();
+        }
     }
 
     [ClientRpc]
@@ -232,7 +245,15 @@ public class ElevatorPlayers : NetworkBehaviour
     {
         if (ElevatorMenu.Instance != null)
             ElevatorMenu.Instance.StartTimer(duration);
+
+        // 🔥 SERVER authoritative timing start
+        if (IsServer)
+        {
+            serverTimerStart = (float)NetworkManager.ServerTime.Time;
+            serverDuration = duration;
+        }
     }
+
 
     [ClientRpc]
     private void StopFullTimerClientRpc(
@@ -258,7 +279,15 @@ public class ElevatorPlayers : NetworkBehaviour
         // 👇 HIER PLAATSEN
         HideAllElevatorUIClientRpc();
 
+        DoorSequenceClientRpc();
+
         StartCoroutine(MoveElevatorDown());
+    }
+
+    [ClientRpc]
+    public void DoorSequenceClientRpc()
+    {
+        FindObjectOfType<OpenDoorEntrance>()?.StartDoorSequence();
     }
 
     [ClientRpc]
@@ -273,9 +302,9 @@ public class ElevatorPlayers : NetworkBehaviour
 
     private IEnumerator MoveElevatorDown()
     {
-        elevatorBusy = true;
-
         List<ulong> passengers = new List<ulong>(playersInside);
+
+        elevatorBusy = true;
 
         Vector3 target = new Vector3(
             startPosition.x,
@@ -296,7 +325,16 @@ public class ElevatorPlayers : NetworkBehaviour
         }
 
         elevatorPlatform.position = target;
-        ShowFadeClientRpc(2f);
+
+        ClientRpcParams rpcParams = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = passengers.ToArray()
+            }
+        };
+
+        ShowFadeClientRpc(2f, rpcParams);
 
         StopFullTimerClientRpc(
             GetPassengersRpcParams()
@@ -607,11 +645,13 @@ public class ElevatorPlayers : NetworkBehaviour
             );
 
             UpdateLockCollider();
-
             yield return null;
         }
 
         elevatorPlatform.position = startPosition;
+
+        // 🔥 BELANGRIJK: deuren opnieuw openen (server -> clients)
+        OpenDoorsClientRpc();
 
         ResetElevatorAfterTrip();
         elevatorBusy = false;
@@ -653,5 +693,23 @@ public class ElevatorPlayers : NetworkBehaviour
         ElevatorMenu.Instance?.ShowLeaveButton(true);
 
         ElevatorMenu.Instance?.UpdateStartButton(true);
+    }
+
+    [ClientRpc]
+    private void OpenDoorsClientRpc()
+    {
+        OpenDoorEntrance door = FindObjectOfType<OpenDoorEntrance>();
+
+        if (door == null)
+            return;
+
+        // alleen reset, NIET openen
+        door.ResetDoorState();
+    }
+
+    [ClientRpc]
+    private void ShowFadeClientRpc(float autoHideTime, ClientRpcParams rpcParams = default)
+    {
+        CameraFade.Instance?.ShowFade(autoHideTime);
     }
 }

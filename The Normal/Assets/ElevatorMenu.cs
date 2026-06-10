@@ -121,11 +121,7 @@ public class ElevatorMenu : MonoBehaviour
             if (!doorsClosedTriggered && currentTimer <= 3f)
             {
                 doorsClosedTriggered = true;
-
                 ShowLeaveButton(false);
-
-                // 🚪 deuren sluiten starten
-                FindObjectOfType<OpenDoorEntrance>()?.StartDoorSequence();
             }
 
             yield return null;
@@ -183,17 +179,17 @@ public class ElevatorMenu : MonoBehaviour
     }
 
     public void RefreshButtonsAfterCinematic()
-{
-    PlayerCubeController player =
-        FindObjectOfType<PlayerCubeController>();
+    {
+        PlayerCubeController player =
+            FindObjectOfType<PlayerCubeController>();
 
-    if (player == null || !player.IsOwner)
-        return;
+        if (player == null || !player.IsOwner)
+            return;
 
-    bool inElevator = player.inElevator.Value;
+        bool inElevator = player.inElevator.Value;
 
         UpdateStartButton(inElevator);
-}
+    }
 
     public void ShowElevatorButtonsAfterCinematic(
     bool showStartButton)
