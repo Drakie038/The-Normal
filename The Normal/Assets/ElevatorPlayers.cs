@@ -65,6 +65,18 @@ public class ElevatorPlayers : NetworkBehaviour
 
     private bool elevatorLocked;
 
+    [ClientRpc]
+    private void ShowFadeClientRpc(float autoHideTime)
+    {
+        CameraFade.Instance?.ShowFade(autoHideTime);
+    }
+
+    [ClientRpc]
+    private void HideFadeClientRpc()
+    {
+        CameraFade.Instance?.HideFadeInstant();
+    }
+
     private ClientRpcParams GetPassengersRpcParams()
     {
         return new ClientRpcParams
@@ -284,6 +296,7 @@ public class ElevatorPlayers : NetworkBehaviour
         }
 
         elevatorPlatform.position = target;
+        ShowFadeClientRpc(2f);
 
         StopFullTimerClientRpc(
             GetPassengersRpcParams()
