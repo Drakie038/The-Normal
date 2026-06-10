@@ -37,6 +37,11 @@ public class CameraMovement : MonoBehaviour
 
     private float leanVelocity;
 
+    private bool InPushMode()
+    {
+        return player != null && player.inPushMode;
+    }
+
     private bool IsPeeking()
     {
         return currentDoor != null && currentDoor.IsPeeking();
@@ -68,6 +73,7 @@ public class CameraMovement : MonoBehaviour
 
     private float doorLeanTarget;
 
+    private LuggageCart currentLuggage;
     public void SetDoorLeanTarget(float value)
     {
         doorLeanTarget = value;
@@ -249,14 +255,45 @@ public class CameraMovement : MonoBehaviour
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
+        // ================= PUSH MODE =================
+        if (InPushMode())
+        {
+            // ❌ geen yaw rotatie (links/rechts blokkeren)
+            xRotation -= mouseY;
+            xRotation = Mathf.Clamp(xRotation, -maxLookAngle, maxLookAngle);
+
+            // FIXED yaw richting van pushTarget
+            Transform pushTarget = player != null ? player.transform : null;
+
+            if (pushTarget != null)
+            {
+                Vector3 dir = pushTarget.forward;
+                dir.y = 0f;
+
+                if (dir.sqrMagnitude > 0.001f)
+                {
+                    Quaternion targetRot = Quaternion.LookRotation(dir);
+
+                    float fixedYaw = targetRot.eulerAngles.y;
+
+                    transform.rotation = Quaternion.Euler(
+                        xRotation,
+                        fixedYaw,
+                        0f
+                    );
+                }
+            }
+
+            transform.position = target.position + firstPersonOffset;
+            return;
+        }
+
+        // ================= NORMAL MODE =================
+
         if (IsPeeking())
         {
             peekYawOffset += mouseX;
-            peekYawOffset = Mathf.Clamp(
-                peekYawOffset,
-                -maxPeekYaw,
-                maxPeekYaw
-            );
+            peekYawOffset = Mathf.Clamp(peekYawOffset, -maxPeekYaw, maxPeekYaw);
         }
         else
         {
@@ -269,9 +306,7 @@ public class CameraMovement : MonoBehaviour
         float targetLean = 0f;
 
         if (currentDoor != null)
-        {
             targetLean = currentDoor.GetLean();
-        }
 
         doorLean = Mathf.SmoothDamp(
             doorLean,
@@ -283,15 +318,14 @@ public class CameraMovement : MonoBehaviour
         float yaw = target.eulerAngles.y;
 
         if (IsPeeking())
-        {
             yaw += peekYawOffset;
-        }
 
         transform.rotation = Quaternion.Euler(
             xRotation,
             yaw,
             doorLean
         );
+
         transform.position = target.position + firstPersonOffset;
     }
 
@@ -367,13 +401,19 @@ public class CameraMovement : MonoBehaviour
 
         if (Physics.Raycast(ray, out RaycastHit hit, doorDetectDistance))
         {
+            // ❌ BLOCK EVERYTHING THAT IS NOT INTERACT
+            if (!hit.collider.CompareTag("Interact"))
+            {
+                // belangrijk: reset current door/lever/luggage als je wil
+                ClearInteractions();
+                return;
+            }
+
             // ================= DOOR =================
             DoorHallway door = hit.collider.GetComponentInParent<DoorHallway>();
 
             if (door != null)
             {
-                // Alleen blokkeren als we momenteel aan het peeken zijn
-                // op een ANDERE deur.
                 if (currentDoor != null &&
                     currentDoor.IsPeeking() &&
                     door != currentDoor)
@@ -411,16 +451,112 @@ public class CameraMovement : MonoBehaviour
 
                 return;
             }
+
+            // ================= LUGGAGE =================
+            LuggageCart luggage = hit.collider.GetComponentInParent<LuggageCart>();
+
+            if (luggage != null)
+            {
+                luggage.SetHighlight(true);
+                currentLuggage = luggage;
+
+                bool pressedE = Input.GetKeyDown(KeyCode.E);
+
+                if (pressedE)
+                {
+                    TogglePush(luggage, hit.collider);
+                }
+
+                return;
+            }
+
+            if (luggage != null)
+            {
+                luggage.SetHighlight(true);
+                luggage.SetFromCollider(hit.collider);
+                return;
+            }
         }
 
-        // ================= CLEANUP =================
+        ClearInteractions();
+    }
 
-        if (currentDoor != null && currentDoor.IsPeeking())
+    private void TogglePush(LuggageCart luggage, Collider hit)
+    {
+        PlayerCubeController p = player;
+
+        if (p == null)
+            return;
+
+        // EXIT
+        if (p.inPushMode)
         {
-            currentDoor.SetCurrentPlayer(player);
+            p.SetPushMode(false, null);
             return;
         }
 
+        Transform target = null;
+
+        Vector3 dir = Vector3.zero;
+
+        if (hit == luggage.frontCollider)
+        {
+            target = luggage.pushFor;
+        }
+        else if (hit == luggage.backCollider)
+        {
+            target = luggage.pushBack;
+        }
+
+        if (target == null)
+            return;
+
+        p.SetPushMode(true, target);
+    }
+
+    private IEnumerator EnterPushMode(PlayerCubeController p, Transform target, Vector3 lookDir)
+    {
+        inputLocked = true;
+
+        Vector3 startPos = transform.position;
+        Quaternion startRot = transform.rotation;
+
+        float t = 0f;
+        float duration = 0.4f;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+
+            float n = Mathf.Clamp01(t / duration);
+
+            transform.position = Vector3.Lerp(
+                startPos,
+                target.position + firstPersonOffset,
+                n
+            );
+
+            Quaternion targetRot = Quaternion.LookRotation(lookDir);
+
+            transform.rotation = Quaternion.Slerp(
+                startRot,
+                targetRot,
+                n
+            );
+
+            yield return null;
+        }
+
+        transform.position = target.position + firstPersonOffset;
+        transform.rotation = Quaternion.LookRotation(lookDir);
+
+        inputLocked = false;
+
+        p.SetPushMode(true, target);
+    }
+
+    private void ClearInteractions()
+    {
         if (currentDoor != null)
         {
             currentDoor.SetHighlight(false);
@@ -432,6 +568,12 @@ public class CameraMovement : MonoBehaviour
         if (oldLever != null)
         {
             oldLever.SetHighlight(false);
+        }
+
+        LuggageCart oldLuggage = FindObjectOfType<LuggageCart>();
+        if (oldLuggage != null)
+        {
+            oldLuggage.SetHighlight(false);
         }
     }
 
