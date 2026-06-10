@@ -41,8 +41,6 @@ public class PlayerCubeController : NetworkBehaviour
 
     private NetworkObjectReference currentElevator;
 
-    public bool isInteracting;
-
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
@@ -315,66 +313,5 @@ public class PlayerCubeController : NetworkBehaviour
         inElevator.Value = false;
 
         SetCameraLockedClientRpc(true);
-    }
-
-    private LuggageCart pendingLuggage;
-    private LuggageCart.LuggageSide pendingSide;
-
-    [ServerRpc]
-    public void RequestPushLuggageServerRpc(NetworkObjectReference luggageRef, int side)
-    {
-        if (!luggageRef.TryGet(out NetworkObject obj))
-            return;
-
-        LuggageCart luggage = obj.GetComponent<LuggageCart>();
-        if (luggage == null)
-            return;
-
-        Transform target = null;
-
-        if (side == (int)LuggageCart.LuggageSide.Front)
-            target = luggage.pushFor;
-        else if (side == (int)LuggageCart.LuggageSide.Back)
-            target = luggage.pushBack;
-
-        if (target == null)
-            return;
-
-        StartCoroutine(SmoothPushRoutine(target));
-    }
-
-    private IEnumerator SmoothPushRoutine(Transform targetPoint)
-    {
-        frozen = true;
-
-        float speed = 6f;
-
-        while (Vector3.Distance(transform.position, targetPoint.position) > 0.05f)
-        {
-            Vector3 dir = targetPoint.position - transform.position;
-            dir.y = 0f;
-
-            if (dir.sqrMagnitude > 0.001f)
-            {
-                Quaternion targetRot = Quaternion.LookRotation(dir.normalized);
-
-                transform.rotation = Quaternion.Slerp(
-                    transform.rotation,
-                    targetRot,
-                    Time.deltaTime * 10f
-                );
-            }
-
-            transform.position = Vector3.MoveTowards(
-                transform.position,
-                targetPoint.position,
-                speed * Time.deltaTime
-            );
-
-            yield return null;
-        }
-
-        frozen = false;
-        isInteracting = false;
     }
 }

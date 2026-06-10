@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System.Collections;
-using Unity.Netcode;
 
 public class CameraMovement : MonoBehaviour
 {
@@ -250,9 +249,6 @@ public class CameraMovement : MonoBehaviour
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
-        if (player != null && player.frozen)
-            return;
-
         if (IsPeeking())
         {
             peekYawOffset += mouseX;
@@ -365,29 +361,19 @@ public class CameraMovement : MonoBehaviour
         transform.rotation = menuRot;
     }
 
-    private LuggageCart currentLuggage;
-
     private void DetectDoor()
     {
         Ray ray = new Ray(transform.position, transform.forward);
 
         if (Physics.Raycast(ray, out RaycastHit hit, doorDetectDistance))
         {
-            // ❌ ignore everything that is not interactable
-            if (!hit.collider.CompareTag("Interact"))
-                return;
-
             // ================= DOOR =================
             DoorHallway door = hit.collider.GetComponentInParent<DoorHallway>();
 
             if (door != null)
             {
-                if (currentLuggage != null)
-                {
-                    currentLuggage.SetHighlight(false);
-                    currentLuggage = null;
-                }
-
+                // Alleen blokkeren als we momenteel aan het peeken zijn
+                // op een ANDERE deur.
                 if (currentDoor != null &&
                     currentDoor.IsPeeking() &&
                     door != currentDoor)
@@ -408,51 +394,6 @@ public class CameraMovement : MonoBehaviour
                 }
 
                 currentDoor.SetFromCollider(hit.collider);
-                return;
-            }
-
-            // ================= LUGGAGE =================
-            LuggageCart luggage = hit.collider.GetComponentInParent<LuggageCart>();
-
-            if (luggage != null)
-            {
-                if (currentDoor != null)
-                {
-                    currentDoor.SetHighlight(false);
-                    currentDoor.SetCurrentPlayer(null);
-                    currentDoor = null;
-                }
-
-                if (currentLuggage != luggage)
-                {
-                    if (currentLuggage != null)
-                        currentLuggage.SetHighlight(false);
-
-                    currentLuggage = luggage;
-                    currentLuggage.SetHighlight(true);
-                }
-
-                currentLuggage.SetFromCollider(hit.collider);
-
-                // ================= PUSH INTERACT =================
-                if (Input.GetKeyDown(KeyCode.E))
-                {
-                    if (player != null)
-                    {
-                        player.isInteracting = true;
-                        player.SetFrozen(true);
-                    }
-
-                    var side = currentLuggage.GetSide(hit.collider);
-
-                    NetworkObject netObj = currentLuggage.GetComponent<NetworkObject>();
-
-                    if (netObj != null)
-                    {
-                        player.RequestPushLuggageServerRpc(netObj, (int)side);
-                    }
-                }
-
                 return;
             }
 
@@ -477,18 +418,14 @@ public class CameraMovement : MonoBehaviour
         if (currentDoor != null && currentDoor.IsPeeking())
         {
             currentDoor.SetCurrentPlayer(player);
+            return;
         }
-        else if (currentDoor != null)
+
+        if (currentDoor != null)
         {
             currentDoor.SetHighlight(false);
             currentDoor.SetCurrentPlayer(null);
             currentDoor = null;
-        }
-
-        if (currentLuggage != null)
-        {
-            currentLuggage.SetHighlight(false);
-            currentLuggage = null;
         }
 
         Lever oldLever = FindObjectOfType<Lever>();
@@ -497,7 +434,6 @@ public class CameraMovement : MonoBehaviour
             oldLever.SetHighlight(false);
         }
     }
-
 
     public void BeginPeek()
     {
