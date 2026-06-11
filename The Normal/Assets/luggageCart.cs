@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class LuggageCart : MonoBehaviour
 {
@@ -21,17 +21,22 @@ public class LuggageCart : MonoBehaviour
 
     private bool isHighlighted;
 
+    // ===== ADDED =====
+    private Rigidbody rb;
+
     private void Awake()
     {
         rend = GetComponentInChildren<Renderer>();
         if (rend != null)
             mat = rend.material;
+
+        // ADDED
+        rb = GetComponent<Rigidbody>();
     }
 
     // Called from camera raycast
     public void SetFromCollider(Collider hitCollider)
     {
-        // Hier kun je later direction logic doen (push/back system)
         if (hitCollider == frontCollider)
         {
             // Debug.Log("Front geraakt");
@@ -73,5 +78,22 @@ public class LuggageCart : MonoBehaviour
         {
             // back interact
         }
+    }
+
+    // =========================
+    // ADDED PUSH SYSTEM
+    // =========================
+
+    public void SetPushPhysics(bool active)
+    {
+        if (rb == null) return;
+
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+
+        rb.constraints = RigidbodyConstraints.FreezeRotation;
+
+        // optional: friction boost tijdens push
+        rb.mass = active ? rb.mass : rb.mass;
     }
 }

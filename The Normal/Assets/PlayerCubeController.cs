@@ -50,6 +50,27 @@ public class PlayerCubeController : NetworkBehaviour
     private Vector3 pushForwardDir;
     private bool pushReady;
 
+    public LuggageCart currentLuggage;
+    private Vector3 lastPlayerPos;
+
+    private bool pushApproaching;
+    private float approachSpeed = 6f;
+    private float alignSpeed = 10f;
+
+    private void Start()
+    {
+        lastPlayerPos = transform.position;
+    }
+
+    public void SetLuggage(LuggageCart luggage)
+    {
+        currentLuggage = luggage;
+
+        if (currentLuggage != null)
+        {
+            currentLuggage.SetPushPhysics(true);
+        }
+    }
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
@@ -187,14 +208,6 @@ public class PlayerCubeController : NetworkBehaviour
         if (!IsOwner)
             return;
 
-        // ⭐ ADD DIT HIER (helemaal bovenaan)
-        if (inPushMode && pushTarget != null)
-        {
-            pushForwardDir = pushTarget.forward;
-            pushForwardDir.y = 0f;
-            pushReady = true;
-        }
-
         if (frozen && !inPushMode)
             return;
 
@@ -204,11 +217,65 @@ public class PlayerCubeController : NetworkBehaviour
 
         if (inPushMode && pushTarget != null)
         {
-            PushMoveServerRpc(pushTarget.position, pushTarget.forward);
+            if (pushApproaching)
+            {
+                HandlePushApproach();
+                return;
+            }
+
+            float input = moveInput.y;
+            PushMoveServerRpc(pushTarget.forward, input);
             return;
         }
 
         MoveServerRpc(moveInput, Time.fixedDeltaTime);
+    }
+
+    private void HandlePushApproach()
+    {
+        if (currentLuggage == null || pushTarget == null)
+            return;
+
+        float dt = Time.fixedDeltaTime;
+
+        // ================= POSITION ALIGN =================
+        Vector3 targetPos = pushTarget.position;
+
+        Vector3 newPos = Vector3.Lerp(
+            transform.position,
+            targetPos,
+            approachSpeed * dt
+        );
+
+        controller.Move(newPos - transform.position);
+
+        // ================= ROTATION ALIGN =================
+        Vector3 dir = pushTarget.forward;
+        dir.y = 0f;
+
+        if (dir.sqrMagnitude > 0.001f)
+        {
+            Quaternion targetRot = Quaternion.LookRotation(dir);
+
+            transform.rotation = Quaternion.Slerp(
+                transform.rotation,
+                targetRot,
+                alignSpeed * dt
+            );
+        }
+
+        // ================= FINISH CONDITION =================
+        float dist = Vector3.Distance(transform.position, targetPos);
+        float angle = Vector3.Angle(transform.forward, dir);
+
+        if (dist < 0.05f && angle < 5f)
+        {
+            pushApproaching = false;
+            pushReady = true;
+        }
+
+        if (!inPushMode)
+            return;
     }
 
     private void HandlePushMode()
@@ -366,6 +433,10 @@ public class PlayerCubeController : NetworkBehaviour
 
     private void LateUpdate()
     {
+        if (!IsOwner) return;
+
+        lastPlayerPos = transform.position;
+
         if (nameCanvas == null)
             return;
 
@@ -396,6 +467,12 @@ public class PlayerCubeController : NetworkBehaviour
     public void SetPushMode(bool value, Transform target)
     {
         inPushMode = value;
+
+        if (!value)
+        {
+            pushApproaching = false;
+            pushReady = false;
+        }
         pushTarget = target;
 
         frozen = false;
@@ -410,6 +487,11 @@ public class PlayerCubeController : NetworkBehaviour
         {
             pushTarget = null;
             pushForwardDir = Vector3.zero;
+
+            if (currentLuggage != null)
+                currentLuggage.SetPushPhysics(false);
+
+            currentLuggage = null;
         }
     }
 
@@ -448,19 +530,91 @@ public class PlayerCubeController : NetworkBehaviour
     }
 
     [ServerRpc]
-    private void PushMoveServerRpc(Vector3 targetPos, Vector3 forwardDir)
+    private void PushMoveServerRpc(Vector3 forwardDir, float input)
     {
-        Vector3 nextPos = Vector3.Lerp(transform.position, targetPos, 0.35f);
-
-        controller.Move(nextPos - transform.position);
+        if (currentLuggage == null || pushTarget == null) return;
 
         Vector3 dir = forwardDir;
         dir.y = 0f;
+        dir.Normalize();
 
-        if (dir.sqrMagnitude > 0.001f)
+        Vector3 move = dir * input * moveSpeed * Time.fixedDeltaTime;
+
+        // 1. probeer luggage te bewegen (physics-style)
+        Vector3 oldPos = currentLuggage.transform.position;
+        currentLuggage.transform.position += move;
+
+        // 2. check of het blocked wordt (simple correction)
+        if (Physics.SphereCast(oldPos, 0.3f, dir, out RaycastHit hit, move.magnitude))
         {
-            Quaternion rot = Quaternion.LookRotation(dir);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rot, 0.35f);
+            currentLuggage.transform.position = oldPos; // blocked
+            return;
+        }
+
+        // 3. speler volgt EXACT luggage movement
+        Vector3 delta = currentLuggage.transform.position - oldPos;
+        controller.Move(delta);
+    }
+
+    private bool IsCorrectPushSide()
+    {
+        if (pushTarget == null) return false;
+
+        Vector3 toPlayer = (transform.position - pushTarget.position);
+        toPlayer.y = 0f;
+
+        Vector3 forward = pushTarget.forward;
+        forward.y = 0f;
+
+        float frontDot = Vector3.Dot(forward, toPlayer.normalized);
+
+        // front side
+        if (pushTarget == currentLuggage?.pushFor)
+        {
+            return frontDot > 0.5f;
+        }
+
+        // back side
+        if (pushTarget == currentLuggage?.pushBack)
+        {
+            return frontDot < -0.5f;
+        }
+
+        return false;
+    }
+
+    public void StartPush(LuggageCart luggage, Transform target)
+    {
+        if (luggage == null || target == null)
+            return;
+
+        currentLuggage = luggage;
+
+        SetPushMode(true, target); // ← BELANGRIJK: first set canonical state
+
+        pushTarget = target;
+
+        frozen = false;
+        canMove = true;
+
+        moveInput = Vector2.zero;
+        velocity = Vector3.zero;
+
+        pushReady = false;
+        pushApproaching = true;
+
+        inPushMode = true; // 🔥 HARD GUARANTEE (fixes your bug)
+
+        currentLuggage.SetPushPhysics(true);
+    }
+    public void StopPush()
+    {
+        SetPushMode(false, null);
+
+        if (currentLuggage != null)
+        {
+            currentLuggage.SetPushPhysics(false);
+            currentLuggage = null;
         }
     }
 }

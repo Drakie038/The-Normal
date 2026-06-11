@@ -488,16 +488,13 @@ public class CameraMovement : MonoBehaviour
         if (p == null)
             return;
 
-        // EXIT
         if (p.inPushMode)
         {
-            p.SetPushMode(false, null);
+            p.StopPush();
             return;
         }
 
         Transform target = null;
-
-        Vector3 dir = Vector3.zero;
 
         if (hit == luggage.frontCollider)
         {
@@ -511,7 +508,7 @@ public class CameraMovement : MonoBehaviour
         if (target == null)
             return;
 
-        p.SetPushMode(true, target);
+        p.StartPush(luggage, target);
     }
 
     private IEnumerator EnterPushMode(PlayerCubeController p, Transform target, Vector3 lookDir)
