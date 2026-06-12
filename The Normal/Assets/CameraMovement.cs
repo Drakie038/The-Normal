@@ -37,6 +37,12 @@ public class CameraMovement : MonoBehaviour
 
     private float leanVelocity;
 
+    [Header("Push Mode Camera Sway")]
+    public float pushYawSwayAmount = 2f;   // max graden links/rechts
+    public float pushYawSwaySpeed = 3f;    // hoe snel hij beweegt
+
+    private float pushSwayTime;
+
     private bool InPushMode()
     {
         return player != null && player.inPushMode;
@@ -258,11 +264,9 @@ public class CameraMovement : MonoBehaviour
         // ================= PUSH MODE =================
         if (InPushMode())
         {
-            // ❌ geen yaw rotatie (links/rechts blokkeren)
             xRotation -= mouseY;
             xRotation = Mathf.Clamp(xRotation, -maxLookAngle, maxLookAngle);
 
-            // FIXED yaw richting van pushTarget
             Transform pushTarget = player != null ? player.transform : null;
 
             if (pushTarget != null)
@@ -273,12 +277,19 @@ public class CameraMovement : MonoBehaviour
                 if (dir.sqrMagnitude > 0.001f)
                 {
                     Quaternion targetRot = Quaternion.LookRotation(dir);
-
                     float fixedYaw = targetRot.eulerAngles.y;
+
+                    // 🔥 HIER komt de condition
+                    if (Mathf.Abs(Input.GetAxisRaw("Vertical")) > 0.1f)
+                    {
+                        pushSwayTime += Time.deltaTime * pushYawSwaySpeed;
+                    }
+
+                    float sway = Mathf.Sin(pushSwayTime) * pushYawSwayAmount;
 
                     transform.rotation = Quaternion.Euler(
                         xRotation,
-                        fixedYaw,
+                        fixedYaw + sway,
                         0f
                     );
                 }
@@ -457,6 +468,18 @@ public class CameraMovement : MonoBehaviour
 
             if (luggage != null)
             {
+                if (InPushMode())
+                {
+                    luggage.SetHighlight(false);
+
+                    if (Input.GetKeyDown(KeyCode.E))
+                    {
+                        player.StopPush();
+                    }
+
+                    return;
+                }
+
                 luggage.SetHighlight(true);
                 currentLuggage = luggage;
 

@@ -9,6 +9,8 @@ public class PlayerCubeController : NetworkBehaviour
 {
     [Header("Movement")]
     public float moveSpeed = 5f;
+    public float pushSpeed = 2.5f;
+    public float PushRotationSpeed = 0.25f;
     public float gravity = -9.81f;
 
     private CharacterController controller;
@@ -56,6 +58,11 @@ public class PlayerCubeController : NetworkBehaviour
     private bool pushApproaching;
     private float approachSpeed = 6f;
     private float alignSpeed = 10f;
+
+    private Vector3 luggageOffsetLocal;
+    private bool hasLuggageOffset;
+
+    private Quaternion luggageRotationOffset;
 
     private void Start()
     {
@@ -187,13 +194,83 @@ public class PlayerCubeController : NetworkBehaviour
         if (inPushMode && pushReady)
         {
             float forward = 0f;
+            float turn = 0f;
 
+            // WASD input
             if (Input.GetKey(KeyCode.W))
                 forward = 1f;
             else if (Input.GetKey(KeyCode.S))
                 forward = -1f;
 
+            if (Input.GetKey(KeyCode.D))
+                turn = 1f;
+            else if (Input.GetKey(KeyCode.A))
+                turn = -1f;
+
+            // richting correctie
+            if (pushTarget != null && currentLuggage != null)
+            {
+                if (pushTarget == currentLuggage.pushFor)
+                {
+                    forward *= -1f;
+                }
+            }
+
+            // ===== ROTATIE LOGICA =====
+            float rotationInput = 0f;
+
+            bool isFront =
+                currentLuggage != null &&
+                pushTarget == currentLuggage.pushFor;
+
+            if (forward > 0f)
+            {
+                rotationInput = turn;
+            }
+            else if (forward < 0f)
+            {
+                rotationInput = -turn;
+            }
+
+            // voorkant van de trolley = stuurrichting omdraaien
+            if (isFront)
+            {
+                rotationInput *= -1f;
+            }
+
+            if (rotationInput != 0f)
+                SendLookInputServerRpc(rotationInput * PushRotationSpeed);
+
             moveInput = new Vector2(0f, forward);
+
+            // =====================================================
+            // LUGGAGE FOLLOW (blijft vóór speler + roteert mee)
+            // =====================================================
+            if (currentLuggage != null && hasLuggageOffset)
+            {
+                Vector3 targetPos =
+                    transform.position +
+                    transform.forward * Vector3.Distance(
+                        currentLuggage.transform.position,
+                        transform.position
+                    );
+
+                currentLuggage.transform.position = Vector3.Lerp(
+                    currentLuggage.transform.position,
+                    targetPos,
+                    20f * Time.deltaTime
+                );
+
+                Quaternion targetRot =
+                    transform.rotation * luggageRotationOffset;
+
+                currentLuggage.transform.rotation = Quaternion.Slerp(
+                    currentLuggage.transform.rotation,
+                    targetRot,
+                    8f * Time.deltaTime
+                );
+            }
+
             return;
         }
 
@@ -270,6 +347,10 @@ public class PlayerCubeController : NetworkBehaviour
 
         if (dist < 0.05f && angle < 5f)
         {
+            luggageRotationOffset =
+    Quaternion.Inverse(transform.rotation) *
+    currentLuggage.transform.rotation;
+
             pushApproaching = false;
             pushReady = true;
         }
@@ -532,26 +613,45 @@ public class PlayerCubeController : NetworkBehaviour
     [ServerRpc]
     private void PushMoveServerRpc(Vector3 forwardDir, float input)
     {
-        if (currentLuggage == null || pushTarget == null) return;
+        if (currentLuggage == null || pushTarget == null)
+            return;
 
         Vector3 dir = forwardDir;
         dir.y = 0f;
         dir.Normalize();
 
-        Vector3 move = dir * input * moveSpeed * Time.fixedDeltaTime;
+        // =========================
+        // bepaal correcte richting per kant
+        // =========================
+        bool isFront = (pushTarget == currentLuggage.pushFor);
 
-        // 1. probeer luggage te bewegen (physics-style)
+        // als je aan de voorkant staat:
+        // forward = van speler AF
+        if (isFront)
+        {
+            dir = -dir;
+        }
+
+        // input blijft normaal:
+        // W = +1, S = -1
+        float moveInput = input;
+
+        Vector3 move =
+            dir *
+            moveInput *
+            pushSpeed *
+            Time.fixedDeltaTime;
+
         Vector3 oldPos = currentLuggage.transform.position;
+
         currentLuggage.transform.position += move;
 
-        // 2. check of het blocked wordt (simple correction)
         if (Physics.SphereCast(oldPos, 0.3f, dir, out RaycastHit hit, move.magnitude))
         {
-            currentLuggage.transform.position = oldPos; // blocked
+            currentLuggage.transform.position = oldPos;
             return;
         }
 
-        // 3. speler volgt EXACT luggage movement
         Vector3 delta = currentLuggage.transform.position - oldPos;
         controller.Move(delta);
     }
@@ -590,6 +690,11 @@ public class PlayerCubeController : NetworkBehaviour
 
         currentLuggage = luggage;
 
+        hasLuggageOffset = true;
+        luggageOffsetLocal =
+            Quaternion.Inverse(transform.rotation) *
+            (currentLuggage.transform.position - transform.position);
+
         SetPushMode(true, target); // ← BELANGRIJK: first set canonical state
 
         pushTarget = target;
@@ -616,5 +721,7 @@ public class PlayerCubeController : NetworkBehaviour
             currentLuggage.SetPushPhysics(false);
             currentLuggage = null;
         }
+
+        hasLuggageOffset = false;
     }
 }
