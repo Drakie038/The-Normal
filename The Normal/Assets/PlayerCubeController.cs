@@ -43,7 +43,7 @@ public class PlayerCubeController : NetworkBehaviour
 
     private NetworkObjectReference currentElevator;
 
-    public bool inPushMode;
+public NetworkVariable<bool> inPushMode = new NetworkVariable<bool>(false);
     private Transform pushTarget;
 
     private Quaternion pushRotationVelocity;
@@ -94,7 +94,7 @@ public class PlayerCubeController : NetworkBehaviour
         UpdateNameVisual(PlayerName.Value.ToString());
 
         // 🔥 IMPORTANT: reset push state op elke client
-        inPushMode = false;
+        inPushMode.Value = false;
         pushReady = false;
         pushApproaching = false;
         pushTarget = null;
@@ -197,7 +197,7 @@ public class PlayerCubeController : NetworkBehaviour
             return;
         }
 
-        if (inPushMode && pushReady)
+        if (inPushMode.Value && pushReady)
         {
             float forward = 0f;
             float turn = 0f;
@@ -214,12 +214,9 @@ public class PlayerCubeController : NetworkBehaviour
                 turn = -1f;
 
             // richting correctie
-            if (pushTarget != null && currentLuggage != null)
+            if (IsFrontSide())
             {
-                if (pushTarget == currentLuggage.pushFor)
-                {
-                    forward *= -1f;
-                }
+                forward = -forward;
             }
 
             // ===== ROTATIE LOGICA =====
@@ -288,10 +285,10 @@ public class PlayerCubeController : NetworkBehaviour
 
     private void FixedUpdate()
     {
-        if (!IsOwner && !inPushMode)
+        if (!IsOwner && !inPushMode.Value)
             return;
 
-        if (inPushMode)
+        if (inPushMode.Value)
         {
             if (pushTarget == null)
                 return;
@@ -359,7 +356,7 @@ public class PlayerCubeController : NetworkBehaviour
             pushReady = true;
         }
 
-        if (!inPushMode)
+        if (!inPushMode.Value)
             return;
     }
 
@@ -397,7 +394,7 @@ public class PlayerCubeController : NetworkBehaviour
 
         if (!inElevator.Value)
         {
-            if (inPushMode && pushReady)
+            if (inPushMode.Value && pushReady)
             {
                 move = pushForwardDir * input.y;
             }
@@ -541,7 +538,7 @@ public class PlayerCubeController : NetworkBehaviour
 
     public void SetPushMode(bool value, Transform target)
     {
-        inPushMode = value;
+        inPushMode.Value = value;
 
         pushTarget = target; // 🔥 ALTIJD zetten (niet IsOwner checken)
 
@@ -569,7 +566,7 @@ public class PlayerCubeController : NetworkBehaviour
 
     public void ForcePushUpdate()
     {
-        if (!inPushMode || pushTarget == null)
+        if (!inPushMode.Value || pushTarget == null)
             return;
 
         float dt = Time.fixedDeltaTime;
@@ -616,12 +613,10 @@ public class PlayerCubeController : NetworkBehaviour
         // =========================
         bool isFront = (pushTarget == currentLuggage.pushFor);
 
-        // als je aan de voorkant staat:
-        // forward = van speler AF
         if (isFront)
-        {
             dir = -dir;
-        }
+        else
+            dir = dir;
 
         // input blijft normaal:
         // W = +1, S = -1
@@ -645,6 +640,9 @@ public class PlayerCubeController : NetworkBehaviour
 
         Vector3 delta = currentLuggage.transform.position - oldPos;
         controller.Move(delta);
+
+        currentLuggage.transform.rotation =
+            transform.rotation * luggageRotationOffset;
     }
 
     private bool IsCorrectPushSide()
@@ -683,7 +681,7 @@ public class PlayerCubeController : NetworkBehaviour
 
         // 🔥 FORCE CLIENT STATE DIRECT
         pushTarget = target;
-        inPushMode = true;
+        inPushMode.Value = true;
 
         pushApproaching = true;
         pushReady = false;
@@ -704,7 +702,7 @@ public class PlayerCubeController : NetworkBehaviour
 
     public void StopPush()
     {
-        SetPushMode(false, null);
+        StopPushServerRpc();
 
         if (currentLuggage != null)
         {
@@ -713,6 +711,30 @@ public class PlayerCubeController : NetworkBehaviour
         }
 
         hasLuggageOffset = false;
+    }
+
+    [ServerRpc]
+    private void StopPushServerRpc()
+    {
+        inPushMode.Value = false;
+
+        pushTarget = null;
+        pushForwardDir = Vector3.zero;
+
+        if (currentLuggage != null)
+            currentLuggage.SetPushPhysics(false);
+
+        currentLuggage = null;
+        hasLuggageOffset = false;
+
+        StopPushClientRpc();
+    }
+
+    [ClientRpc]
+    private void StopPushClientRpc()
+    {
+        pushApproaching = false;
+        pushReady = false;
     }
 
     [ServerRpc]
@@ -742,7 +764,7 @@ public class PlayerCubeController : NetworkBehaviour
 
         pushTarget = isFront ? luggage.pushFor : luggage.pushBack;
 
-        inPushMode = true;
+        inPushMode.Value = true;
         pushApproaching = true;
         pushReady = false;
 
@@ -755,5 +777,10 @@ public class PlayerCubeController : NetworkBehaviour
         hasLuggageOffset = true;
 
         currentLuggage.SetPushPhysics(true);
+    }
+
+    private bool IsFrontSide()
+    {
+        return currentLuggage != null && pushTarget == currentLuggage.pushFor;
     }
 }

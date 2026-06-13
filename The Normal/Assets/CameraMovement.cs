@@ -45,7 +45,7 @@ public class CameraMovement : MonoBehaviour
 
     private bool InPushMode()
     {
-        return player != null && player.inPushMode;
+        return player != null && player.inPushMode.Value;
     }
 
     private bool IsPeeking()
@@ -511,9 +511,10 @@ public class CameraMovement : MonoBehaviour
         if (p == null)
             return;
 
-        if (p.inPushMode)
+        if (p.inPushMode.Value)
         {
             p.StopPush();
+            p.inPushMode.Value = false; // 🔥 HARD RESET
             return;
         }
 
