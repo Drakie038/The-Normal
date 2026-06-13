@@ -531,7 +531,7 @@ public class CameraMovement : MonoBehaviour
         if (target == null)
             return;
 
-        p.StartPush(luggage, target);
+        p.RequestStartPushServerRpc(luggage.NetworkObject, hit == luggage.frontCollider);
     }
 
     private IEnumerator EnterPushMode(PlayerCubeController p, Transform target, Vector3 lookDir)

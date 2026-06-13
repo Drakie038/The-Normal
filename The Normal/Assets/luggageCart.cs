@@ -1,6 +1,7 @@
-﻿using UnityEngine;
+﻿using Unity.Netcode;
+using UnityEngine;
 
-public class LuggageCart : MonoBehaviour
+public class LuggageCart : NetworkBehaviour
 {
     [Header("Luggage Colliders (CHILDREN)")]
     public Collider frontCollider;
