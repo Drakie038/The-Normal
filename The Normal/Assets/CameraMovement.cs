@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using Unity.Netcode;
 
 public class CameraMovement : MonoBehaviour
 {
@@ -463,6 +464,21 @@ public class CameraMovement : MonoBehaviour
                 return;
             }
 
+            // ================= SuitCAse =================
+            SuitCase SuitCase = hit.collider.GetComponent<SuitCase>();
+
+            if (SuitCase != null)
+            {
+                SuitCase.SetHighlight(true);
+
+                if (Input.GetKeyDown(KeyCode.E))
+                {
+                    SuitCase.PickUpSuitCase();
+                }
+
+                return;
+            }
+
             // ================= LUGGAGE =================
             LuggageCart luggage = hit.collider.GetComponentInParent<LuggageCart>();
 
@@ -514,7 +530,7 @@ public class CameraMovement : MonoBehaviour
         if (p.inPushMode.Value)
         {
             p.StopPush();
-            p.inPushMode.Value = false; // 🔥 HARD RESET
+            p.inPushMode.Value = false;
             return;
         }
 
@@ -532,7 +548,22 @@ public class CameraMovement : MonoBehaviour
         if (target == null)
             return;
 
-        p.RequestStartPushServerRpc(luggage.NetworkObject, hit == luggage.frontCollider);
+        // EXACT hetzelfde idee als DoorHallway:
+        // collider -> luggage -> parent networkobject
+
+        NetworkObject rootNetworkObject =
+            luggage.GetComponentInParent<NetworkObject>();
+
+        if (rootNetworkObject == null)
+        {
+            Debug.LogError("No parent NetworkObject found");
+            return;
+        }
+
+        p.RequestStartPushServerRpc(
+            rootNetworkObject,
+            hit == luggage.frontCollider
+        );
     }
 
     private IEnumerator EnterPushMode(PlayerCubeController p, Transform target, Vector3 lookDir)
@@ -595,6 +626,12 @@ public class CameraMovement : MonoBehaviour
         if (oldLuggage != null)
         {
             oldLuggage.SetHighlight(false);
+        }
+
+        SuitCase oldSuitCase = FindObjectOfType<SuitCase>();
+        if (oldSuitCase != null)
+        {
+            oldSuitCase.SetHighlight(false);
         }
     }
 

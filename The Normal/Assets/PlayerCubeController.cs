@@ -258,9 +258,9 @@ public NetworkVariable<bool> inPushMode = new NetworkVariable<bool>(false);
                         transform.position
                     );
 
-                currentLuggage.transform.position = Vector3.Lerp(
+                currentLuggage.transform.position = Vector3.SmoothDamp(
                     currentLuggage.transform.position,
-                    targetPos,
+                    targetPos, ref velocity,
                     20f * Time.deltaTime
                 );
 
@@ -737,34 +737,56 @@ public NetworkVariable<bool> inPushMode = new NetworkVariable<bool>(false);
         pushReady = false;
     }
 
-    [ServerRpc]
-    public void RequestStartPushServerRpc(NetworkObjectReference luggageRef, bool isFront)
+    [ServerRpc(RequireOwnership = false)]
+    public void RequestStartPushServerRpc(
+        NetworkObjectReference luggageRef,
+        bool isFront)
     {
         if (!luggageRef.TryGet(out NetworkObject obj))
             return;
 
-        LuggageCart luggage = obj.GetComponent<LuggageCart>();
+        LuggageCart luggage =
+            obj.GetComponentInChildren<LuggageCart>(true);
+
         if (luggage == null)
+        {
+            Debug.LogError(
+                $"No LuggageCart found under {obj.name}"
+            );
             return;
+        }
 
         StartPushClientRpc(luggageRef, isFront);
     }
 
     [ClientRpc]
-    private void StartPushClientRpc(NetworkObjectReference luggageRef, bool isFront)
+    private void StartPushClientRpc(
+        NetworkObjectReference luggageRef,
+        bool isFront)
     {
         if (!luggageRef.TryGet(out NetworkObject obj))
             return;
 
-        LuggageCart luggage = obj.GetComponent<LuggageCart>();
+        LuggageCart luggage =
+            obj.GetComponentInChildren<LuggageCart>(true);
+
         if (luggage == null)
+        {
+            Debug.LogError(
+                $"No LuggageCart found under {obj.name}"
+            );
             return;
+        }
 
         currentLuggage = luggage;
 
-        pushTarget = isFront ? luggage.pushFor : luggage.pushBack;
+        pushTarget =
+            isFront
+                ? luggage.pushFor
+                : luggage.pushBack;
 
         inPushMode.Value = true;
+
         pushApproaching = true;
         pushReady = false;
 
