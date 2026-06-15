@@ -5926,7 +5926,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   elevatorCameraRotation: {x: 0, y: 180, z: 0}
-  doorDetectDistance: 1.5
+  doorDetectDistance: 1.75
   maxPeekYaw: 40
   leanSmoothSpeed: 4
   pushYawSwayAmount: 1
@@ -6383,6 +6383,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2422777884358387077, guid: 6ff775de8e6cb2a428405d3933961960, type: 3}
+      propertyPath: flySpeed
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6136736102667362403, guid: 6ff775de8e6cb2a428405d3933961960, type: 3}
       propertyPath: m_Name
       value: SuitCase Black
@@ -7510,7 +7514,7 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 8836093947877826288, guid: 92e3bca060eefe84d9ff8b0eb51b99c6, type: 3}
-      insertIndex: -1
+      insertIndex: 5
       addedObject: {fileID: 1718966213}
     - targetCorrespondingSourceObject: {fileID: 8836093947877826288, guid: 92e3bca060eefe84d9ff8b0eb51b99c6, type: 3}
       insertIndex: -1

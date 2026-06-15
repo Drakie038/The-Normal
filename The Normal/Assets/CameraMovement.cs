@@ -44,6 +44,8 @@ public class CameraMovement : MonoBehaviour
 
     private float pushSwayTime;
 
+    private SuitCase heldSuitCase;
+
     private bool InPushMode()
     {
         return player != null && player.inPushMode.Value;
@@ -81,6 +83,8 @@ public class CameraMovement : MonoBehaviour
     private float doorLeanTarget;
 
     private LuggageCart currentLuggage;
+
+    private SuitCase currentSuitCase;
     public void SetDoorLeanTarget(float value)
     {
         doorLeanTarget = value;
@@ -214,6 +218,15 @@ public class CameraMovement : MonoBehaviour
 
         if (state != State.FPS)
             return;
+
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            if (heldSuitCase != null)
+            {
+                heldSuitCase.Drop();
+                heldSuitCase = null;
+            }
+        }
 
         bool inElevator = player != null && player.inElevator.Value;
 
@@ -464,16 +477,29 @@ public class CameraMovement : MonoBehaviour
                 return;
             }
 
-            // ================= SuitCAse =================
-            SuitCase SuitCase = hit.collider.GetComponent<SuitCase>();
+            //SuitCase
+            SuitCase suitCase = hit.collider.GetComponent<SuitCase>();
 
-            if (SuitCase != null)
+            if (suitCase != null)
             {
-                SuitCase.SetHighlight(true);
+                if (currentSuitCase != suitCase)
+                {
+                    if (currentSuitCase != null)
+                        currentSuitCase.SetHighlight(false);
 
+                    currentSuitCase = suitCase;
+                }
+
+                currentSuitCase.SetHighlight(true);
+
+                // ❌ voeg cooldown check toe hier
                 if (Input.GetKeyDown(KeyCode.E))
                 {
-                    SuitCase.PickUpSuitCase();
+                    if (Time.time >= suitCase.GetPickupCooldown())
+                    {
+                        suitCase.PickUp(transform);
+                        heldSuitCase = suitCase;
+                    }
                 }
 
                 return;
@@ -628,10 +654,10 @@ public class CameraMovement : MonoBehaviour
             oldLuggage.SetHighlight(false);
         }
 
-        SuitCase oldSuitCase = FindObjectOfType<SuitCase>();
-        if (oldSuitCase != null)
+        if (currentSuitCase != null)
         {
-            oldSuitCase.SetHighlight(false);
+            currentSuitCase.SetHighlight(false);
+            currentSuitCase = null;
         }
     }
 
