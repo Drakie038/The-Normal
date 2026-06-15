@@ -56,7 +56,14 @@ public class GameInstanceManager : NetworkBehaviour
             return null;
         }
 
-        netObj.Spawn(true); // 🔥 THIS FIXES EVERYTHING
+        netObj.Spawn(true);
+
+        SuitCaseSpawner spawner = obj.GetComponentInChildren<SuitCaseSpawner>();
+
+        if (spawner != null)
+        {
+            spawner.SpawnSuitCases();
+        }
 
         obj.name = $"Game{gameIndex}";
 

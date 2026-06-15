@@ -9,7 +9,6 @@ public class SuitCase : MonoBehaviour
     [Header("Hold In Front Of Camera")]
     public float distanceInFront = 1.2f;
     public float heightOffset = -0.2f;
-    public float followSpeed = 12f;
 
     [Header("Pickup Animation")]
     public float flySpeed = 6f;
@@ -21,6 +20,8 @@ public class SuitCase : MonoBehaviour
     private Rigidbody rb;
 
     private bool isPickedUp;
+    private bool isHeldActive;
+
     private Transform camTarget;
 
     private bool isFlyingToHand;
@@ -28,11 +29,9 @@ public class SuitCase : MonoBehaviour
     private Vector3 flyStartPos;
     private Quaternion flyStartRot;
 
-    public bool IsHeld => isPickedUp;
-
-    public bool isHeldActive;
-
     private float pickupCooldownEnd;
+
+    public bool IsHeld => isPickedUp;
 
     void Awake()
     {
@@ -42,6 +41,22 @@ public class SuitCase : MonoBehaviour
 
         if (rend != null)
             mat = rend.material;
+    }
+
+    void Start()
+    {
+        // ✅ BELANGRIJK: altijd physics actief bij spawn
+        EnablePhysics();
+    }
+
+    private void EnablePhysics()
+    {
+        if (rb == null) return;
+
+        rb.isKinematic = false;
+        rb.useGravity = true;
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
     }
 
     public void SetHighlight(bool active)
@@ -72,7 +87,6 @@ public class SuitCase : MonoBehaviour
         if (isHeldActive || cameraTransform == null)
             return;
 
-        // ❌ cooldown check
         if (Time.time < pickupCooldownEnd)
             return;
 
@@ -94,7 +108,8 @@ public class SuitCase : MonoBehaviour
 
     void LateUpdate()
     {
-        if (!isHeldActive || camTarget == null)
+        // ❌ BELANGRIJK: alleen checken als je echt vastgehouden wordt
+        if (!isHeldActive)
             return;
 
         if (camTarget == null)
@@ -145,7 +160,6 @@ public class SuitCase : MonoBehaviour
 
         camTarget = null;
 
-        // ✅ cooldown starten
         pickupCooldownEnd = Time.time + 0.25f;
 
         if (rb != null)
