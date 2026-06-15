@@ -122,9 +122,8 @@ MonoBehaviour:
   intensity: 0.05
   distanceInFront: 0.75
   heightOffset: -0.35
-  followSpeed: 12
   flySpeed: 1.5
-  isHeldActive: 0
+  color: 2
 --- !u!114 &7786432161843571702
 MonoBehaviour:
   m_ObjectHideFlags: 0

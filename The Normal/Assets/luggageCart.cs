@@ -1,4 +1,7 @@
-﻿using Unity.Netcode;
+﻿using System.Collections;
+using System.Collections.Generic;
+using Unity.Multiplayer.PlayMode;
+using Unity.Netcode;
 using UnityEngine;
 
 public class LuggageCart : NetworkBehaviour
@@ -11,19 +14,25 @@ public class LuggageCart : NetworkBehaviour
     public Color highlightColor = Color.yellow;
     [Range(0f, 2f)] public float intensity = 0.3f;
 
-    private Renderer rend;
-    private Material mat;
-
+    [Header("Push Points")]
     public Transform pushFor;
     public Transform pushBack;
 
-    private bool playerInside;
-    private PlayerCubeController currentPlayer;
+    [Header("Luggage Items (slots)")]
+    public List<Transform> luggageItems = new List<Transform>();
 
-    private bool isHighlighted;
+    [Header("SuitCaseType")]
+    public bool blue;
+    public bool red;
+    public bool black;
 
-    // ===== ADDED =====
+    private SuitCase[] occupied;
+
+    private Renderer rend;
+    private Material mat;
     private Rigidbody rb;
+
+    private PlayerCubeController currentPlayer;
 
     private void Awake()
     {
@@ -31,29 +40,15 @@ public class LuggageCart : NetworkBehaviour
         if (rend != null)
             mat = rend.material;
 
-        // ADDED
         rb = GetComponent<Rigidbody>();
-    }
 
-    // Called from camera raycast
-    public void SetFromCollider(Collider hitCollider)
-    {
-        if (hitCollider == frontCollider)
-        {
-            // Debug.Log("Front geraakt");
-        }
-        else if (hitCollider == backCollider)
-        {
-            // Debug.Log("Back geraakt");
-        }
+        // init slots
+        occupied = new SuitCase[luggageItems.Count];
     }
 
     public void SetHighlight(bool active)
     {
-        isHighlighted = active;
-
-        if (mat == null)
-            return;
+        if (mat == null) return;
 
         if (active)
         {
@@ -65,6 +60,43 @@ public class LuggageCart : NetworkBehaviour
             mat.DisableKeyword("_EMISSION");
             mat.SetColor("_EmissionColor", Color.black);
         }
+    }
+
+    // =========================
+    // PLACE SUITCASE SYSTEM
+    // =========================
+
+    public bool TryPlaceSuitcase(SuitCase suitCase)
+    {
+        if (suitCase == null) return false;
+
+        for (int i = 0; i < luggageItems.Count; i++)
+        {
+            if (occupied[i] != null)
+                continue;
+
+            Transform slot = luggageItems[i];
+
+            occupied[i] = suitCase;
+
+            suitCase.PlaceOnLuggage(slot, this, i);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public void ClearSlot(int index)
+    {
+        if (index < 0 || index >= occupied.Length) return;
+        occupied[index] = null;
+    }
+
+    // SAFE overload (camera gebruikt soms andere signature)
+    public void SetFromCollider(Collider hitCollider)
+    {
+        SetFromCollider(hitCollider, null);
     }
 
     public void SetFromCollider(Collider hitCollider, PlayerCubeController player)
@@ -81,10 +113,6 @@ public class LuggageCart : NetworkBehaviour
         }
     }
 
-    // =========================
-    // ADDED PUSH SYSTEM
-    // =========================
-
     public void SetPushPhysics(bool active)
     {
         if (rb == null) return;
@@ -93,8 +121,5 @@ public class LuggageCart : NetworkBehaviour
         rb.angularVelocity = Vector3.zero;
 
         rb.constraints = RigidbodyConstraints.FreezeRotation;
-
-        // optional: friction boost tijdens push
-        rb.mass = active ? rb.mass : rb.mass;
     }
 }

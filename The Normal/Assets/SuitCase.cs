@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections;
 
 public class SuitCase : MonoBehaviour
 {
@@ -13,15 +14,22 @@ public class SuitCase : MonoBehaviour
     [Header("Pickup Animation")]
     public float flySpeed = 6f;
 
+    public enum ColorSuit
+    {
+        red,
+        blue,
+        black
+    }
+
+    public ColorSuit color;
+
     private Renderer rend;
     private Material mat;
-
     private Collider col;
     private Rigidbody rb;
 
     private bool isPickedUp;
     private bool isHeldActive;
-
     private Transform camTarget;
 
     private bool isFlyingToHand;
@@ -31,7 +39,14 @@ public class SuitCase : MonoBehaviour
 
     private float pickupCooldownEnd;
 
+    // NEW
+    private bool isPlacedOnLuggage;
+    private LuggageCart currentCart;
+    private int currentSlot;
+
     public bool IsHeld => isPickedUp;
+
+    public bool IsOnLuggage => isPlacedOnLuggage;
 
     void Awake()
     {
@@ -45,41 +60,13 @@ public class SuitCase : MonoBehaviour
 
     void Start()
     {
-        // ✅ BELANGRIJK: altijd physics actief bij spawn
         EnablePhysics();
     }
 
     private void EnablePhysics()
     {
-        if (rb == null) return;
-
         rb.isKinematic = false;
         rb.useGravity = true;
-        rb.linearVelocity = Vector3.zero;
-        rb.angularVelocity = Vector3.zero;
-    }
-
-    public void SetHighlight(bool active)
-    {
-        if (mat == null)
-            return;
-
-        if (active)
-        {
-            mat.EnableKeyword("_EMISSION");
-
-            float finalIntensity = intensity;
-
-            if (isPickedUp)
-                finalIntensity *= 4f;
-
-            mat.SetColor("_EmissionColor", highlightColor * finalIntensity);
-        }
-        else
-        {
-            mat.DisableKeyword("_EMISSION");
-            mat.SetColor("_EmissionColor", Color.black);
-        }
     }
 
     public void PickUp(Transform cameraTransform)
@@ -93,34 +80,37 @@ public class SuitCase : MonoBehaviour
         camTarget = cameraTransform;
         isHeldActive = true;
 
-        if (col != null)
-            col.enabled = false;
-
-        if (rb != null)
-            rb.isKinematic = true;
+        if (col != null) col.enabled = false;
+        if (rb != null) rb.isKinematic = true;
 
         isFlyingToHand = true;
         flyT = 0f;
 
         flyStartPos = transform.position;
         flyStartRot = transform.rotation;
+
+        // 🔥 IMPORTANT: detach from luggage properly
+        if (currentCart != null)
+        {
+            currentCart.ClearSlot(currentSlot);
+            currentCart = null;
+        }
+
+        if (transform.parent != null)
+            transform.SetParent(null);
+
+        isPlacedOnLuggage = false;
     }
 
     void LateUpdate()
     {
-        // ❌ BELANGRIJK: alleen checken als je echt vastgehouden wordt
-        if (!isHeldActive)
-            return;
-
-        if (camTarget == null)
+        if (!isHeldActive || camTarget == null)
             return;
 
         Vector3 targetPos =
             camTarget.position +
             camTarget.forward * distanceInFront +
             camTarget.up * heightOffset;
-
-        Quaternion targetRot = camTarget.rotation;
 
         if (isFlyingToHand)
         {
@@ -129,27 +119,70 @@ public class SuitCase : MonoBehaviour
             float curve = Mathf.SmoothStep(0f, 1f, flyT);
 
             transform.position = Vector3.Lerp(flyStartPos, targetPos, curve);
-            transform.rotation = Quaternion.Slerp(flyStartRot, targetRot, curve);
+            transform.rotation = Quaternion.Slerp(flyStartRot, camTarget.rotation, curve);
 
             if (flyT >= 1f)
-            {
                 isFlyingToHand = false;
-                isPickedUp = true;
-            }
 
             return;
         }
 
-        float distance = Vector3.Distance(transform.position, targetPos);
+        transform.position = Vector3.Lerp(transform.position, targetPos, 12f * Time.deltaTime);
+        transform.rotation = Quaternion.Slerp(transform.rotation, camTarget.rotation, 12f * Time.deltaTime);
+    }
 
-        float minSpeed = 12f;
-        float maxSpeed = 20f;
+    // =========================
+    // NEW: PLACE ON LUGGAGE
+    // =========================
+    public void PlaceOnLuggage(Transform slot, LuggageCart cart, int index)
+    {
+        StopAllCoroutines();
 
-        float t = Mathf.InverseLerp(0.2f, 2.5f, distance);
-        float speed = Mathf.Lerp(minSpeed, maxSpeed, t);
+        isHeldActive = false;
+        isPickedUp = false;
+        camTarget = null;
 
-        transform.position = Vector3.Lerp(transform.position, targetPos, speed * Time.deltaTime);
-        transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, speed * Time.deltaTime);
+        currentCart = cart;
+        currentSlot = index;
+        isPlacedOnLuggage = true;
+
+        if (rb != null)
+        {
+            rb.isKinematic = true;
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+
+        // 🔥 KEY FIX: make it follow luggage like a child
+        transform.SetParent(slot);
+
+        StartCoroutine(SmoothPlace(slot));
+
+        if (col != null)
+            col.enabled = true;
+    }
+
+    private IEnumerator SmoothPlace(Transform slot)
+    {
+        Vector3 startPos = transform.position;
+        Quaternion startRot = transform.rotation;
+
+        float t = 0f;
+        float duration = 0.5f;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            float n = t / duration;
+
+            transform.position = Vector3.Lerp(startPos, slot.position, n);
+            transform.rotation = Quaternion.Slerp(startRot, slot.rotation, n);
+
+            yield return null;
+        }
+
+        transform.position = slot.position;
+        transform.rotation = slot.rotation;
     }
 
     public void Drop()
@@ -166,11 +199,6 @@ public class SuitCase : MonoBehaviour
         {
             rb.isKinematic = false;
             rb.useGravity = true;
-
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-
-            rb.AddForce(Vector3.down * 2f, ForceMode.Impulse);
         }
 
         if (col != null)
@@ -182,5 +210,21 @@ public class SuitCase : MonoBehaviour
     public float GetPickupCooldown()
     {
         return pickupCooldownEnd;
+    }
+
+    public void SetHighlight(bool active)
+    {
+        if (mat == null) return;
+
+        if (active)
+        {
+            mat.EnableKeyword("_EMISSION");
+            mat.SetColor("_EmissionColor", highlightColor * intensity);
+        }
+        else
+        {
+            mat.DisableKeyword("_EMISSION");
+            mat.SetColor("_EmissionColor", Color.black);
+        }
     }
 }

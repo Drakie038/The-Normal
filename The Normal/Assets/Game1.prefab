@@ -4380,6 +4380,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: hotelbedroomfull flipped (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 5241439628050941303, guid: dc17e816e3076434a8c37f8488689a0b, type: 3}
+      propertyPath: openAngle
+      value: 90
+      objectReference: {fileID: 0}
     - target: {fileID: 6160960567019734160, guid: dc17e816e3076434a8c37f8488689a0b, type: 3}
       propertyPath: GlobalObjectIdHash
       value: 519673861
@@ -4734,6 +4738,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 107207119494537937}
     m_Modifications:
+    - target: {fileID: 939436569164034301, guid: 0dbb6a1080048b44a88de388996b0251, type: 3}
+      propertyPath: openAngle
+      value: -90
+      objectReference: {fileID: 0}
     - target: {fileID: 1167833051503259930, guid: 0dbb6a1080048b44a88de388996b0251, type: 3}
       propertyPath: GlobalObjectIdHash
       value: 2169330677
@@ -5428,7 +5436,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 939436569164034301, guid: 0dbb6a1080048b44a88de388996b0251, type: 3}
       propertyPath: openAngle
-      value: 90
+      value: -90
       objectReference: {fileID: 0}
     - target: {fileID: 1167833051503259930, guid: 0dbb6a1080048b44a88de388996b0251, type: 3}
       propertyPath: GlobalObjectIdHash
@@ -5635,7 +5643,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 939436569164034301, guid: 0dbb6a1080048b44a88de388996b0251, type: 3}
       propertyPath: openAngle
-      value: 90
+      value: -90
       objectReference: {fileID: 0}
     - target: {fileID: 1167833051503259930, guid: 0dbb6a1080048b44a88de388996b0251, type: 3}
       propertyPath: GlobalObjectIdHash

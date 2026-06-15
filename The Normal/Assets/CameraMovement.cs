@@ -225,6 +225,7 @@ public class CameraMovement : MonoBehaviour
             {
                 heldSuitCase.Drop();
                 heldSuitCase = null;
+                return;
             }
         }
 
@@ -478,7 +479,7 @@ public class CameraMovement : MonoBehaviour
             }
 
             //SuitCase
-            SuitCase suitCase = hit.collider.GetComponent<SuitCase>();
+            SuitCase suitCase = hit.collider.GetComponentInParent<SuitCase>();
 
             if (suitCase != null)
             {
@@ -492,11 +493,11 @@ public class CameraMovement : MonoBehaviour
 
                 currentSuitCase.SetHighlight(true);
 
-                // ❌ voeg cooldown check toe hier
                 if (Input.GetKeyDown(KeyCode.E))
                 {
                     if (Time.time >= suitCase.GetPickupCooldown())
                     {
+                        // werkt zowel op grond als op luggage
                         suitCase.PickUp(transform);
                         heldSuitCase = suitCase;
                     }
@@ -510,6 +511,19 @@ public class CameraMovement : MonoBehaviour
 
             if (luggage != null)
             {
+                // ⭐ NIEUW: als je een suitcase vast hebt → plaatsen
+                if (heldSuitCase != null)
+                {
+                    bool placed = luggage.TryPlaceSuitcase(heldSuitCase);
+
+                    if (placed)
+                    {
+                        heldSuitCase = null;
+                    }
+
+                    return;
+                }
+
                 if (InPushMode())
                 {
                     luggage.SetHighlight(false);
@@ -534,16 +548,9 @@ public class CameraMovement : MonoBehaviour
 
                 return;
             }
-
-            if (luggage != null)
-            {
-                luggage.SetHighlight(true);
-                luggage.SetFromCollider(hit.collider);
-                return;
-            }
         }
 
-        ClearInteractions();
+            ClearInteractions();
     }
 
     private void TogglePush(LuggageCart luggage, Collider hit)
