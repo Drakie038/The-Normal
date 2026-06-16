@@ -19,7 +19,12 @@ public class SuitCase : NetworkBehaviour
     {
         red,
         blue,
-        black
+        black,
+        green,
+        magenta,
+        purple,
+        teal,
+        yellow
     }
 
     public ColorSuit color;

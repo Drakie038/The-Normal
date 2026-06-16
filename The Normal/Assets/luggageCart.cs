@@ -25,6 +25,11 @@ public class LuggageCart : NetworkBehaviour
     public bool blue;
     public bool red;
     public bool black;
+    public bool green;
+    public bool yellow;
+    public bool magenta;
+    public bool teal;
+    public bool purple;
 
     private SuitCase[] occupied;
 
@@ -42,8 +47,56 @@ public class LuggageCart : NetworkBehaviour
 
         rb = GetComponent<Rigidbody>();
 
-        // init slots
         occupied = new SuitCase[luggageItems.Count];
+
+        // alles resetten
+        blue = false;
+        red = false;
+        black = false;
+        green = false;
+        yellow = false;
+        magenta = false;
+        teal = false;
+        purple = false;
+    }
+
+    private void SetColorBool(SuitCase.ColorSuit color, bool value)
+    {
+        switch (color)
+        {
+            case SuitCase.ColorSuit.red: red = value; break;
+            case SuitCase.ColorSuit.blue: blue = value; break;
+            case SuitCase.ColorSuit.black: black = value; break;
+            case SuitCase.ColorSuit.green: green = value; break;
+            case SuitCase.ColorSuit.magenta: magenta = value; break;
+            case SuitCase.ColorSuit.teal: teal = value; break;
+            case SuitCase.ColorSuit.yellow: yellow = value; break;
+            case SuitCase.ColorSuit.purple: purple = value; break; // typo in enum
+        }
+    }
+
+    public bool TryPlaceSuitcase(SuitCase suitCase)
+    {
+        if (suitCase == null) return false;
+
+        for (int i = 0; i < luggageItems.Count; i++)
+        {
+            if (occupied[i] != null)
+                continue;
+
+            Transform slot = luggageItems[i];
+
+            occupied[i] = suitCase;
+
+            // 🔥 kleur activeren
+            SetColorBool(suitCase.color, true);
+
+            suitCase.PlaceOnLuggage(slot, this, i);
+
+            return true;
+        }
+
+        return false;
     }
 
     public void SetHighlight(bool active)
@@ -60,31 +113,6 @@ public class LuggageCart : NetworkBehaviour
             mat.DisableKeyword("_EMISSION");
             mat.SetColor("_EmissionColor", Color.black);
         }
-    }
-
-    // =========================
-    // PLACE SUITCASE SYSTEM
-    // =========================
-
-    public bool TryPlaceSuitcase(SuitCase suitCase)
-    {
-        if (suitCase == null) return false;
-
-        for (int i = 0; i < luggageItems.Count; i++)
-        {
-            if (occupied[i] != null)
-                continue;
-
-            Transform slot = luggageItems[i];
-
-            occupied[i] = suitCase;
-
-            suitCase.PlaceOnLuggage(slot, this, i);
-
-            return true;
-        }
-
-        return false;
     }
 
     public void ClearSlot(int index)

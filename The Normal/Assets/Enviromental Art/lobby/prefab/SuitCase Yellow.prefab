@@ -242,5 +242,5 @@ MonoBehaviour:
   distanceInFront: 0.75
   heightOffset: -0.35
   flySpeed: 1.5
-  color: 0
+  color: 7
   netObj: {fileID: 0}
