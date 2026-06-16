@@ -2,7 +2,7 @@
 using System.Collections;
 using Unity.Netcode;
 
-public class SuitCase : MonoBehaviour
+public class SuitCase : NetworkBehaviour
 {
     [Header("Highlight")]
     public Color highlightColor = Color.white;
@@ -57,6 +57,8 @@ public class SuitCase : MonoBehaviour
 
         if (rend != null)
             mat = rend.material;
+
+        netObj = GetComponent<NetworkObject>();
     }
 
     void Start()
@@ -81,7 +83,7 @@ public class SuitCase : MonoBehaviour
         camTarget = cameraTransform;
         isHeldActive = true;
 
-        if (col != null) col.enabled = false;
+        SetColliderServerRpc(false);
         if (rb != null) rb.isKinematic = true;
 
         isFlyingToHand = true;
@@ -188,6 +190,10 @@ public class SuitCase : MonoBehaviour
 
     public void Drop()
     {
+        SetColliderServerRpc(true);
+
+        DropServerRpc(); // ownership terug naar server
+
         isPickedUp = false;
         isFlyingToHand = false;
         isHeldActive = false;
@@ -250,5 +256,51 @@ public class SuitCase : MonoBehaviour
             transform.SetParent(null);
 
         isPlacedOnLuggage = false;
+    }
+
+    public NetworkObject netObj;
+
+    [ServerRpc(RequireOwnership = false)]
+    public void PickupServerRpc(ulong clientId)
+    {
+        if (!netObj.IsSpawned)
+            return;
+
+        netObj.ChangeOwnership(clientId);
+
+        PickupClientRpc(clientId);
+    }
+
+    [ClientRpc]
+    private void PickupClientRpc(ulong clientId)
+    {
+        if (NetworkManager.Singleton.LocalClientId != clientId)
+            return;
+
+        CameraMovement cam = FindObjectOfType<CameraMovement>();
+
+        if (cam != null)
+        {
+            PickUp(cam.transform);
+        }
+    }
+
+    [ServerRpc]
+    public void DropServerRpc()
+    {
+        NetworkObject.ChangeOwnership(NetworkManager.ServerClientId);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void SetColliderServerRpc(bool state)
+    {
+        SetColliderClientRpc(state);
+    }
+
+    [ClientRpc]
+    private void SetColliderClientRpc(bool state)
+    {
+        if (col != null)
+            col.enabled = state;
     }
 }

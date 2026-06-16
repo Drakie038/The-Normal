@@ -153,6 +153,7 @@ MonoBehaviour:
   heightOffset: -0.35
   flySpeed: 1.5
   color: 0
+  netObj: {fileID: 0}
 --- !u!114 &-2002777126873993006
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -177,7 +178,7 @@ MonoBehaviour:
   RotationMaxInterpolationTime: 0.1
   ScaleLerpSmoothing: 1
   ScaleMaxInterpolationTime: 0.1
-  AuthorityMode: 0
+  AuthorityMode: 1
   TickSyncChildren: 0
   UseUnreliableDeltas: 0
   SyncPositionX: 1

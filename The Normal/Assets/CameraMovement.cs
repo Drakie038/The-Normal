@@ -498,7 +498,7 @@ public class CameraMovement : MonoBehaviour
                     if (Time.time >= suitCase.GetPickupCooldown())
                     {
                         // werkt zowel op grond als op luggage
-                        suitCase.PickUp(transform);
+                        suitCase.PickupServerRpc(NetworkManager.Singleton.LocalClientId);
                         heldSuitCase = suitCase;
                     }
                 }
