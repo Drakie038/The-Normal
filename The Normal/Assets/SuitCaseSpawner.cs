@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
 
-public class SuitCaseSpawner : MonoBehaviour
+public class SuitCaseSpawner : NetworkBehaviour
 {
     [Header("Suitcase Prefabs")]
     public List<GameObject> suitCases = new();
@@ -14,6 +14,9 @@ public class SuitCaseSpawner : MonoBehaviour
 
     public void SpawnSuitCases()
     {
+        if (!IsServer)
+            return;
+
         if (hasSpawned)
             return;
 
@@ -33,7 +36,7 @@ public class SuitCaseSpawner : MonoBehaviour
             return;
         }
 
-        List<Transform> availablePoints = new List<Transform>(spawnPoints);
+        List<Transform> availablePoints = new(spawnPoints);
 
         foreach (GameObject suitCasePrefab in suitCases)
         {
@@ -49,10 +52,21 @@ public class SuitCaseSpawner : MonoBehaviour
 
             NetworkObject netObj = suitcase.GetComponent<NetworkObject>();
 
-            if (netObj != null && NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer)
+            if (netObj == null)
             {
-                netObj.Spawn(true);
+                Debug.LogError(
+                    $"Suitcase prefab '{suitCasePrefab.name}' has NO NetworkObject on the root!"
+                );
+
+                Destroy(suitcase);
+                continue;
             }
+
+            netObj.Spawn(true);
+
+            Debug.Log(
+                $"Spawned suitcase '{suitCasePrefab.name}' NetworkId={netObj.NetworkObjectId}"
+            );
 
             availablePoints.RemoveAt(randomIndex);
         }

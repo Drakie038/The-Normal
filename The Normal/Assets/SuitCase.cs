@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using Unity.Netcode;
 
 public class SuitCase : MonoBehaviour
 {
@@ -226,5 +227,28 @@ public class SuitCase : MonoBehaviour
             mat.DisableKeyword("_EMISSION");
             mat.SetColor("_EmissionColor", Color.black);
         }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void RequestPickupServerRpc()
+    {
+        ApplyPickup();
+    }
+
+    private void ApplyPickup()
+    {
+        if (isHeldActive)
+            return;
+
+        isHeldActive = true;
+        isPickedUp = true;
+
+        if (col != null) col.enabled = false;
+        if (rb != null) rb.isKinematic = true;
+
+        if (transform.parent != null)
+            transform.SetParent(null);
+
+        isPlacedOnLuggage = false;
     }
 }

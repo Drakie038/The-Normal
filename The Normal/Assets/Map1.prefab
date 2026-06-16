@@ -590,6 +590,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dae613b45495f6340b418fb32dc48d5b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  ShowTopMostFoldoutHeaderGroup: 1
   suitCases:
   - {fileID: 6136736102667362403, guid: 6ff775de8e6cb2a428405d3933961960, type: 3}
   - {fileID: 8836093947877826288, guid: 92e3bca060eefe84d9ff8b0eb51b99c6, type: 3}
