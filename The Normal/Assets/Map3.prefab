@@ -7953,7 +7953,7 @@ GameObject:
   - component: {fileID: 107207119494537937}
   - component: {fileID: 1998182789821751336}
   m_Layer: 0
-  m_Name: Map2
+  m_Name: Map3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7996,7 +7996,7 @@ Transform:
   - {fileID: 8806802467111815370}
   - {fileID: 2794587626157742820}
   - {fileID: 1305691714244326396}
-  - {fileID: 2044602143705387126}
+  - {fileID: 235533809611882513}
   - {fileID: 8670868774405465210}
   - {fileID: 5427162280419231531}
   - {fileID: 805003633329012255}
@@ -8017,7 +8017,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 3907142535
+  GlobalObjectIdHash: 4232037998
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -10122,58 +10122,62 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 107207119494537937}
     m_Modifications:
-    - target: {fileID: 3667431434306808980, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
+    - target: {fileID: 2789328820460070473, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+      propertyPath: m_Name
+      value: hotelhallwaykitchen
+      objectReference: {fileID: 0}
+    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
       propertyPath: m_LocalPosition.x
       value: -7.291467
       objectReference: {fileID: 0}
-    - target: {fileID: 3667431434306808980, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
+    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
       propertyPath: m_LocalPosition.y
       value: -23.351892
       objectReference: {fileID: 0}
-    - target: {fileID: 3667431434306808980, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
+    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
       propertyPath: m_LocalPosition.z
       value: 61.308266
       objectReference: {fileID: 0}
-    - target: {fileID: 3667431434306808980, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
+    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
       propertyPath: m_LocalRotation.w
       value: 0.97992474
       objectReference: {fileID: 0}
-    - target: {fileID: 3667431434306808980, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
+    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3667431434306808980, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
+    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
       propertyPath: m_LocalRotation.y
       value: 0.19936788
       objectReference: {fileID: 0}
-    - target: {fileID: 3667431434306808980, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
+    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3667431434306808980, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
+    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3667431434306808980, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
+    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 23
       objectReference: {fileID: 0}
-    - target: {fileID: 3667431434306808980, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
+    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4156406677413115438, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
-      propertyPath: m_Name
-      value: hotelhallwayfixed (1)
+    - target: {fileID: 4587826487541273481, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+      propertyPath: frontCollider
+      value: 
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
---- !u!4 &2044602143705387126 stripped
+  m_SourcePrefab: {fileID: 100100000, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+--- !u!4 &235533809611882513 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 3667431434306808980, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
+  m_CorrespondingSourceObject: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
   m_PrefabInstance: {fileID: 3367205587581058274}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &3485982757578498900
@@ -10246,6 +10250,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 107207119494537937}
     m_Modifications:
+    - target: {fileID: 650340127623687272, guid: 894a650d413cd06408ce94ea2399672c, type: 3}
+      propertyPath: frontCollider
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 838668329755417774, guid: 894a650d413cd06408ce94ea2399672c, type: 3}
+      propertyPath: frontCollider
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 4946221686962792867, guid: 894a650d413cd06408ce94ea2399672c, type: 3}
       propertyPath: m_Name
       value: hotel hallway  0 doorsfbx 1 (1)
@@ -10727,6 +10739,14 @@ PrefabInstance:
     - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7485755427280626312, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+      propertyPath: frontCollider
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 8928433249841359933, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+      propertyPath: frontCollider
+      value: 
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
