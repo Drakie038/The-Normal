@@ -60,24 +60,24 @@ public class LuggageCart : NetworkBehaviour
         purple = false;
     }
 
-private void LateUpdate()
-{
-    if (!IsServer) return; // 🔥 BELANGRIJK: alleen server stuurt posities
-
-    for (int i = 0; i < luggageItems.Count; i++)
+    private void LateUpdate()
     {
-        if (occupied[i] == null)
-            continue;
+        if (!IsServer) return; // 🔥 BELANGRIJK: alleen server stuurt posities
 
-        SuitCase s = occupied[i];
-        if (s == null)
-            continue;
+        for (int i = 0; i < luggageItems.Count; i++)
+        {
+            if (occupied[i] == null)
+                continue;
 
-        Transform slot = luggageItems[i];
+            SuitCase s = occupied[i];
+            if (s == null)
+                continue;
 
-        s.NetworkObject.TrySetParent(slot, false); // 🔥 NETCODE parenting sync
+            Transform slot = luggageItems[i];
+
+            s.NetworkObject.TrySetParent(slot, false); // 🔥 NETCODE parenting sync
+        }
     }
-}
 
     private void SetColorBool(SuitCase.ColorSuit color, bool value)
     {

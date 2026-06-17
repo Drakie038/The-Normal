@@ -48,7 +48,7 @@ public class SuitCase : NetworkBehaviour
     // NEW
     private bool isPlacedOnLuggage;
     private LuggageCart currentCart;
-    private int currentSlot;    
+    private int currentSlot;
 
     public bool IsHeld => isPickedUp;
 
@@ -139,44 +139,44 @@ public class SuitCase : NetworkBehaviour
         colliderEnabled.Value = false;
     }
 
-void LateUpdate()
-{
-    // 🔥 suitcase blijft luggage slot volgen
-    if (isPlacedOnLuggage &&
-        followSlot != null &&
-        !isPlacing)
+    void LateUpdate()
     {
-        transform.position = followSlot.position;
-        transform.rotation = followSlot.rotation;
-        return;
+        // 🔥 suitcase blijft luggage slot volgen
+        if (isPlacedOnLuggage &&
+            followSlot != null &&
+            !isPlacing)
+        {
+            transform.position = followSlot.position;
+            transform.rotation = followSlot.rotation;
+            return;
+        }
+
+        if (!isHeldActive || camTarget == null)
+            return;
+
+        Vector3 targetPos =
+            camTarget.position +
+            camTarget.forward * distanceInFront +
+            camTarget.up * heightOffset;
+
+        if (isFlyingToHand)
+        {
+            flyT += Time.deltaTime * flySpeed;
+
+            float curve = Mathf.SmoothStep(0f, 1f, flyT);
+
+            transform.position = Vector3.Lerp(flyStartPos, targetPos, curve);
+            transform.rotation = Quaternion.Slerp(flyStartRot, camTarget.rotation, curve);
+
+            if (flyT >= 1f)
+                isFlyingToHand = false;
+
+            return;
+        }
+
+        transform.position = Vector3.Lerp(transform.position, targetPos, 12f * Time.deltaTime);
+        transform.rotation = Quaternion.Slerp(transform.rotation, camTarget.rotation, 12f * Time.deltaTime);
     }
-
-    if (!isHeldActive || camTarget == null)
-        return;
-
-    Vector3 targetPos =
-        camTarget.position +
-        camTarget.forward * distanceInFront +
-        camTarget.up * heightOffset;
-
-    if (isFlyingToHand)
-    {
-        flyT += Time.deltaTime * flySpeed;
-
-        float curve = Mathf.SmoothStep(0f, 1f, flyT);
-
-        transform.position = Vector3.Lerp(flyStartPos, targetPos, curve);
-        transform.rotation = Quaternion.Slerp(flyStartRot, camTarget.rotation, curve);
-
-        if (flyT >= 1f)
-            isFlyingToHand = false;
-
-        return;
-    }
-
-    transform.position = Vector3.Lerp(transform.position, targetPos, 12f * Time.deltaTime);
-    transform.rotation = Quaternion.Slerp(transform.rotation, camTarget.rotation, 12f * Time.deltaTime);
-}
 
     // =========================
     // NEW: PLACE ON LUGGAGE
