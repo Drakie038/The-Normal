@@ -84,7 +84,7 @@ public class SuitCase : NetworkBehaviour
 
         colliderEnabled.OnValueChanged += OnColliderChanged;
 
-        OnColliderChanged(false, colliderEnabled.Value);
+        OnColliderChanged(colliderEnabled.Value, colliderEnabled.Value);
     }
 
     private void OnColliderChanged(bool oldValue, bool newValue)
@@ -101,8 +101,6 @@ public class SuitCase : NetworkBehaviour
 
     public void PickUp(Transform cameraTransform)
     {
-        colliderEnabled.Value = false;
-
         if (isHeldActive || cameraTransform == null)
             return;
 
@@ -131,36 +129,54 @@ public class SuitCase : NetworkBehaviour
             transform.SetParent(null);
 
         isPlacedOnLuggage = false;
+
+        SetPickupStateServerRpc();
     }
 
-    void LateUpdate()
+    [ServerRpc(RequireOwnership = false)]
+    public void SetPickupStateServerRpc()
     {
-        if (!isHeldActive || camTarget == null)
-            return;
-
-        Vector3 targetPos =
-            camTarget.position +
-            camTarget.forward * distanceInFront +
-            camTarget.up * heightOffset;
-
-        if (isFlyingToHand)
-        {
-            flyT += Time.deltaTime * flySpeed;
-
-            float curve = Mathf.SmoothStep(0f, 1f, flyT);
-
-            transform.position = Vector3.Lerp(flyStartPos, targetPos, curve);
-            transform.rotation = Quaternion.Slerp(flyStartRot, camTarget.rotation, curve);
-
-            if (flyT >= 1f)
-                isFlyingToHand = false;
-
-            return;
-        }
-
-        transform.position = Vector3.Lerp(transform.position, targetPos, 12f * Time.deltaTime);
-        transform.rotation = Quaternion.Slerp(transform.rotation, camTarget.rotation, 12f * Time.deltaTime);
+        colliderEnabled.Value = false;
     }
+
+void LateUpdate()
+{
+    // 🔥 suitcase blijft luggage slot volgen
+    if (isPlacedOnLuggage &&
+        followSlot != null &&
+        !isPlacing)
+    {
+        transform.position = followSlot.position;
+        transform.rotation = followSlot.rotation;
+        return;
+    }
+
+    if (!isHeldActive || camTarget == null)
+        return;
+
+    Vector3 targetPos =
+        camTarget.position +
+        camTarget.forward * distanceInFront +
+        camTarget.up * heightOffset;
+
+    if (isFlyingToHand)
+    {
+        flyT += Time.deltaTime * flySpeed;
+
+        float curve = Mathf.SmoothStep(0f, 1f, flyT);
+
+        transform.position = Vector3.Lerp(flyStartPos, targetPos, curve);
+        transform.rotation = Quaternion.Slerp(flyStartRot, camTarget.rotation, curve);
+
+        if (flyT >= 1f)
+            isFlyingToHand = false;
+
+        return;
+    }
+
+    transform.position = Vector3.Lerp(transform.position, targetPos, 12f * Time.deltaTime);
+    transform.rotation = Quaternion.Slerp(transform.rotation, camTarget.rotation, 12f * Time.deltaTime);
+}
 
     // =========================
     // NEW: PLACE ON LUGGAGE
@@ -192,6 +208,12 @@ public class SuitCase : NetworkBehaviour
 
         if (col != null)
             col.enabled = true;
+
+        // 🔥 BELANGRIJK: server parent sync (dit fixeert host/client verschil)
+        if (IsServer)
+        {
+            NetworkObject.TrySetParent(slot, false);
+        }
     }
 
     private IEnumerator SmoothPlace(Transform slot)
@@ -213,37 +235,30 @@ public class SuitCase : NetworkBehaviour
             yield return null;
         }
 
-        transform.position = slot.position;
-        transform.rotation = slot.rotation;
-
         // 🔥 BELANGRIJK: release anim lock
         isPlacing = false;
     }
 
     public void Drop()
     {
+        DropServerRpc();
+    }
+
+
+
+    [ServerRpc(RequireOwnership = false)]
+    public void DropServerRpc()
+    {
         colliderEnabled.Value = true;
 
-        DropServerRpc(); // ownership terug naar server
-
-        isPickedUp = false;
-        isFlyingToHand = false;
-        isHeldActive = false;
-
-        camTarget = null;
-
-        pickupCooldownEnd = Time.time + 0.25f;
-
-        if (rb != null)
+        if (transform.parent != null)
         {
-            rb.isKinematic = false;
-            rb.useGravity = true;
+            transform.SetParent(null);
         }
 
-        if (col != null)
-            col.enabled = true;
+        NetworkObject.ChangeOwnership(NetworkManager.ServerClientId);
 
-        SetHighlight(false);
+        DropClientRpc(); // 🔥 sync naar iedereen
     }
 
     public float GetPickupCooldown()
@@ -317,16 +332,29 @@ public class SuitCase : NetworkBehaviour
         }
     }
 
-    [ServerRpc]
-    public void DropServerRpc()
-    {
-        NetworkObject.ChangeOwnership(NetworkManager.ServerClientId);
-    }
-
     [ClientRpc]
     public void PlaceOnLuggageClientRpc(Vector3 pos, Quaternion rot)
     {
         transform.position = pos;
         transform.rotation = rot;
+    }
+    [ClientRpc]
+    private void DropClientRpc()
+    {
+        isHeldActive = false;
+        isPickedUp = false;
+        isFlyingToHand = false;
+
+        camTarget = null;
+
+        pickupCooldownEnd = Time.time + 0.25f;
+
+        if (rb != null)
+        {
+            rb.isKinematic = false;
+            rb.useGravity = true;
+        }
+
+        SetHighlight(false);
     }
 }

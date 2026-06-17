@@ -62,6 +62,8 @@ public class LuggageCart : NetworkBehaviour
 
 private void LateUpdate()
 {
+    if (!IsServer) return; // 🔥 BELANGRIJK: alleen server stuurt posities
+
     for (int i = 0; i < luggageItems.Count; i++)
     {
         if (occupied[i] == null)
@@ -71,14 +73,9 @@ private void LateUpdate()
         if (s == null)
             continue;
 
-        // 🔥 wacht tot animatie klaar is
-        if (s.IsPlacing)
-            continue;
-
         Transform slot = luggageItems[i];
 
-        s.transform.position = slot.position;
-        s.transform.rotation = slot.rotation;
+        s.NetworkObject.TrySetParent(slot, false); // 🔥 NETCODE parenting sync
     }
 }
 
