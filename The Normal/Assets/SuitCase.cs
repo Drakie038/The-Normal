@@ -48,11 +48,23 @@ public class SuitCase : NetworkBehaviour
     // NEW
     private bool isPlacedOnLuggage;
     private LuggageCart currentCart;
-    private int currentSlot;
+    private int currentSlot;    
 
     public bool IsHeld => isPickedUp;
 
     public bool IsOnLuggage => isPlacedOnLuggage;
+
+    private Transform followSlot;
+
+    private bool isPlacing;
+
+    public bool IsPlacing => isPlacing;
+
+    public NetworkVariable<bool> colliderEnabled = new NetworkVariable<bool>(
+    true,
+    NetworkVariableReadPermission.Everyone,
+    NetworkVariableWritePermission.Server
+);
 
     void Awake()
     {
@@ -69,6 +81,16 @@ public class SuitCase : NetworkBehaviour
     void Start()
     {
         EnablePhysics();
+
+        colliderEnabled.OnValueChanged += OnColliderChanged;
+
+        OnColliderChanged(false, colliderEnabled.Value);
+    }
+
+    private void OnColliderChanged(bool oldValue, bool newValue)
+    {
+        if (col != null)
+            col.enabled = newValue;
     }
 
     private void EnablePhysics()
@@ -79,6 +101,8 @@ public class SuitCase : NetworkBehaviour
 
     public void PickUp(Transform cameraTransform)
     {
+        colliderEnabled.Value = false;
+
         if (isHeldActive || cameraTransform == null)
             return;
 
@@ -88,7 +112,6 @@ public class SuitCase : NetworkBehaviour
         camTarget = cameraTransform;
         isHeldActive = true;
 
-        SetColliderServerRpc(false);
         if (rb != null) rb.isKinematic = true;
 
         isFlyingToHand = true;
@@ -154,6 +177,8 @@ public class SuitCase : NetworkBehaviour
         currentSlot = index;
         isPlacedOnLuggage = true;
 
+        followSlot = slot;
+
         if (rb != null)
         {
             rb.isKinematic = true;
@@ -161,8 +186,7 @@ public class SuitCase : NetworkBehaviour
             rb.angularVelocity = Vector3.zero;
         }
 
-        // 🔥 KEY FIX: make it follow luggage like a child
-        transform.SetParent(slot);
+        isPlacing = true;
 
         StartCoroutine(SmoothPlace(slot));
 
@@ -191,11 +215,14 @@ public class SuitCase : NetworkBehaviour
 
         transform.position = slot.position;
         transform.rotation = slot.rotation;
+
+        // 🔥 BELANGRIJK: release anim lock
+        isPlacing = false;
     }
 
     public void Drop()
     {
-        SetColliderServerRpc(true);
+        colliderEnabled.Value = true;
 
         DropServerRpc(); // ownership terug naar server
 
@@ -296,16 +323,10 @@ public class SuitCase : NetworkBehaviour
         NetworkObject.ChangeOwnership(NetworkManager.ServerClientId);
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    public void SetColliderServerRpc(bool state)
-    {
-        SetColliderClientRpc(state);
-    }
-
     [ClientRpc]
-    private void SetColliderClientRpc(bool state)
+    public void PlaceOnLuggageClientRpc(Vector3 pos, Quaternion rot)
     {
-        if (col != null)
-            col.enabled = state;
+        transform.position = pos;
+        transform.rotation = rot;
     }
 }

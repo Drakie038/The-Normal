@@ -60,6 +60,28 @@ public class LuggageCart : NetworkBehaviour
         purple = false;
     }
 
+private void LateUpdate()
+{
+    for (int i = 0; i < luggageItems.Count; i++)
+    {
+        if (occupied[i] == null)
+            continue;
+
+        SuitCase s = occupied[i];
+        if (s == null)
+            continue;
+
+        // 🔥 wacht tot animatie klaar is
+        if (s.IsPlacing)
+            continue;
+
+        Transform slot = luggageItems[i];
+
+        s.transform.position = slot.position;
+        s.transform.rotation = slot.rotation;
+    }
+}
+
     private void SetColorBool(SuitCase.ColorSuit color, bool value)
     {
         switch (color)
@@ -88,8 +110,11 @@ public class LuggageCart : NetworkBehaviour
 
             occupied[i] = suitCase;
 
-            // 🔥 kleur activeren
-            SetColorBool(suitCase.color, true);
+            // 🔥 kleur activeren (server)
+            SetColorBoolServerRpc(suitCase.color, true);
+
+            // 🔥 collider globally aanzetten (server → all clients)
+            SetSuitcaseColliderServerRpc(suitCase.NetworkObject, true);
 
             suitCase.PlaceOnLuggage(slot, this, i);
 
@@ -118,6 +143,16 @@ public class LuggageCart : NetworkBehaviour
     public void ClearSlot(int index)
     {
         if (index < 0 || index >= occupied.Length) return;
+
+        SuitCase suitCase = occupied[index];
+
+        if (suitCase != null)
+        {
+            // kleur uitzetten op server
+            ClearColorBoolServerRpc(suitCase.color, false);
+            SetSuitcaseColliderServerRpc(suitCase.NetworkObject, false);
+        }
+
         occupied[index] = null;
     }
 
@@ -149,5 +184,30 @@ public class LuggageCart : NetworkBehaviour
         rb.angularVelocity = Vector3.zero;
 
         rb.constraints = RigidbodyConstraints.FreezeRotation;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void SetColorBoolServerRpc(SuitCase.ColorSuit color, bool value)
+    {
+        SetColorBool(color, value);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void ClearColorBoolServerRpc(SuitCase.ColorSuit color, bool value)
+    {
+        SetColorBool(color, value);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void SetSuitcaseColliderServerRpc(NetworkObjectReference suitCaseRef, bool state)
+    {
+        if (suitCaseRef.TryGet(out NetworkObject netObj))
+        {
+            SuitCase suitCase = netObj.GetComponent<SuitCase>();
+            if (suitCase != null)
+            {
+                suitCase.colliderEnabled.Value = state;
+            }
+        }
     }
 }

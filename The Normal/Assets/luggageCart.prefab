@@ -270,6 +270,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 4771156417303923644}
     m_Modifications:
+    - target: {fileID: 4879626632035546320, guid: 6ff775de8e6cb2a428405d3933961960, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 836649352
+      objectReference: {fileID: 0}
     - target: {fileID: 6136736102667362403, guid: 6ff775de8e6cb2a428405d3933961960, type: 3}
       propertyPath: m_Name
       value: SuitCase Black (1)
@@ -340,6 +344,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 4771156417303923644}
     m_Modifications:
+    - target: {fileID: 4879626632035546320, guid: 6ff775de8e6cb2a428405d3933961960, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 3933780346
+      objectReference: {fileID: 0}
     - target: {fileID: 6136736102667362403, guid: 6ff775de8e6cb2a428405d3933961960, type: 3}
       propertyPath: m_Name
       value: SuitCase Black (5)
@@ -410,6 +418,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 4771156417303923644}
     m_Modifications:
+    - target: {fileID: 4879626632035546320, guid: 6ff775de8e6cb2a428405d3933961960, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 3919842952
+      objectReference: {fileID: 0}
     - target: {fileID: 6136736102667362403, guid: 6ff775de8e6cb2a428405d3933961960, type: 3}
       propertyPath: m_Name
       value: SuitCase Black (3)
@@ -480,6 +492,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 4771156417303923644}
     m_Modifications:
+    - target: {fileID: 4879626632035546320, guid: 6ff775de8e6cb2a428405d3933961960, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 2973137235
+      objectReference: {fileID: 0}
     - target: {fileID: 6136736102667362403, guid: 6ff775de8e6cb2a428405d3933961960, type: 3}
       propertyPath: m_Name
       value: SuitCase Black
@@ -550,6 +566,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 4771156417303923644}
     m_Modifications:
+    - target: {fileID: 4879626632035546320, guid: 6ff775de8e6cb2a428405d3933961960, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 710560293
+      objectReference: {fileID: 0}
     - target: {fileID: 6136736102667362403, guid: 6ff775de8e6cb2a428405d3933961960, type: 3}
       propertyPath: m_Name
       value: SuitCase Black (4)
@@ -809,6 +829,12 @@ MonoBehaviour:
   blue: 0
   red: 0
   black: 0
+  green: 0
+  yellow: 0
+  magenta: 0
+  teal: 0
+  purple: 0
+  slotRoot: {fileID: 0}
 --- !u!65 &4496328615861164850
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -838,6 +864,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 4771156417303923644}
     m_Modifications:
+    - target: {fileID: 4879626632035546320, guid: 6ff775de8e6cb2a428405d3933961960, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 3221773419
+      objectReference: {fileID: 0}
     - target: {fileID: 6136736102667362403, guid: 6ff775de8e6cb2a428405d3933961960, type: 3}
       propertyPath: m_Name
       value: SuitCase Black (7)
@@ -908,6 +938,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 4771156417303923644}
     m_Modifications:
+    - target: {fileID: 4879626632035546320, guid: 6ff775de8e6cb2a428405d3933961960, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 1365706390
+      objectReference: {fileID: 0}
     - target: {fileID: 6136736102667362403, guid: 6ff775de8e6cb2a428405d3933961960, type: 3}
       propertyPath: m_Name
       value: SuitCase Black (6)
@@ -978,6 +1012,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 4771156417303923644}
     m_Modifications:
+    - target: {fileID: 4879626632035546320, guid: 6ff775de8e6cb2a428405d3933961960, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 1184027294
+      objectReference: {fileID: 0}
     - target: {fileID: 6136736102667362403, guid: 6ff775de8e6cb2a428405d3933961960, type: 3}
       propertyPath: m_Name
       value: SuitCase Black (2)
