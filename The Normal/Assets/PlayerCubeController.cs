@@ -505,15 +505,11 @@ public NetworkVariable<bool> inPushMode = new NetworkVariable<bool>(false);
 
     private void LateUpdate()
     {
-        if (!IsOwner) return;
-
-        lastPlayerPos = transform.position;
-
+        // elke client draait ALLE nametags naar zijn eigen camera
         if (nameCanvas == null)
             return;
 
         Camera cam = Camera.main;
-
         if (cam == null)
             return;
 
@@ -522,6 +518,7 @@ public NetworkVariable<bool> inPushMode = new NetworkVariable<bool>(false);
             cam.transform.rotation * Vector3.up
         );
     }
+
 
     public void ForceEnterExitState()
     {

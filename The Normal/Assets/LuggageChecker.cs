@@ -9,8 +9,10 @@ public class LuggageChecker : NetworkBehaviour
 
     [Header("Wall")]
     public Transform wall;
-    public Vector3 moveOffset = new Vector3(0, 5f, 0);
-    public float moveSpeed = 2f;
+
+    [Header("Wall Movement")]
+    public Vector3 moveAmount;   // hoeveel de muur moet bewegen
+    public float moveSpeed = 2f; // snelheid
 
     [Header("Detection")]
     public BoxCollider detectionBox;
@@ -33,26 +35,22 @@ public class LuggageChecker : NetworkBehaviour
             detectionBox.transform.rotation
         );
 
+        bool checkerInside = false;
         LuggageCart foundCart = null;
 
         foreach (var hit in hits)
         {
-            foundCart = hit.GetComponentInParent<LuggageCart>();
-            if (foundCart != null)
-                break;
+            // Check of dit de LuggageChecker zelf is
+            if (hit.GetComponentInParent<LuggageChecker>() == this)
+                checkerInside = true;
+
+            // Check of er een cart aanwezig is
+            if (foundCart == null)
+                foundCart = hit.GetComponentInParent<LuggageCart>();
         }
 
-        if (foundCart != null)
-        {
-            if (!hasLuggage)
-            {
-                hasLuggage = true;
-                SetUIColorClientRpc(Color.yellow);
-            }
-
-            EvaluateCart(foundCart);
-        }
-        else
+        // Als de checker NIET in de box staat → reset UI
+        if (!checkerInside)
         {
             if (hasLuggage)
             {
@@ -61,7 +59,20 @@ public class LuggageChecker : NetworkBehaviour
             }
 
             UpdateUIClientRpc(0);
+            return;
         }
+
+        // Checker staat WEL in de box → UI geel + cart evalueren
+        if (!hasLuggage)
+        {
+            hasLuggage = true;
+            SetUIColorClientRpc(Color.yellow);
+        }
+
+        if (foundCart != null)
+            EvaluateCart(foundCart);
+        else
+            UpdateUIClientRpc(0);
     }
 
     private void EvaluateCart(LuggageCart cart)
@@ -101,23 +112,22 @@ public class LuggageChecker : NetworkBehaviour
             progressText.color = color;
     }
 
+    // 🔥 Wordt maar één keer aangeroepen omdat wallMoved = true
     [ClientRpc]
     private void MoveWallClientRpc()
     {
-        StartCoroutine(MoveWall());
+        Vector3 targetPos = wall.position + moveAmount;
+        StartCoroutine(MoveWall(targetPos));
     }
 
-    private System.Collections.IEnumerator MoveWall()
+    private System.Collections.IEnumerator MoveWall(Vector3 targetPos)
     {
-        Vector3 startPos = wall.position;
-        Vector3 targetPos = startPos + moveOffset;
-
         while (Vector3.Distance(wall.position, targetPos) > 0.01f)
         {
-            wall.position = Vector3.Lerp(
+            wall.position = Vector3.MoveTowards(
                 wall.position,
                 targetPos,
-                Time.deltaTime * moveSpeed
+                moveSpeed * Time.deltaTime
             );
 
             yield return null;
