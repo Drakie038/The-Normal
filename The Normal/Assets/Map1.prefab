@@ -17369,7 +17369,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 4946221686962792867, guid: 894a650d413cd06408ce94ea2399672c, type: 3}
       propertyPath: m_Name
-      value: hotel hallway  0 doorsfbx 1 (1)
+      value: hotel hallway  0 doorsfbx 1
       objectReference: {fileID: 0}
     - target: {fileID: 5759913465723515673, guid: 894a650d413cd06408ce94ea2399672c, type: 3}
       propertyPath: m_LocalPosition.x
@@ -20175,7 +20175,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 4946221686962792867, guid: 894a650d413cd06408ce94ea2399672c, type: 3}
       propertyPath: m_Name
-      value: hotel hallway  0 doorsfbx 1 (2)
+      value: hotel hallway  0 doorsfbx 1 (1)
       objectReference: {fileID: 0}
     - target: {fileID: 5759913465723515673, guid: 894a650d413cd06408ce94ea2399672c, type: 3}
       propertyPath: m_LocalPosition.x
@@ -30681,7 +30681,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 4946221686962792867, guid: 894a650d413cd06408ce94ea2399672c, type: 3}
       propertyPath: m_Name
-      value: hotel hallway  0 doorsfbx 1 (3)
+      value: hotel hallway  0 doorsfbx 1 (2)
       objectReference: {fileID: 0}
     - target: {fileID: 5759913465723515673, guid: 894a650d413cd06408ce94ea2399672c, type: 3}
       propertyPath: m_LocalPosition.x
@@ -43355,7 +43355,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 4946221686962792867, guid: 894a650d413cd06408ce94ea2399672c, type: 3}
       propertyPath: m_Name
-      value: hotel hallway  0 doorsfbx 1
+      value: hotel hallway  0 doorsfbx 1 (3)
       objectReference: {fileID: 0}
     - target: {fileID: 5759913465723515673, guid: 894a650d413cd06408ce94ea2399672c, type: 3}
       propertyPath: m_LocalPosition.x
