@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 8802339592191907674}
   - component: {fileID: 3198490143852361096}
   - component: {fileID: 2393939993355676727}
-  - component: {fileID: 1219976356925368562}
+  - component: {fileID: 7040201198350427068}
   m_Layer: 0
   m_Name: NPC
   m_TagString: Untagged
@@ -189,7 +189,7 @@ CapsuleCollider:
   m_Height: 2.1499999
   m_Direction: 1
   m_Center: {x: -0.000000029802322, y: 1.0742453, z: -0.13334456}
---- !u!143 &1219976356925368562
+--- !u!143 &7040201198350427068
 CharacterController:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -281,8 +281,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Name
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 2437078380f2a1f4e9c563c88e8c14c9, type: 2}
-  m_sharedMaterial: {fileID: -1519484557047187532, guid: 2437078380f2a1f4e9c563c88e8c14c9, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

@@ -338,6 +338,7 @@ public class SuitCase : NetworkBehaviour
         transform.position = pos;
         transform.rotation = rot;
     }
+
     [ClientRpc]
     private void DropClientRpc()
     {
@@ -355,6 +356,9 @@ public class SuitCase : NetworkBehaviour
             rb.useGravity = true;
         }
 
+        // 🔥 BELANGRIJK: collider altijd terug aan bij drop
+        ForceEnableCollider();
+
         SetHighlight(false);
     }
 
@@ -370,5 +374,14 @@ public class SuitCase : NetworkBehaviour
             currentCart = null;
             followSlot = null;
         }
+    }
+
+    public void ForceEnableCollider()
+    {
+        if (col != null)
+            col.enabled = true;
+
+        // server sync (belangrijk voor netcode state consistency)
+        colliderEnabled.Value = true;
     }
 }

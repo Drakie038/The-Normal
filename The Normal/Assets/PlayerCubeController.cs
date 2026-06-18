@@ -802,4 +802,18 @@ public NetworkVariable<bool> inPushMode = new NetworkVariable<bool>(false);
     {
         return currentLuggage != null && pushTarget == currentLuggage.pushFor;
     }
+
+    [ClientRpc]
+    public void ForceDropSuitcaseClientRpc()
+    {
+        if (!IsOwner)
+            return;
+
+        CameraMovement cam = FindObjectOfType<CameraMovement>();
+
+        if (cam != null)
+        {
+            cam.ForceDropHeldSuitcase();
+        }
+    }
 }

@@ -182,6 +182,15 @@ public class ElevatorPlayers : NetworkBehaviour
         PlayerCubeController player = other.GetComponent<PlayerCubeController>();
         if (player == null) return;
 
+        // 🔥 FORCE DROP SUITCASE WHEN ENTERING ELEVATOR
+        player.ForceDropSuitcaseClientRpc();
+
+        SuitCase held = FindObjectOfType<SuitCase>();
+        if (held != null)
+        {
+            held.ForceEnableCollider();
+        }
+
         ulong id = player.OwnerClientId;
 
         if (playersInside.Count >= maxPlayers) return;
@@ -462,7 +471,8 @@ public class ElevatorPlayers : NetworkBehaviour
         ShowElevatorButtonsClientRpc(
             player.OwnerClientId,
             isSeatOne,
-            isNotFull
+            isNotFull,
+            timerRunning
         );
     }
 
@@ -682,15 +692,23 @@ public class ElevatorPlayers : NetworkBehaviour
 
     [ClientRpc]
     private void ShowElevatorButtonsClientRpc(
-    ulong targetClientId,
-    bool isSeatOne,
-    bool isNotFull)
+        ulong targetClientId,
+        bool isSeatOne,
+        bool isNotFull,
+        bool timerActive)
     {
         if (NetworkManager.Singleton.LocalClientId != targetClientId)
             return;
 
-        ElevatorMenu.Instance?.ShowLeaveButton(true);
+        // 🚨 BELANGRIJK: als timer al loopt → GEEN buttons tonen
+        if (timerActive)
+        {
+            ElevatorMenu.Instance?.ShowLeaveButton(false);
+            ElevatorMenu.Instance?.UpdateStartButton(false);
+            return;
+        }
 
+        ElevatorMenu.Instance?.ShowLeaveButton(true);
         ElevatorMenu.Instance?.UpdateStartButton(true);
     }
 

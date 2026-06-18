@@ -240,7 +240,12 @@ MonoBehaviour:
   highlightColor: {r: 1, g: 1, b: 1, a: 1}
   intensity: 0.05
   distanceInFront: 0.75
-  heightOffset: -0.35
+  heightOffset: -0.5
   flySpeed: 1.5
   color: 6
+  colliderEnabled:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 1
   netObj: {fileID: 0}

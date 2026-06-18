@@ -46,6 +46,8 @@ public class CameraMovement : MonoBehaviour
 
     private SuitCase heldSuitCase;
 
+    private HotelBell currentBell;
+
     private bool InPushMode()
     {
         return player != null && player.inPushMode.Value;
@@ -548,8 +550,30 @@ public class CameraMovement : MonoBehaviour
 
                 return;
             }
-        }
 
+            // ================= BELL =================
+            HotelBell bell = hit.collider.GetComponentInParent<HotelBell>();
+
+            if (bell != null)
+            {
+                if (currentBell != bell)
+                {
+                    if (currentBell != null)
+                        currentBell.SetHighlight(false);
+
+                    currentBell = bell;
+                }
+
+                currentBell.SetHighlight(true);
+
+                if (Input.GetKeyDown(KeyCode.E))
+                {
+                    currentBell.TryRing(player);
+                }
+
+                return;
+            }
+        }
             ClearInteractions();
     }
 
@@ -666,6 +690,12 @@ public class CameraMovement : MonoBehaviour
             currentSuitCase.SetHighlight(false);
             currentSuitCase = null;
         }
+
+        if (currentBell != null)
+        {
+            currentBell.SetHighlight(false);
+            currentBell = null;
+        }
     }
 
     public void BeginPeek()
@@ -677,5 +707,14 @@ public class CameraMovement : MonoBehaviour
     public void EndPeek()
     {
         peekYawOffset = 0f;
+    }
+
+    public void ForceDropHeldSuitcase()
+    {
+        if (heldSuitCase != null)
+        {
+            heldSuitCase.Drop();
+            heldSuitCase = null;
+        }
     }
 }
