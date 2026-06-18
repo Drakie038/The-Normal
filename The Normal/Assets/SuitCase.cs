@@ -121,7 +121,7 @@ public class SuitCase : NetworkBehaviour
         // 🔥 IMPORTANT: detach from luggage properly
         if (currentCart != null)
         {
-            currentCart.ClearSlot(currentSlot);
+            currentCart.ClearSlotServerRpc(currentSlot);
             currentCart = null;
         }
 
@@ -356,5 +356,19 @@ public class SuitCase : NetworkBehaviour
         }
 
         SetHighlight(false);
+    }
+
+    [ClientRpc]
+    public void SetLuggageStateClientRpc(bool placedOnLuggage, int slotIndex)
+    {
+        isPlacedOnLuggage = placedOnLuggage;
+        currentSlot = slotIndex;
+
+        if (!placedOnLuggage)
+        {
+            currentSlot = -1;
+            currentCart = null;
+            followSlot = null;
+        }
     }
 }

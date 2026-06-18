@@ -98,27 +98,9 @@ public class LuggageCart : NetworkBehaviour
     {
         if (suitCase == null) return false;
 
-        for (int i = 0; i < luggageItems.Count; i++)
-        {
-            if (occupied[i] != null)
-                continue;
+        TryPlaceSuitcaseServerRpc(suitCase.NetworkObject);
 
-            Transform slot = luggageItems[i];
-
-            occupied[i] = suitCase;
-
-            // 🔥 kleur activeren (server)
-            SetColorBoolServerRpc(suitCase.color, true);
-
-            // 🔥 collider globally aanzetten (server → all clients)
-            SetSuitcaseColliderServerRpc(suitCase.NetworkObject, true);
-
-            suitCase.PlaceOnLuggage(slot, this, i);
-
-            return true;
-        }
-
-        return false;
+        return true;
     }
 
     public void SetHighlight(bool active)
@@ -145,6 +127,7 @@ public class LuggageCart : NetworkBehaviour
 
         if (suitCase != null)
         {
+            suitCase.SetLuggageStateClientRpc(false, -1);
             // kleur uitzetten op server
             ClearColorBoolServerRpc(suitCase.color, false);
             SetSuitcaseColliderServerRpc(suitCase.NetworkObject, false);
@@ -206,5 +189,82 @@ public class LuggageCart : NetworkBehaviour
                 suitCase.colliderEnabled.Value = state;
             }
         }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void TryPlaceSuitcaseServerRpc(NetworkObjectReference suitCaseRef)
+    {
+        if (!suitCaseRef.TryGet(out NetworkObject netObj))
+            return;
+
+        SuitCase suitCase = netObj.GetComponent<SuitCase>();
+        if (suitCase == null)
+            return;
+
+        for (int i = 0; i < luggageItems.Count; i++)
+        {
+            if (occupied[i] != null)
+                continue;
+
+            Transform slot = luggageItems[i];
+
+            occupied[i] = suitCase;
+
+            SetColorBoolServerRpc(suitCase.color, true);
+            SetSuitcaseColliderServerRpc(suitCase.NetworkObject, true);
+
+            // 🔥 SERVER triggert visuals op iedereen
+            PlaceSuitcaseClientRpc(suitCase.NetworkObject, i);
+
+            return;
+        }
+    }
+
+    [ClientRpc]
+    private void PlaceSuitcaseClientRpc(NetworkObjectReference suitCaseRef, int index)
+    {
+        if (!suitCaseRef.TryGet(out NetworkObject netObj))
+            return;
+
+        SuitCase suitCase = netObj.GetComponent<SuitCase>();
+        if (suitCase == null)
+            return;
+
+        Transform slot = luggageItems[index];
+
+        // 🔥 hier start weer jouw fly + placement
+        suitCase.PlaceOnLuggage(slot, this, index);
+        suitCase.SetLuggageStateClientRpc(true, index);
+    }
+
+    private bool TryPlaceSuitcaseInternal(SuitCase suitCase)
+    {
+        if (suitCase == null) return false;
+
+        for (int i = 0; i < luggageItems.Count; i++)
+        {
+            if (occupied[i] != null)
+                continue;
+
+            Transform slot = luggageItems[i];
+
+            occupied[i] = suitCase;
+
+            SetColorBoolServerRpc(suitCase.color, true);
+            SetSuitcaseColliderServerRpc(suitCase.NetworkObject, true);
+
+            suitCase.PlaceOnLuggage(slot, this, i);
+            suitCase.SetLuggageStateClientRpc(true, i);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void ClearSlotServerRpc(int index)
+    {
+        ClearSlot(index);
     }
 }
