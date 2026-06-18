@@ -7991,18 +7991,18 @@ Transform:
   - {fileID: 4448022350391549685}
   - {fileID: 251380562798357302}
   - {fileID: 7098521044347097743}
-  - {fileID: 7080925709394956243}
+  - {fileID: 2002603435694937868}
   - {fileID: 9037977172917827328}
   - {fileID: 8806802467111815370}
   - {fileID: 2794587626157742820}
   - {fileID: 1305691714244326396}
-  - {fileID: 2044602143705387126}
   - {fileID: 8670868774405465210}
   - {fileID: 5427162280419231531}
-  - {fileID: 805003633329012255}
+  - {fileID: 8261255203450349248}
   - {fileID: 6885364507870633605}
   - {fileID: 2840092773216922816}
   - {fileID: 445789126438104278}
+  - {fileID: 484779510586701150}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1998182789821751336
@@ -8017,7 +8017,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 3907142535
+  GlobalObjectIdHash: 3157548658
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -9998,58 +9998,58 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 107207119494537937}
     m_Modifications:
-    - target: {fileID: 2789328820460070473, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
-      propertyPath: m_Name
-      value: hotelhallwayfixed
-      objectReference: {fileID: 0}
-    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
       propertyPath: m_LocalPosition.x
       value: -30.766165
       objectReference: {fileID: 0}
-    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
       propertyPath: m_LocalPosition.y
       value: -23.351635
       objectReference: {fileID: 0}
-    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
       propertyPath: m_LocalPosition.z
       value: 77.59019
       objectReference: {fileID: 0}
-    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
       propertyPath: m_LocalRotation.w
       value: 0.9800983
       objectReference: {fileID: 0}
-    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
       propertyPath: m_LocalRotation.y
       value: -0.19851261
       objectReference: {fileID: 0}
-    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: -22.9
       objectReference: {fileID: 0}
-    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6862222033131945622, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
+      propertyPath: m_Name
+      value: hotelhallwaykitchen2 (1)
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
---- !u!4 &805003633329012255 stripped
+  m_SourcePrefab: {fileID: 100100000, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
+--- !u!4 &8261255203450349248 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+  m_CorrespondingSourceObject: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
   m_PrefabInstance: {fileID: 2798298797569016556}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &3292039949581736547
@@ -10113,68 +10113,6 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: 4589470756840335775, guid: c14551d93532d0f4385535396963d5cb, type: 3}
   m_PrefabInstance: {fileID: 3292039949581736547}
-  m_PrefabAsset: {fileID: 0}
---- !u!1001 &3367205587581058274
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 107207119494537937}
-    m_Modifications:
-    - target: {fileID: 3667431434306808980, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -7.291467
-      objectReference: {fileID: 0}
-    - target: {fileID: 3667431434306808980, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: -23.351892
-      objectReference: {fileID: 0}
-    - target: {fileID: 3667431434306808980, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 61.308266
-      objectReference: {fileID: 0}
-    - target: {fileID: 3667431434306808980, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.97992474
-      objectReference: {fileID: 0}
-    - target: {fileID: 3667431434306808980, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3667431434306808980, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0.19936788
-      objectReference: {fileID: 0}
-    - target: {fileID: 3667431434306808980, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3667431434306808980, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3667431434306808980, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 23
-      objectReference: {fileID: 0}
-    - target: {fileID: 3667431434306808980, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4156406677413115438, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
-      propertyPath: m_Name
-      value: hotelhallwayfixed (1)
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
---- !u!4 &2044602143705387126 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 3667431434306808980, guid: 4a92144135592f14d80a6e641309fb1b, type: 3}
-  m_PrefabInstance: {fileID: 3367205587581058274}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &3485982757578498900
 PrefabInstance:
@@ -10684,59 +10622,125 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 107207119494537937}
     m_Modifications:
-    - target: {fileID: 2789328820460070473, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
-      propertyPath: m_Name
-      value: hotelhallwayfixed (3)
-      objectReference: {fileID: 0}
-    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
       propertyPath: m_LocalPosition.x
       value: -19.709682
       objectReference: {fileID: 0}
-    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
       propertyPath: m_LocalPosition.y
       value: -23.351635
       objectReference: {fileID: 0}
-    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
       propertyPath: m_LocalPosition.z
       value: 51.415634
       objectReference: {fileID: 0}
-    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
       propertyPath: m_LocalRotation.w
       value: 0.9800983
       objectReference: {fileID: 0}
-    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
       propertyPath: m_LocalRotation.y
       value: -0.19851261
       objectReference: {fileID: 0}
-    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: -22.9
       objectReference: {fileID: 0}
-    - target: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6862222033131945622, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
+      propertyPath: m_Name
+      value: hotelhallwaykitchen2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
---- !u!4 &7080925709394956243 stripped
+  m_SourcePrefab: {fileID: 100100000, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
+--- !u!4 &2002603435694937868 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 3314226444270861555, guid: 32d6dd2d98e10c240b5a60d25b1f3d4f, type: 3}
+  m_CorrespondingSourceObject: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
   m_PrefabInstance: {fileID: 5745184713187963680}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &5965609644195320178
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 107207119494537937}
+    m_Modifications:
+    - target: {fileID: 5239587690159342624, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
+      propertyPath: frontCollider
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -7.293468
+      objectReference: {fileID: 0}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -23.351892
+      objectReference: {fileID: 0}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 61.303535
+      objectReference: {fileID: 0}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.97992474
+      objectReference: {fileID: 0}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.19936788
+      objectReference: {fileID: 0}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 23
+      objectReference: {fileID: 0}
+    - target: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6862222033131945622, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
+      propertyPath: m_Name
+      value: hotelhallwaykitchen2 (2)
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
+--- !u!4 &484779510586701150 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6084453498190062636, guid: 4c26bd5bbc9d9994f88967c37400955b, type: 3}
+  m_PrefabInstance: {fileID: 5965609644195320178}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &6118865152334734776
 PrefabInstance:
@@ -10875,16 +10879,28 @@ PrefabInstance:
       value: hallwayend (1)
       objectReference: {fileID: 0}
     - target: {fileID: 6732520097422375169, guid: 078d571e7ca696940a1e8e168af52ed7, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1.053389
+      objectReference: {fileID: 0}
+    - target: {fileID: 6732520097422375169, guid: 078d571e7ca696940a1e8e168af52ed7, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.053389
+      objectReference: {fileID: 0}
+    - target: {fileID: 6732520097422375169, guid: 078d571e7ca696940a1e8e168af52ed7, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.11216711
+      objectReference: {fileID: 0}
+    - target: {fileID: 6732520097422375169, guid: 078d571e7ca696940a1e8e168af52ed7, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -40.433
+      value: -40.435
       objectReference: {fileID: 0}
     - target: {fileID: 6732520097422375169, guid: 078d571e7ca696940a1e8e168af52ed7, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -23.286398
+      value: -23.305
       objectReference: {fileID: 0}
     - target: {fileID: 6732520097422375169, guid: 078d571e7ca696940a1e8e168af52ed7, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 100.601
+      value: 100.7
       objectReference: {fileID: 0}
     - target: {fileID: 6732520097422375169, guid: 078d571e7ca696940a1e8e168af52ed7, type: 3}
       propertyPath: m_LocalRotation.w
@@ -11247,16 +11263,28 @@ PrefabInstance:
       value: hallwayend
       objectReference: {fileID: 0}
     - target: {fileID: 6732520097422375169, guid: 078d571e7ca696940a1e8e168af52ed7, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1.0088
+      objectReference: {fileID: 0}
+    - target: {fileID: 6732520097422375169, guid: 078d571e7ca696940a1e8e168af52ed7, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.0088
+      objectReference: {fileID: 0}
+    - target: {fileID: 6732520097422375169, guid: 078d571e7ca696940a1e8e168af52ed7, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.10741919
+      objectReference: {fileID: 0}
+    - target: {fileID: 6732520097422375169, guid: 078d571e7ca696940a1e8e168af52ed7, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.7996184
+      value: 1.7995
       objectReference: {fileID: 0}
     - target: {fileID: 6732520097422375169, guid: 078d571e7ca696940a1e8e168af52ed7, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -23.282
+      value: -23.278
       objectReference: {fileID: 0}
     - target: {fileID: 6732520097422375169, guid: 078d571e7ca696940a1e8e168af52ed7, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 82.64461
+      value: 82.644
       objectReference: {fileID: 0}
     - target: {fileID: 6732520097422375169, guid: 078d571e7ca696940a1e8e168af52ed7, type: 3}
       propertyPath: m_LocalRotation.w
