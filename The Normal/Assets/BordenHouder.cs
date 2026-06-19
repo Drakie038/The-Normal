@@ -6,10 +6,22 @@ public class BordenHouder : MonoBehaviour
     [Header("Borden van boven naar beneden")]
     public List<DienBlad> borden = new List<DienBlad>();
 
-    [Header("Placement Slots")]
-    public Transform[] placementSlots;
+    [System.Serializable]
+    public class PlacementSlot
+    {
+        public Transform slot;
+        public GameObject ghostBord;
+        public GameObject ghostDienblad;
+    }
 
-    private DienBlad[] placed = new DienBlad[3];
+    public PlacementSlot[] placementSlots;
+
+    private DienBlad[] placed;
+
+    private void Awake()
+    {
+        placed = new DienBlad[placementSlots.Length];
+    }
 
     public bool TryPlace(DienBlad board, int index)
     {
@@ -20,10 +32,6 @@ public class BordenHouder : MonoBehaviour
             return false;
 
         placed[index] = board;
-
-        board.transform.position = placementSlots[index].position;
-        board.transform.rotation = placementSlots[index].rotation;
-
         return true;
     }
 
@@ -41,5 +49,41 @@ public class BordenHouder : MonoBehaviour
     {
         if (borden.Contains(bord))
             borden.Remove(bord);
+    }
+
+    public void HideAllGhosts()
+    {
+        for (int i = 0; i < placementSlots.Length; i++)
+        {
+            if (placementSlots[i].ghostBord != null)
+                placementSlots[i].ghostBord.SetActive(false);
+
+            if (placementSlots[i].ghostDienblad != null)
+                placementSlots[i].ghostDienblad.SetActive(false);
+        }
+    }
+
+    public void ShowGhost(int index, DienBlad.DienBladType type)
+    {
+        if (index < 0 || index >= placementSlots.Length)
+            return;
+
+        if (placed[index] != null)
+            return;
+
+        HideAllGhosts();
+
+        var slot = placementSlots[index];
+
+        if (type == DienBlad.DienBladType.Bord)
+        {
+            if (slot.ghostBord != null)
+                slot.ghostBord.SetActive(true);
+        }
+        else
+        {
+            if (slot.ghostDienblad != null)
+                slot.ghostDienblad.SetActive(true);
+        }
     }
 }

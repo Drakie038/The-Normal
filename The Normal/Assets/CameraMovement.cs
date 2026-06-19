@@ -599,15 +599,29 @@ public class CameraMovement : MonoBehaviour
 
                 if (heldDienBlad != null)
                 {
+                    for (int i = 0; i < houder.placementSlots.Length; i++)
+                    {
+                        if (hit.collider.transform == houder.placementSlots[i].slot)
+                        {
+                            houder.ShowGhost(i, heldDienBlad.type);
+                            break;
+                        }
+                    }
+
                     if (Input.GetKeyDown(KeyCode.E))
                     {
                         for (int i = 0; i < houder.placementSlots.Length; i++)
                         {
-                            if (hit.collider.transform == houder.placementSlots[i])
+                            if (hit.collider.transform == houder.placementSlots[i].slot)
                             {
-                                heldDienBlad.PlaceToSlot(houder.placementSlots[i]);
+                                bool placed = houder.TryPlace(heldDienBlad, i);
 
-                                // reset state
+                                if (!placed)
+                                    return;
+                                heldDienBlad.PlaceToSlot(houder.placementSlots[i].slot);
+                                heldDienBlad.SetHighlight(false);
+                                houder.HideAllGhosts();
+
                                 heldDienBlad = null;
                                 currentDienBlad = null;
 
@@ -767,6 +781,13 @@ public class CameraMovement : MonoBehaviour
         {
             currentDienBlad.SetHighlight(false);
             currentDienBlad = null;
+        }
+
+        BordenHouder[] houders = FindObjectsOfType<BordenHouder>();
+
+        foreach (BordenHouder h in houders)
+        {
+            h.HideAllGhosts();
         }
     }
 
