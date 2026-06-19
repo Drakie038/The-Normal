@@ -60,6 +60,8 @@ public class SuitCase : NetworkBehaviour
 
     public bool IsPlacing => isPlacing;
 
+    public bool isDienblad;
+
     public NetworkVariable<bool> colliderEnabled = new NetworkVariable<bool>(
     true,
     NetworkVariableReadPermission.Everyone,

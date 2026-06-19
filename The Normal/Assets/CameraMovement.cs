@@ -46,11 +46,11 @@ public class CameraMovement : MonoBehaviour
 
     private SuitCase heldSuitCase;
 
-    private DienBlad heldDienBlad;
-
     private HotelBell currentBell;
 
     private DienBlad currentDienBlad;
+
+    private DienBlad heldDienBlad;
 
     private bool InPushMode()
     {
@@ -231,17 +231,6 @@ public class CameraMovement : MonoBehaviour
             {
                 heldSuitCase.Drop();
                 heldSuitCase = null;
-                return;
-            }
-        }
-
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-            if (heldDienBlad != null)
-            {
-                heldDienBlad.Drop();
-                heldDienBlad = null;
-                return;
             }
         }
 
@@ -588,29 +577,34 @@ public class CameraMovement : MonoBehaviour
                 return;
             }
 
-            //SuitCase
-            DienBlad dienBlad = hit.collider.GetComponentInParent<DienBlad>();
+            // ================= DIENBLAD =================
+            DienBlad dienblad = hit.collider.GetComponentInParent<DienBlad>();
 
-            if (dienBlad != null)
+            if (dienblad != null)
             {
-                if (currentDienBlad != dienBlad)
+                // ❌ geen pickup als al iets vast
+                if (heldDienBlad != null)
+                {
+                    dienblad.SetHighlight(false);
+                    return;
+                }
+
+                // 🔥 highlight switch logic
+                if (currentDienBlad != dienblad)
                 {
                     if (currentDienBlad != null)
                         currentDienBlad.SetHighlight(false);
 
-                    currentDienBlad = dienBlad;
+                    currentDienBlad = dienblad;
                 }
 
                 currentDienBlad.SetHighlight(true);
 
+                // 🔥 pickup (maar 1x)
                 if (Input.GetKeyDown(KeyCode.E))
                 {
-                    if (Time.time >= dienBlad.GetPickupCooldown())
-                    {
-                        // werkt zowel op grond als op luggage
-                        dienBlad.PickupServerRpc(NetworkManager.Singleton.LocalClientId);
-                        heldDienBlad = dienBlad;
-                    }
+                    currentDienBlad.PickUp(transform);
+                    heldDienBlad = currentDienBlad;
                 }
 
                 return;
@@ -733,16 +727,16 @@ public class CameraMovement : MonoBehaviour
             currentSuitCase = null;
         }
 
-        if (currentDienBlad != null)
-        {
-            currentDienBlad.SetHighlight(false);
-            currentDienBlad = null;
-        }
-
         if (currentBell != null)
         {
             currentBell.SetHighlight(false);
             currentBell = null;
+        }
+
+        if (currentDienBlad != null)
+        {
+            currentDienBlad.SetHighlight(false);
+            currentDienBlad = null;
         }
     }
 
@@ -764,5 +758,10 @@ public class CameraMovement : MonoBehaviour
             heldSuitCase.Drop();
             heldSuitCase = null;
         }
+    }
+
+    public bool HasDienBlad()
+    {
+        return heldDienBlad != null;
     }
 }

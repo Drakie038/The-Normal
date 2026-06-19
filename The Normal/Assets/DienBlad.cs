@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 using Unity.Netcode;
 
 public class DienBlad : NetworkBehaviour
@@ -20,29 +19,13 @@ public class DienBlad : NetworkBehaviour
     private Collider col;
     private Rigidbody rb;
 
-    private bool isPickedUp;
-    private bool isHeldActive;
+    private bool isHeld;
+    private bool isFlying;
     private Transform camTarget;
 
-    private bool isFlyingToHand;
-    private float flyT;
     private Vector3 flyStartPos;
     private Quaternion flyStartRot;
-
-    private float pickupCooldownEnd;
-
-    public bool IsHeld => isPickedUp;
-
-
-    private bool isPlacing;
-
-    public bool IsPlacing => isPlacing;
-
-    public NetworkVariable<bool> colliderEnabled = new NetworkVariable<bool>(
-    true,
-    NetworkVariableReadPermission.Everyone,
-    NetworkVariableWritePermission.Server
-);
+    private float flyT;
 
     void Awake()
     {
@@ -52,62 +35,36 @@ public class DienBlad : NetworkBehaviour
 
         if (rend != null)
             mat = rend.material;
-
-        netObj = GetComponent<NetworkObject>();
     }
 
-    void Start()
+    public void PickUp(Transform cam)
     {
-        EnablePhysics();
+        if (isHeld || cam == null)
+            return;
 
-        colliderEnabled.OnValueChanged += OnColliderChanged;
+        isHeld = true;
+        camTarget = cam;
 
-        OnColliderChanged(colliderEnabled.Value, colliderEnabled.Value);
-    }
+        if (rb != null)
+        {
+            rb.isKinematic = true;
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
 
-    private void OnColliderChanged(bool oldValue, bool newValue)
-    {
         if (col != null)
-            col.enabled = newValue;
-    }
-
-    private void EnablePhysics()
-    {
-        rb.isKinematic = false;
-        rb.useGravity = true;
-    }
-
-    public void PickUp(Transform cameraTransform)
-    {
-        if (isHeldActive || cameraTransform == null)
-            return;
-
-        if (Time.time < pickupCooldownEnd)
-            return;
-
-        camTarget = cameraTransform;
-        isHeldActive = true;
-
-        if (rb != null) rb.isKinematic = true;
-
-        isFlyingToHand = true;
-        flyT = 0f;
+            col.enabled = false;
 
         flyStartPos = transform.position;
         flyStartRot = transform.rotation;
 
-        SetPickupStateServerRpc();
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    public void SetPickupStateServerRpc()
-    {
-        colliderEnabled.Value = false;
+        flyT = 0f;
+        isFlying = true;
     }
 
     void LateUpdate()
     {
-        if (!isHeldActive || camTarget == null)
+        if (!isHeld || camTarget == null)
             return;
 
         Vector3 targetPos =
@@ -115,17 +72,16 @@ public class DienBlad : NetworkBehaviour
             camTarget.forward * distanceInFront +
             camTarget.up * heightOffset;
 
-        if (isFlyingToHand)
+        if (isFlying)
         {
             flyT += Time.deltaTime * flySpeed;
+            float t = Mathf.SmoothStep(0f, 1f, flyT);
 
-            float curve = Mathf.SmoothStep(0f, 1f, flyT);
-
-            transform.position = Vector3.Lerp(flyStartPos, targetPos, curve);
-            transform.rotation = Quaternion.Slerp(flyStartRot, camTarget.rotation, curve);
+            transform.position = Vector3.Lerp(flyStartPos, targetPos, t);
+            transform.rotation = Quaternion.Slerp(flyStartRot, camTarget.rotation, t);
 
             if (flyT >= 1f)
-                isFlyingToHand = false;
+                isFlying = false;
 
             return;
         }
@@ -134,55 +90,9 @@ public class DienBlad : NetworkBehaviour
         transform.rotation = Quaternion.Slerp(transform.rotation, camTarget.rotation, 12f * Time.deltaTime);
     }
 
-    private IEnumerator SmoothPlace(Transform slot)
-    {
-        Vector3 startPos = transform.position;
-        Quaternion startRot = transform.rotation;
-
-        float t = 0f;
-        float duration = 0.5f;
-
-        while (t < duration)
-        {
-            t += Time.deltaTime;
-            float n = t / duration;
-
-            transform.position = Vector3.Lerp(startPos, slot.position, n);
-            transform.rotation = Quaternion.Slerp(startRot, slot.rotation, n);
-
-            yield return null;
-        }
-
-        // 🔥 BELANGRIJK: release anim lock
-        isPlacing = false;
-    }
-
-    public void Drop()
-    {
-        DropServerRpc();
-    }
-
-
-
-    [ServerRpc(RequireOwnership = false)]
-    public void DropServerRpc()
-    {
-        colliderEnabled.Value = true;
-
-        if (transform.parent != null)
-        {
-            transform.SetParent(null);
-        }
-
-        NetworkObject.ChangeOwnership(NetworkManager.ServerClientId);
-
-        DropClientRpc(); // 🔥 sync naar iedereen
-    }
-
-    public float GetPickupCooldown()
-    {
-        return pickupCooldownEnd;
-    }
+    // =========================
+    // HIGHLIGHT (FIXED)
+    // =========================
 
     public void SetHighlight(bool active)
     {
@@ -198,85 +108,5 @@ public class DienBlad : NetworkBehaviour
             mat.DisableKeyword("_EMISSION");
             mat.SetColor("_EmissionColor", Color.black);
         }
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    public void RequestPickupServerRpc()
-    {
-        ApplyPickup();
-    }
-
-    private void ApplyPickup()
-    {
-        if (isHeldActive)
-            return;
-
-        isHeldActive = true;
-        isPickedUp = true;
-
-        if (col != null) col.enabled = false;
-        if (rb != null) rb.isKinematic = true;
-
-        if (transform.parent != null)
-            transform.SetParent(null);
-    }
-
-    public NetworkObject netObj;
-
-    [ServerRpc(RequireOwnership = false)]
-    public void PickupServerRpc(ulong clientId)
-    {
-        if (!netObj.IsSpawned)
-            return;
-
-        netObj.ChangeOwnership(clientId);
-
-        PickupClientRpc(clientId);
-    }
-
-    [ClientRpc]
-    private void PickupClientRpc(ulong clientId)
-    {
-        if (NetworkManager.Singleton.LocalClientId != clientId)
-            return;
-
-        CameraMovement cam = FindObjectOfType<CameraMovement>();
-
-        if (cam != null)
-        {
-            PickUp(cam.transform);
-        }
-    }
-
-    [ClientRpc]
-    private void DropClientRpc()
-    {
-        isHeldActive = false;
-        isPickedUp = false;
-        isFlyingToHand = false;
-
-        camTarget = null;
-
-        pickupCooldownEnd = Time.time + 0.25f;
-
-        if (rb != null)
-        {
-            rb.isKinematic = false;
-            rb.useGravity = true;
-        }
-
-        // 🔥 BELANGRIJK: collider altijd terug aan bij drop
-        ForceEnableCollider();
-
-        SetHighlight(false);
-    }
-
-    public void ForceEnableCollider()
-    {
-        if (col != null)
-            col.enabled = true;
-
-        // server sync (belangrijk voor netcode state consistency)
-        colliderEnabled.Value = true;
     }
 }
