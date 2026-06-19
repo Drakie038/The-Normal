@@ -577,30 +577,60 @@ public class CameraMovement : MonoBehaviour
                 return;
             }
 
-            // ================= DIENBLAD =================
-            DienBlad dienblad = hit.collider.GetComponentInParent<DienBlad>();
+            // ================= BORDENHOUDER =================
+            BordenHouder houder = hit.collider.GetComponentInParent<BordenHouder>();
 
-            if (dienblad != null)
+
+            if (houder != null)
             {
-                // ❌ geen pickup als al iets vast
-                if (heldDienBlad != null)
+                // 1. eerst highlight logica blijft zoals je had
+                DienBlad topPlate = houder.GetTopPlate();
+
+                if (topPlate == null)
                 {
-                    dienblad.SetHighlight(false);
+                    if (currentDienBlad != null)
+                    {
+                        currentDienBlad.SetHighlight(false);
+                        currentDienBlad = null;
+                    }
+
                     return;
                 }
 
-                // 🔥 highlight switch logic
-                if (currentDienBlad != dienblad)
+                if (heldDienBlad != null)
+                {
+                    if (Input.GetKeyDown(KeyCode.E))
+                    {
+                        for (int i = 0; i < houder.placementSlots.Length; i++)
+                        {
+                            if (hit.collider.transform == houder.placementSlots[i])
+                            {
+                                heldDienBlad.PlaceToSlot(houder.placementSlots[i]);
+
+                                // reset state
+                                heldDienBlad = null;
+                                currentDienBlad = null;
+
+                                return;
+                            }
+                        }
+                    }
+
+                    return;
+                }
+
+                // ================= PICKUP =================
+
+                if (currentDienBlad != topPlate)
                 {
                     if (currentDienBlad != null)
                         currentDienBlad.SetHighlight(false);
 
-                    currentDienBlad = dienblad;
+                    currentDienBlad = topPlate;
                 }
 
                 currentDienBlad.SetHighlight(true);
 
-                // 🔥 pickup (maar 1x)
                 if (Input.GetKeyDown(KeyCode.E))
                 {
                     currentDienBlad.PickUp(transform);

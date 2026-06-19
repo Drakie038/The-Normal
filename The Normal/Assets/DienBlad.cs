@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using Unity.Netcode;
+using System.Collections;
 
 public class DienBlad : NetworkBehaviour
 {
@@ -27,6 +28,16 @@ public class DienBlad : NetworkBehaviour
     private Quaternion flyStartRot;
     private float flyT;
 
+    private BordenHouder houder;
+
+    public enum DienBladType
+    {
+        Bord,
+        DienBlad
+    }
+
+    public DienBladType type;
+
     void Awake()
     {
         rend = GetComponentInChildren<Renderer>();
@@ -35,6 +46,8 @@ public class DienBlad : NetworkBehaviour
 
         if (rend != null)
             mat = rend.material;
+
+        houder = GetComponentInParent<BordenHouder>();
     }
 
     public void PickUp(Transform cam)
@@ -42,8 +55,16 @@ public class DienBlad : NetworkBehaviour
         if (isHeld || cam == null)
             return;
 
+        // Alleen het bovenste bord mag worden opgepakt
+        if (houder != null && houder.GetTopPlate() != this)
+            return;
+
         isHeld = true;
         camTarget = cam;
+
+        // Verwijder dit bord uit de stapel
+        if (houder != null)
+            houder.RemovePlate(this);
 
         if (rb != null)
         {
@@ -108,5 +129,54 @@ public class DienBlad : NetworkBehaviour
             mat.DisableKeyword("_EMISSION");
             mat.SetColor("_EmissionColor", Color.black);
         }
+    }
+
+    public void PlaceToSlot(Transform slot)
+    {
+        if (!isHeld || slot == null)
+            return;
+
+        StartCoroutine(FlyToSlot(slot));
+    }
+
+    private IEnumerator FlyToSlot(Transform slot)
+    {
+        isHeld = false;
+
+        Vector3 startPos = transform.position;
+        Quaternion startRot = transform.rotation;
+
+        float t = 0f;
+        float duration = 0.4f;
+
+        Rigidbody rb = GetComponent<Rigidbody>();
+        Collider col = GetComponent<Collider>();
+
+        if (rb != null)
+        {
+            rb.isKinematic = true;
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+
+        if (col != null)
+            col.enabled = false;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            float n = Mathf.SmoothStep(0, 1, t / duration);
+
+            transform.position = Vector3.Lerp(startPos, slot.position, n);
+            transform.rotation = Quaternion.Slerp(startRot, slot.rotation, n);
+
+            yield return null;
+        }
+
+        transform.position = slot.position;
+        transform.rotation = slot.rotation;
+
+        // vastzetten
+        transform.SetParent(slot);
     }
 }

@@ -242,3 +242,4 @@ MonoBehaviour:
   distanceInFront: 1
   heightOffset: -0.35
   flySpeed: 6
+  type: 1
