@@ -46,7 +46,11 @@ public class CameraMovement : MonoBehaviour
 
     private SuitCase heldSuitCase;
 
+    private DienBlad heldDienBlad;
+
     private HotelBell currentBell;
+
+    private DienBlad currentDienBlad;
 
     private bool InPushMode()
     {
@@ -227,6 +231,16 @@ public class CameraMovement : MonoBehaviour
             {
                 heldSuitCase.Drop();
                 heldSuitCase = null;
+                return;
+            }
+        }
+
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            if (heldDienBlad != null)
+            {
+                heldDienBlad.Drop();
+                heldDienBlad = null;
                 return;
             }
         }
@@ -573,6 +587,34 @@ public class CameraMovement : MonoBehaviour
 
                 return;
             }
+
+            //SuitCase
+            DienBlad dienBlad = hit.collider.GetComponentInParent<DienBlad>();
+
+            if (dienBlad != null)
+            {
+                if (currentDienBlad != dienBlad)
+                {
+                    if (currentDienBlad != null)
+                        currentDienBlad.SetHighlight(false);
+
+                    currentDienBlad = dienBlad;
+                }
+
+                currentDienBlad.SetHighlight(true);
+
+                if (Input.GetKeyDown(KeyCode.E))
+                {
+                    if (Time.time >= dienBlad.GetPickupCooldown())
+                    {
+                        // werkt zowel op grond als op luggage
+                        dienBlad.PickupServerRpc(NetworkManager.Singleton.LocalClientId);
+                        heldDienBlad = dienBlad;
+                    }
+                }
+
+                return;
+            }
         }
             ClearInteractions();
     }
@@ -689,6 +731,12 @@ public class CameraMovement : MonoBehaviour
         {
             currentSuitCase.SetHighlight(false);
             currentSuitCase = null;
+        }
+
+        if (currentDienBlad != null)
+        {
+            currentDienBlad.SetHighlight(false);
+            currentDienBlad = null;
         }
 
         if (currentBell != null)
