@@ -128,6 +128,10 @@ public class MultiplayerMenu : MonoBehaviour
 
     private const int MAX_PLAYERS = 15;
 
+    [Header("UI SFX")]
+    [SerializeField] private AudioSource uiAudioSource;
+    [SerializeField] private AudioClip clickSound;
+
     private async void Start()
     {
         RegisterCallbacks();
@@ -154,6 +158,18 @@ public class MultiplayerMenu : MonoBehaviour
 
         StartServerLoop();
         SetupMenu();
+
+        AddClickSoundsToAllButtons();
+    }
+
+    private void AddClickSoundsToAllButtons()
+    {
+        Button[] buttons = FindObjectsOfType<Button>(true);
+
+        foreach (var btn in buttons)
+        {
+            btn.onClick.AddListener(PlayClick);
+        }
     }
 
     private void SetupMenu()
@@ -381,11 +397,8 @@ public class MultiplayerMenu : MonoBehaviour
         }
 
         if (startGameButton != null)
-        {
-            startGameButton.onClick.AddListener(() =>
-            {
-                StartSingleplayer();
-            });
+        {  
+
         }
     }
 
@@ -1696,5 +1709,11 @@ cameraMovement.OnMenuCameraFinished = () =>
     public bool IsSettingsOpen()
     {
         return SettingsGroup != null && SettingsGroup.activeSelf;
+    }
+
+    private void PlayClick()
+    {
+        if (uiAudioSource != null && clickSound != null)
+            uiAudioSource.PlayOneShot(clickSound);
     }
 }

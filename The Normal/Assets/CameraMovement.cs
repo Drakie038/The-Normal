@@ -113,8 +113,8 @@ public class CameraMovement : MonoBehaviour
         return currentDoor != null && currentDoor.IsPeeking();
     }
 
-    private enum State { Menu, Cinematic, FPS }
-    private State state;
+    public enum State { Menu, Cinematic, FPS }
+    public State state;
 
     private float xRotation;
 
@@ -261,6 +261,11 @@ public class CameraMovement : MonoBehaviour
 
         xRotation = 0f;
         state = State.FPS;
+
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer)
+        {
+            LobbyMusicManager.Instance.StartLobbyMusicClientRpc();
+        }
 
         inputLocked = false;
 
