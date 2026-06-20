@@ -229,7 +229,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCubeController
   ShowTopMostFoldoutHeaderGroup: 1
-  moveSpeed: 3
+  moveSpeed: 2
   pushSpeed: 1
   PushRotationSpeed: 0.25
   gravity: -9.81
@@ -287,7 +287,6 @@ MonoBehaviour:
       MaxSecondsBetweenUpdates: 0
     m_InternalValue: 0
   currentLuggage: {fileID: 0}
-  playerHands: {fileID: 2872873860496840731}
 --- !u!1 &4487729306449807928
 GameObject:
   m_ObjectHideFlags: 0

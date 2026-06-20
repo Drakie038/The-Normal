@@ -72,6 +72,30 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 2b75a80cf0ca5ae4d92696921a2dfe22, type: 2}
+    - target: {fileID: 5023757091570042315, guid: 3ee8545958e90514f9c7e19f0c2118da, type: 3}
+      propertyPath: m_TagString
+      value: Interact
+      objectReference: {fileID: 0}
+    - target: {fileID: 5541361243381698761, guid: 3ee8545958e90514f9c7e19f0c2118da, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 5541361243381698761, guid: 3ee8545958e90514f9c7e19f0c2118da, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 5541361243381698761, guid: 3ee8545958e90514f9c7e19f0c2118da, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5541361243381698761, guid: 3ee8545958e90514f9c7e19f0c2118da, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5541361243381698761, guid: 3ee8545958e90514f9c7e19f0c2118da, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 90
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -79,7 +103,105 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 3ee8545958e90514f9c7e19f0c2118da, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1347183855385792203}
+    - targetCorrespondingSourceObject: {fileID: 5023757091570042315, guid: 3ee8545958e90514f9c7e19f0c2118da, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5329076491987123021}
+    - targetCorrespondingSourceObject: {fileID: 5023757091570042315, guid: 3ee8545958e90514f9c7e19f0c2118da, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4669582697561215043}
+    - targetCorrespondingSourceObject: {fileID: 5023757091570042315, guid: 3ee8545958e90514f9c7e19f0c2118da, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4220665947645463111}
   m_SourcePrefab: {fileID: 100100000, guid: 3ee8545958e90514f9c7e19f0c2118da, type: 3}
+--- !u!1 &3072935145588516337 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5023757091570042315, guid: 3ee8545958e90514f9c7e19f0c2118da, type: 3}
+  m_PrefabInstance: {fileID: 8003664335895011386}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &5329076491987123021
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3072935145588516337}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e96cb6065543e43c4a752faaa1468eb1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkTransform
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkTransformExpanded: 0
+  AutoOwnerAuthorityTickOffset: 1
+  PositionInterpolationType: 0
+  RotationInterpolationType: 0
+  ScaleInterpolationType: 0
+  PositionLerpSmoothing: 1
+  PositionMaxInterpolationTime: 0.1
+  RotationLerpSmoothing: 1
+  RotationMaxInterpolationTime: 0.1
+  ScaleLerpSmoothing: 1
+  ScaleMaxInterpolationTime: 0.1
+  AuthorityMode: 0
+  TickSyncChildren: 0
+  UseUnreliableDeltas: 0
+  SyncPositionX: 1
+  SyncPositionY: 1
+  SyncPositionZ: 1
+  SyncRotAngleX: 1
+  SyncRotAngleY: 1
+  SyncRotAngleZ: 1
+  SyncScaleX: 1
+  SyncScaleY: 1
+  SyncScaleZ: 1
+  PositionThreshold: 0.001
+  RotAngleThreshold: 0.01
+  ScaleThreshold: 0.01
+  UseQuaternionSynchronization: 0
+  UseQuaternionCompression: 0
+  UseHalfFloatPrecision: 0
+  InLocalSpace: 0
+  SwitchTransformSpaceWhenParented: 0
+  Interpolate: 1
+  SlerpPosition: 0
+--- !u!114 &4669582697561215043
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3072935145588516337}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63d7563d2c016e3419b2a859dfdb5638, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Lever
+  ShowTopMostFoldoutHeaderGroup: 1
+  openAngleX: -90
+  smoothSpeed: 6
+  highlightColor: {r: 1, g: 1, b: 1, a: 1}
+  intensity: 0.95
+--- !u!65 &4220665947645463111
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3072935145588516337}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.36479476, y: 0.6904085, z: 0.09215687}
+  m_Center: {x: 0, y: 0.34520426, z: -0.000000027939677}
 --- !u!1 &7193325709936369003 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 3ee8545958e90514f9c7e19f0c2118da, type: 3}

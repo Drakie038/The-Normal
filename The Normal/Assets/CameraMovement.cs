@@ -52,6 +52,57 @@ public class CameraMovement : MonoBehaviour
 
     private DienBlad heldDienBlad;
 
+    public System.Action OnMenuCameraFinished;
+
+    private Coroutine lookForwardRoutine;
+
+    private bool isTransitioningToSettings;
+
+    private Coroutine settingsTransitionRoutine;
+
+    private Coroutine settingsRoutine;
+
+
+    public void SmoothLookForwardForSettings(float duration = 0.25f)
+    {
+        if (settingsRoutine != null)
+            StopCoroutine(settingsRoutine);
+
+        settingsRoutine = StartCoroutine(SmoothLookForwardRoutine(duration));
+    }
+
+    private IEnumerator SmoothLookForwardRoutine(float duration)
+    {
+        isTransitioningToSettings = true;
+
+        Quaternion startRot = transform.rotation;
+        float startX = xRotation;
+
+        float t = 0f;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+
+            float n = Mathf.Clamp01(t / duration);
+            float c = curve.Evaluate(n);
+
+            float targetYaw = target != null ? target.eulerAngles.y : transform.eulerAngles.y;
+
+            Quaternion endRot = Quaternion.Euler(0f, targetYaw, 0f);
+
+            transform.rotation = Quaternion.Slerp(startRot, endRot, c);
+            xRotation = Mathf.Lerp(startX, 0f, c);
+
+            yield return null;
+        }
+
+        transform.rotation = Quaternion.Euler(0f, transform.eulerAngles.y, 0f);
+        xRotation = 0f;
+
+        isTransitioningToSettings = false;
+    }
+
     private bool InPushMode()
     {
         return player != null && player.inPushMode.Value;
@@ -265,15 +316,27 @@ public class CameraMovement : MonoBehaviour
 
     private void HandleLockedCamera(bool inElevator)
     {
+        // ❌ BELANGRIJK: tijdens transition NIET hard zetten
+        if (isTransitioningToSettings)
+            return;
+
         xRotation = 0f;
 
-        transform.position = target.position + firstPersonOffset;
+        Vector3 targetPos = target.position + firstPersonOffset;
 
-        transform.rotation = Quaternion.Euler(
+        Quaternion targetRot = Quaternion.Euler(
             inElevator ? elevatorCameraRotation.x : 0f,
             target.eulerAngles.y,
             inElevator ? elevatorCameraRotation.z : 0f
         );
+
+        // ❌ oude snap:
+        // transform.position = targetPos;
+        // transform.rotation = targetRot;
+
+        // ✅ smooth fallback (alleen als geen transition loopt)
+        transform.position = Vector3.Lerp(transform.position, targetPos, Time.deltaTime * 12f);
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Time.deltaTime * 12f);
     }
 
     private void HandleFPSCamera(bool inElevator)
@@ -411,19 +474,27 @@ public class CameraMovement : MonoBehaviour
         Quaternion startRot = transform.rotation;
 
         float t = 0f;
+        float duration = 1f;
 
-        while (t < 1f)
+        while (t < duration)
         {
             t += Time.deltaTime;
 
-            transform.position = Vector3.Lerp(startPos, menuPos, t);
-            transform.rotation = Quaternion.Slerp(startRot, menuRot, t);
+            float n = t / duration;
+
+            transform.position = Vector3.Lerp(startPos, menuPos, n);
+            transform.rotation = Quaternion.Slerp(startRot, menuRot, n);
 
             yield return null;
         }
 
         transform.position = menuPos;
         transform.rotation = menuRot;
+
+        inputLocked = false;
+
+        // 🔥 HIER: meld dat camera klaar is
+        OnMenuCameraFinished?.Invoke();
     }
 
     private void DetectDoor()

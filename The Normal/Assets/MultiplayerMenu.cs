@@ -18,6 +18,8 @@ using System.Threading.Tasks;
 using System.Collections;
 using System.Collections.Generic;
 
+using UnityEngine.SceneManagement;
+
 public class MultiplayerMenu : MonoBehaviour
 {
     private CameraMovement cameraMovement;
@@ -130,8 +132,15 @@ public class MultiplayerMenu : MonoBehaviour
     {
         RegisterCallbacks();
 
-        await UnityServices.InitializeAsync();
-        await AuthenticationService.Instance.SignInAnonymouslyAsync();
+        if (UnityServices.State != Unity.Services.Core.ServicesInitializationState.Initialized)
+        {
+            await UnityServices.InitializeAsync();
+        }
+
+        if (!AuthenticationService.Instance.IsSignedIn)
+        {
+            await AuthenticationService.Instance.SignInAnonymouslyAsync();
+        }
 
         cameraMovement = FindObjectOfType<CameraMovement>();
 
@@ -428,13 +437,13 @@ public class MultiplayerMenu : MonoBehaviour
             }
             else
             {
-                OpenSettingsMenu();
-
                 if (cameraMovement != null)
+                {
                     cameraMovement.settingsLocked = true;
+                    cameraMovement.SmoothLookForwardForSettings();
+                }
 
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
+                OpenSettingsMenu();
             }
         }
 
@@ -1623,6 +1632,7 @@ public class MultiplayerMenu : MonoBehaviour
             // -----------------------------
             ClearButtons();
 
+
             CloseSettingsMenu();
 
             if (cameraMovement != null)
@@ -1650,10 +1660,20 @@ public class MultiplayerMenu : MonoBehaviour
             RegisterCallbacks();
 
             Debug.Log("=== LEAVE EVERYTHING DONE ===");
+
+            networkManager.Shutdown();
+            Destroy(networkManager.gameObject);
         }
         finally
         {
             isLeavingEverything = false;
+
+cameraMovement.ResetCameraToMenu();
+
+cameraMovement.OnMenuCameraFinished = () =>
+{
+    SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+};
         }
     }
 
