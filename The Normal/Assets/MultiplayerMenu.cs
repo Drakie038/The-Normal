@@ -132,6 +132,9 @@ public class MultiplayerMenu : MonoBehaviour
     [SerializeField] private AudioSource uiAudioSource;
     [SerializeField] private AudioClip clickSound;
 
+    [Header("Menu Music")]
+    [SerializeField] private AudioSource menuMusic;
+
     private async void Start()
     {
         RegisterCallbacks();
@@ -647,6 +650,8 @@ public class MultiplayerMenu : MonoBehaviour
 
         StartHost(hostAllocation);
 
+        StopMenuMusic();
+
         statusText.gameObject.SetActive(true);
         menuCreateServerButton.gameObject.SetActive(false);
 
@@ -887,6 +892,8 @@ public class MultiplayerMenu : MonoBehaviour
 
             currentLobbyId = "";
             inMatch = true;
+
+            StopMenuMusic();
 
             SetStatus("Joined server");
             SetInMatchUI(true);
@@ -1483,11 +1490,11 @@ public class MultiplayerMenu : MonoBehaviour
         singleplayerButton.gameObject.SetActive(false);
         backButton.gameObject.SetActive(false);
 
-        quickPlayButton.gameObject.SetActive(false);
-        createServerButton.gameObject.SetActive(false);
-        menuCreateServerButton.gameObject.SetActive(false);
-        browserRoomsButton.gameObject.SetActive(false);
-        quickJoinButton.gameObject.SetActive(false);
+        quickPlayButton.gameObject.SetActive(true);
+        createServerButton.gameObject.SetActive(true);
+        menuCreateServerButton.gameObject.SetActive(true);
+        browserRoomsButton.gameObject.SetActive(true);
+        quickJoinButton.gameObject.SetActive(true);
         StopSearchingButton.gameObject.SetActive(false);
 
         groupMultiplayer.SetActive(false);
@@ -1715,5 +1722,13 @@ cameraMovement.OnMenuCameraFinished = () =>
     {
         if (uiAudioSource != null && clickSound != null)
             uiAudioSource.PlayOneShot(clickSound);
+    }
+
+    private void StopMenuMusic()
+    {
+        if (menuMusic != null && menuMusic.isPlaying)
+        {
+            menuMusic.Stop();
+        }
     }
 }

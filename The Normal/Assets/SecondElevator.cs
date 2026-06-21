@@ -23,6 +23,13 @@ public class SecondElevator : NetworkBehaviour
     [SerializeField] private float doorMoveDistance = 1f;
     [SerializeField] private float doorMoveSpeed = 2f;
 
+    [Header("Audio")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip doorOpenSound;
+
+    [SerializeField] private AudioSource elevatorMoveAudioSource;
+    [SerializeField] private AudioClip elevatorMoveSound;
+
     public override void OnNetworkSpawn()
     {
         if (IsServer)
@@ -42,6 +49,8 @@ public class SecondElevator : NetworkBehaviour
     private IEnumerator RunElevator(List<ulong> passengers)
     {
         TeleportPlayers(passengers);
+
+        StartElevatorMoveSoundClientRpc();
 
         Vector3 target = new Vector3(
             startPosition.x,
@@ -122,6 +131,10 @@ public class SecondElevator : NetworkBehaviour
 
     private IEnumerator OpenDoors()
     {
+        StopElevatorMoveSoundClientRpc(); // <-- liftgeluid stoppen
+
+        PlayDoorOpenSoundClientRpc();
+
         Vector3 leftStart = doorLeft.position;
         Vector3 rightStart = doorRight.position;
 
@@ -148,5 +161,36 @@ public class SecondElevator : NetworkBehaviour
 
         doorLeft.position = leftTarget;
         doorRight.position = rightTarget;
+    }
+    [ClientRpc]
+    private void PlayDoorOpenSoundClientRpc()
+    {
+        if (audioSource != null && doorOpenSound != null)
+        {
+            audioSource.PlayOneShot(doorOpenSound);
+        }
+    }
+
+    [ClientRpc]
+    private void StartElevatorMoveSoundClientRpc()
+    {
+        if (elevatorMoveAudioSource == null ||
+            elevatorMoveSound == null)
+            return;
+
+        elevatorMoveAudioSource.clip = elevatorMoveSound;
+        elevatorMoveAudioSource.loop = true;
+
+        if (!elevatorMoveAudioSource.isPlaying)
+            elevatorMoveAudioSource.Play();
+    }
+
+    [ClientRpc]
+    private void StopElevatorMoveSoundClientRpc()
+    {
+        if (elevatorMoveAudioSource == null)
+            return;
+
+        elevatorMoveAudioSource.Stop();
     }
 }

@@ -32,6 +32,11 @@ public class OpenDoorEntrance : MonoBehaviour
 
     private Coroutine runningRoutine;
 
+    [Header("Audio")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip doorOpenSound;
+    [SerializeField] private AudioClip doorCloseSound;
+
     private void Awake()
     {
         leftClosed = doorLeft.position;
@@ -59,6 +64,8 @@ public class OpenDoorEntrance : MonoBehaviour
         isRunning = true;
 
         yield return new WaitForSeconds(delayBeforeOpen);
+
+        PlayOpenSound(); // <-- 1x afspelen
 
         bool entranceDone = false;
         bool elevatorDone = false;
@@ -108,6 +115,8 @@ public class OpenDoorEntrance : MonoBehaviour
             runningRoutine = null;
         }
 
+        PlayCloseSound(); // <-- 1x afspelen bij sluiten
+
         isRunning = false;
         doorsAreOpen = false;
 
@@ -115,5 +124,21 @@ public class OpenDoorEntrance : MonoBehaviour
         doorRight.position = rightClosed;
         elevatorDoorLeft.position = elevLeftClosed;
         elevatorDoorRight.position = elevRightClosed;
+    }
+
+    private void PlayOpenSound()
+    {
+        if (audioSource != null && doorOpenSound != null)
+        {
+            audioSource.PlayOneShot(doorOpenSound);
+        }
+    }
+
+    private void PlayCloseSound()
+    {
+        if (audioSource != null && doorCloseSound != null)
+        {
+            audioSource.PlayOneShot(doorCloseSound);
+        }
     }
 }

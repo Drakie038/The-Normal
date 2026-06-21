@@ -169,6 +169,8 @@ public class ElevatorMenu : MonoBehaviour
 
     private void OnClickStartElevator()
     {
+        LobbyMusicManager.Instance?.FadeOutLobbyMusicLocal();
+
         if (startElevatorButton != null)
             startElevatorButton.gameObject.SetActive(false);
 

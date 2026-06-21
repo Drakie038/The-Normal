@@ -19,7 +19,7 @@ public class CameraFade : MonoBehaviour
             blackImage.enabled = false;
     }
 
-    public void ShowFade(float autoHideTime = 2f)
+    public void ShowFade(float autoHideTime = 1f)
     {
         if (blackImage == null)
             return;

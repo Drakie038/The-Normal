@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Unity.Netcode;
 using System.Collections;
 #if UNITY_EDITOR
@@ -26,6 +26,18 @@ public class LobbyNPC : NetworkBehaviour
 
     private Coroutine returnRoutine;
 
+    [Header("Audio")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip bellResponseClip;
+
+    [Header("Footsteps")]
+    [SerializeField] private AudioSource footstepSource;
+    [SerializeField] private AudioClip footstepClip;
+
+    [SerializeField] private float stepInterval = 0.5f;
+
+    private float stepTimer;
+    private Vector3 lastPosition;
 
     private void Awake()
     {
@@ -36,6 +48,7 @@ public class LobbyNPC : NetworkBehaviour
     {
         if (IsServer)
         {
+            lastPosition = transform.position;
             StartCoroutine(PatrolRoutine());
         }
     }
@@ -51,6 +64,8 @@ public class LobbyNPC : NetworkBehaviour
         }
 
         MoveTo(patrolTarget);
+
+        HandleFootsteps();
     }
 
     // =========================
@@ -119,6 +134,8 @@ public class LobbyNPC : NetworkBehaviour
         currentTargetPlayer = player;
         isResponding = true;
 
+        PlayBellResponseSoundClientRpc(); // 👈 HIER TOEVOEGEN
+
         // restart timer als hij al bezig is
         if (returnRoutine != null)
             StopCoroutine(returnRoutine);
@@ -163,5 +180,48 @@ public class LobbyNPC : NetworkBehaviour
         Gizmos.DrawLine(bottomLeft, topLeft);
 
         Gizmos.DrawSphere(c, 0.1f);
+    }
+
+    [ClientRpc]
+    private void PlayBellResponseSoundClientRpc()
+    {
+        if (audioSource != null && bellResponseClip != null)
+        {
+            audioSource.PlayOneShot(bellResponseClip);
+        }
+    }
+
+    private void HandleFootsteps()
+    {
+        if (!IsServer) return;
+
+        float moved = Vector3.Distance(transform.position, lastPosition);
+
+        bool isMoving = moved > 0.01f;
+
+        lastPosition = transform.position;
+
+        if (!isMoving)
+        {
+            stepTimer = 0f;
+            return;
+        }
+
+        stepTimer += Time.deltaTime;
+
+        if (stepTimer >= stepInterval)
+        {
+            stepTimer = 0f;
+            PlayFootstepClientRpc();
+        }
+    }
+
+    [ClientRpc]
+    private void PlayFootstepClientRpc()
+    {
+        if (footstepSource == null || footstepClip == null)
+            return;
+
+        footstepSource.PlayOneShot(footstepClip);
     }
 }

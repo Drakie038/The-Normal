@@ -70,6 +70,10 @@ public class ElevatorPlayers : NetworkBehaviour
 
     private bool isOpening;
 
+    [Header("Elevator Audio")]
+    [SerializeField] private AudioSource elevatorMoveAudioSource;
+    [SerializeField] private AudioClip elevatorMoveClip;
+
     private void Update()
     {
         if (!IsServer) return;
@@ -315,6 +319,16 @@ public class ElevatorPlayers : NetworkBehaviour
 
         elevatorBusy = true;
 
+        ClientRpcParams passengerRpcParams = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = passengers.ToArray()
+            }
+        };
+
+        StartElevatorMoveSoundClientRpc(passengerRpcParams);
+
         Vector3 target = new Vector3(
             startPosition.x,
             bottomY,
@@ -342,6 +356,8 @@ public class ElevatorPlayers : NetworkBehaviour
                 TargetClientIds = passengers.ToArray()
             }
         };
+
+        StopElevatorMoveSoundClientRpc(passengerRpcParams);
 
         ShowFadeClientRpc(2f, rpcParams);
 
@@ -728,5 +744,30 @@ public class ElevatorPlayers : NetworkBehaviour
     private void ShowFadeClientRpc(float autoHideTime, ClientRpcParams rpcParams = default)
     {
         CameraFade.Instance?.ShowFade(autoHideTime);
+    }
+
+    [ClientRpc]
+    private void StartElevatorMoveSoundClientRpc(
+    ClientRpcParams rpcParams = default)
+    {
+        if (elevatorMoveAudioSource == null ||
+            elevatorMoveClip == null)
+            return;
+
+        elevatorMoveAudioSource.clip = elevatorMoveClip;
+        elevatorMoveAudioSource.loop = true;
+
+        if (!elevatorMoveAudioSource.isPlaying)
+            elevatorMoveAudioSource.Play();
+    }
+
+    [ClientRpc]
+    private void StopElevatorMoveSoundClientRpc(
+        ClientRpcParams rpcParams = default)
+    {
+        if (elevatorMoveAudioSource == null)
+            return;
+
+        elevatorMoveAudioSource.Stop();
     }
 }

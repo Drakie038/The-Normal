@@ -64,6 +64,16 @@ public NetworkVariable<bool> inPushMode = new NetworkVariable<bool>(false);
 
     private Quaternion luggageRotationOffset;
 
+    [Header("Walk Audio")]
+    [SerializeField] private AudioSource walkAudioSource;
+    [SerializeField] private AudioClip walkClip;
+
+    [SerializeField] private float minMoveThreshold = 0.1f;
+    [SerializeField] private float footstepInterval = 0.5f; // lager = sneller stappen
+
+    private float footstepTimer;
+    private bool wasMoving;
+
     private void Start()
     {
         lastPlayerPos = transform.position;
@@ -281,6 +291,8 @@ public NetworkVariable<bool> inPushMode = new NetworkVariable<bool>(false);
             Input.GetAxisRaw("Horizontal"),
             Input.GetAxisRaw("Vertical")
         );
+
+        HandleWalkAudio();
     }
 
     private void FixedUpdate()
@@ -815,5 +827,35 @@ public NetworkVariable<bool> inPushMode = new NetworkVariable<bool>(false);
         {
             cam.ForceDropHeldSuitcase();
         }
+    }
+
+    private void HandleWalkAudio()
+    {
+        if (!IsOwner || walkAudioSource == null || walkClip == null)
+            return;
+
+        bool isMoving = moveInput.sqrMagnitude > minMoveThreshold;
+
+        float speedFactor = inPushMode.Value ? 1.4f : 1f;
+
+        if (isMoving)
+        {
+            footstepTimer -= Time.deltaTime;
+
+            if (footstepTimer <= 0f)
+            {
+                walkAudioSource.pitch = inPushMode.Value ? 0.75f : 1f;
+                walkAudioSource.PlayOneShot(walkClip, 1f);
+
+                // 🔥 belangrijk: bepaalt hoe vaak geluid speelt
+                footstepTimer = footstepInterval * speedFactor;
+            }
+        }
+        else
+        {
+            footstepTimer = 0f;
+        }
+
+        wasMoving = isMoving;
     }
 }

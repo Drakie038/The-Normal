@@ -51,8 +51,33 @@ public class LobbyMusicManager : NetworkBehaviour
         while (t < 1f)
         {
             t += Time.deltaTime;
-            musicSource.volume = Mathf.Lerp(0f, 0.1f, t);
+            musicSource.volume = Mathf.Lerp(0f, 0.05f, t);
             yield return null;
         }
+    }
+
+    public void FadeOutLobbyMusicLocal()
+    {
+        StartCoroutine(FadeOutRoutine());
+    }
+
+    private System.Collections.IEnumerator FadeOutRoutine()
+    {
+        if (musicSource == null || !musicSource.isPlaying)
+            yield break;
+
+        float startVolume = musicSource.volume;
+        float t = 0f;
+        float duration = 2f; // fade tijd
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            musicSource.volume = Mathf.Lerp(startVolume, 0f, t / duration);
+            yield return null;
+        }
+
+        musicSource.volume = 0f;
+        musicSource.Stop();
     }
 }
