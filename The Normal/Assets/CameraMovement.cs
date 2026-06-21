@@ -729,6 +729,28 @@ public class CameraMovement : MonoBehaviour
 
                 return;
             }
+
+            Prullenbak trash = hit.collider.GetComponentInParent<Prullenbak>();
+
+            if (trash != null)
+            {
+                bool canTrash = heldDienBlad != null;
+
+                // 🔥 alleen highlight als je iets vast hebt
+                trash.SetHighlight(canTrash);
+
+                if (canTrash)
+                {
+                    if (Input.GetKeyDown(KeyCode.E))
+                    {
+                        StartCoroutine(heldDienBlad.FlyIntoTrash(trash));
+                        heldDienBlad = null;
+                        currentDienBlad = null;
+                    }
+                }
+
+                return;
+            }
         }
             ClearInteractions();
     }
@@ -864,6 +886,13 @@ public class CameraMovement : MonoBehaviour
         foreach (BordenHouder h in houders)
         {
             h.HideAllGhosts();
+        }
+
+        Prullenbak[] trashBins = FindObjectsOfType<Prullenbak>();
+
+        foreach (var t in trashBins)
+        {
+            t.SetHighlight(false);
         }
     }
 

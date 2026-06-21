@@ -179,4 +179,61 @@ public class DienBlad : NetworkBehaviour
         // vastzetten
         transform.SetParent(slot);
     }
+
+    public IEnumerator FlyIntoTrash(Prullenbak trash)
+    {
+        isHeld = false;
+
+        trash.OpenLid();
+
+        Vector3 startPos = transform.position;
+        Quaternion startRot = transform.rotation;
+
+        Vector3 topPos = trash.trashTarget.position + Vector3.up * 1.2f; // boven de bin
+        Vector3 endPos = trash.trashTarget.position;
+
+        float t = 0f;
+        float duration = 0.5f;
+
+        Rigidbody rb = GetComponent<Rigidbody>();
+        Collider col = GetComponent<Collider>();
+
+        if (rb != null)
+        {
+            rb.isKinematic = true;
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+
+        if (col != null)
+            col.enabled = false;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            float n = Mathf.SmoothStep(0, 1, t / duration);
+
+            // 🎯 curve: eerst boven de bak, dan naar beneden erin
+            Vector3 pos = Vector3.Lerp(startPos, topPos, n);
+
+            if (n > 0.5f)
+            {
+                float downT = (n - 0.5f) * 2f;
+                pos = Vector3.Lerp(topPos, endPos, downT);
+            }
+
+            transform.position = pos;
+            transform.rotation = Quaternion.Slerp(startRot, trash.lid.rotation, n);
+
+            yield return null;
+        }
+
+        transform.position = endPos;
+
+        yield return new WaitForSeconds(0.1f);
+
+        trash.CloseLid();
+
+        Destroy(gameObject);
+    }
 }
