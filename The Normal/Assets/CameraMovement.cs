@@ -779,6 +779,24 @@ public class CameraMovement : MonoBehaviour
 
                 return;
             }
+
+            LobbyNPC npc = hit.collider.GetComponentInParent<LobbyNPC>();
+
+            if (npc != null)
+            {
+                if (heldSuitCase != null)
+                {
+                    NetworkObject netObj = heldSuitCase.GetComponent<NetworkObject>();
+
+                    // BELANGRIJK: eerst drop forceren lokaal
+                    ForceDropHeldSuitcase();
+
+                    // server handover
+                    npc.TakeSuitcaseServerRpc(netObj);
+
+                    return;
+                }
+            }
         }
             ClearInteractions();
     }

@@ -39,6 +39,8 @@ public class LobbyNPC : NetworkBehaviour
     private float stepTimer;
     private Vector3 lastPosition;
 
+    public Transform suitcaseHand; // child object bij NPC (hand socket)
+
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
@@ -223,5 +225,21 @@ public class LobbyNPC : NetworkBehaviour
             return;
 
         footstepSource.PlayOneShot(footstepClip);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void TakeSuitcaseServerRpc(NetworkObjectReference suitcaseRef)
+    {
+        if (!suitcaseRef.TryGet(out NetworkObject netObj))
+            return;
+
+        SuitCase suitCase = netObj.GetComponent<SuitCase>();
+        if (suitCase == null)
+            return;
+
+        // set NPC follow target
+        suitCase.SetNPCHold(suitcaseHand);
+
+        netObj.TrySetParent(suitcaseHand, false);
     }
 }

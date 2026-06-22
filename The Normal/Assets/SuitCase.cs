@@ -15,6 +15,9 @@ public class SuitCase : NetworkBehaviour
     [Header("Pickup Animation")]
     public float flySpeed = 6f;
 
+    private Transform npcFollowTarget;
+    private bool isHeldByNPC;
+
     public enum ColorSuit
     {
         red,
@@ -106,6 +109,9 @@ public class SuitCase : NetworkBehaviour
         if (isHeldActive || cameraTransform == null)
             return;
 
+        if (isHeldByNPC)
+            return;
+
         if (Time.time < pickupCooldownEnd)
             return;
 
@@ -143,6 +149,24 @@ public class SuitCase : NetworkBehaviour
 
     void LateUpdate()
     {
+        // ================= NPC FOLLOW =================
+        if (isHeldByNPC && npcFollowTarget != null)
+        {
+            transform.position = Vector3.Lerp(
+                transform.position,
+                npcFollowTarget.position,
+                12f * Time.deltaTime
+            );
+
+            transform.rotation = Quaternion.Slerp(
+                transform.rotation,
+                npcFollowTarget.rotation,
+                12f * Time.deltaTime
+            );
+
+            return;
+        }
+
         // 🔥 suitcase blijft luggage slot volgen
         if (isPlacedOnLuggage &&
             followSlot != null &&
@@ -385,5 +409,77 @@ public class SuitCase : NetworkBehaviour
 
         // server sync (belangrijk voor netcode state consistency)
         colliderEnabled.Value = true;
+    }
+
+    [ClientRpc]
+    public void NPCReceiveClientRpc(Vector3 pos, Quaternion rot)
+    {
+        StartCoroutine(FlyToNPC(pos, rot));
+    }
+
+    private IEnumerator FlyToNPC(Vector3 pos, Quaternion rot)
+    {
+        float t = 0f;
+        float duration = 0.4f;
+
+        Vector3 startPos = transform.position;
+        Quaternion startRot = transform.rotation;
+
+        // force drop state
+        isHeldActive = false;
+        isPickedUp = false;
+        camTarget = null;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            float n = Mathf.SmoothStep(0f, 1f, t / duration);
+
+            transform.position = Vector3.Lerp(startPos, pos, n);
+            transform.rotation = Quaternion.Slerp(startRot, rot, n);
+
+            yield return null;
+        }
+
+        transform.position = pos;
+        transform.rotation = rot;
+
+        rb.isKinematic = true;
+    }
+
+    public void ForceReleaseFromPlayer()
+    {
+        isHeldActive = false;
+        isPickedUp = false;
+        camTarget = null;
+    }
+
+    public void SetNPCHold(Transform npcHand)
+    {
+        StopAllCoroutines();
+
+        isHeldActive = false;
+        isPickedUp = false;
+        camTarget = null;
+
+        isHeldByNPC = true;
+        npcFollowTarget = npcHand;
+
+        if (rb != null)
+        {
+            rb.isKinematic = true;
+            rb.useGravity = false;
+        }
+
+        // 🔥 BELANGRIJK: collider uitzetten
+        ForceDisableCollider();
+    }
+
+    public void ForceDisableCollider()
+    {
+        if (col != null)
+            col.enabled = false;
+
+        colliderEnabled.Value = false;
     }
 }

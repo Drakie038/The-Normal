@@ -239,10 +239,11 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   highlightColor: {r: 1, g: 1, b: 1, a: 1}
   intensity: 0.05
-  distanceInFront: 0.75
-  heightOffset: -0.5
+  distanceInFront: 0.5
+  heightOffset: -0.65
   flySpeed: 1.5
   color: 7
+  isDienblad: 0
   colliderEnabled:
     UpdateTraits:
       MinSecondsBetweenUpdates: 0
