@@ -510,6 +510,26 @@ public class CameraMovement : MonoBehaviour
 
         if (Physics.Raycast(ray, out RaycastHit hit, doorDetectDistance))
         {
+            Collider col = hit.collider;
+
+            // ❌ blokkeer CharacterController
+            if (col is CharacterController)
+            {
+                ClearInteractions();
+                return;
+            }
+
+            // ❌ alleen BoxCollider en CapsuleCollider toestaan
+            bool allowed =
+                col is BoxCollider ||
+                col is CapsuleCollider;
+
+            if (!allowed)
+            {
+                ClearInteractions();
+                return;
+            }
+
             // ❌ BLOCK EVERYTHING THAT IS NOT INTERACT
             if (!hit.collider.CompareTag("Interact"))
             {

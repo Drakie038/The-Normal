@@ -150,8 +150,14 @@ public class SuitCase : NetworkBehaviour
     void LateUpdate()
     {
         // ================= NPC FOLLOW =================
-        if (isHeldByNPC && npcFollowTarget != null)
+        if (isHeldByNPC)
         {
+            if (npcFollowTarget == null)
+            {
+                isHeldByNPC = false;
+                return;
+            }
+
             transform.position = Vector3.Lerp(
                 transform.position,
                 npcFollowTarget.position,
@@ -462,6 +468,9 @@ public class SuitCase : NetworkBehaviour
         isPickedUp = false;
         camTarget = null;
 
+        isPlacedOnLuggage = false;
+        followSlot = null;
+
         isHeldByNPC = true;
         npcFollowTarget = npcHand;
 
@@ -471,7 +480,6 @@ public class SuitCase : NetworkBehaviour
             rb.useGravity = false;
         }
 
-        // 🔥 BELANGRIJK: collider uitzetten
         ForceDisableCollider();
     }
 
@@ -481,5 +489,22 @@ public class SuitCase : NetworkBehaviour
             col.enabled = false;
 
         colliderEnabled.Value = false;
+    }
+
+    public void ReleaseFromNPC()
+    {
+        isHeldByNPC = false;
+        npcFollowTarget = null;
+
+        if (transform.parent != null)
+            transform.SetParent(null);
+
+        if (rb != null)
+        {
+            rb.isKinematic = false;
+            rb.useGravity = true;
+        }
+
+        ForceEnableCollider();
     }
 }

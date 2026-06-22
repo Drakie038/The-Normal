@@ -41,33 +41,168 @@ public class LobbyNPC : NetworkBehaviour
 
     public Transform suitcaseHand; // child object bij NPC (hand socket)
 
+    private CapsuleCollider npcCollider;
+
+    private SuitCase carriedSuitcase;
+    private Transform currentDropTarget;
+    private int currentDropSlot = -1;
+
+    [Header("Suitcase Drop Slots")]
+    public Transform[] suitcaseDropSlots;
+    private bool[] slotOccupied;
+
+    private bool isDroppingSuitcase;
+
+    private bool hasDropTask;
+    private float dropTime;
+    private float minDropDelay = 5f;
+    private float maxDropDelay = 12f;
+
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
+        npcCollider = GetComponent<CapsuleCollider>();
+
+        if (npcCollider != null)
+            npcCollider.enabled = false; // 🔥 default uit
+    }
+
+    private void SetNpcCollider(bool value)
+    {
+        if (npcCollider != null)
+            npcCollider.enabled = value;
     }
 
     public override void OnNetworkSpawn()
     {
         if (IsServer)
         {
+            slotOccupied = new bool[suitcaseDropSlots.Length];
+
             lastPosition = transform.position;
             StartCoroutine(PatrolRoutine());
         }
+    }
+
+    private int GetFreeSlotIndex()
+    {
+        for (int i = 0; i < suitcaseDropSlots.Length; i++)
+        {
+            if (!slotOccupied[i])
+                return i;
+        }
+        return -1;
     }
 
     private void Update()
     {
         if (!IsServer) return;
 
-        if (currentTargetPlayer != null)
+        // 1. DROPPING PRIORITY
+        if (carriedSuitcase != null && currentDropTarget != null)
         {
-            MoveTo(currentTargetPlayer.position);
+            MoveTo(currentDropTarget.position);
+
+            float dist = Vector3.Distance(transform.position, currentDropTarget.position);
+
+            if (dist < 0.3f && !isDroppingSuitcase)
+            {
+                StartCoroutine(DropSuitcaseRoutine());
+            }
+
             return;
         }
 
+        // 2. PLAYER PRIORITY (BEL)
+        if (currentTargetPlayer != null)
+        {
+            MoveTo(currentTargetPlayer.position);
+            HandleFootsteps();
+            return;
+        }
+
+        // 3. PATROL
         MoveTo(patrolTarget);
 
         HandleFootsteps();
+    }
+
+    private IEnumerator DropSuitcaseRoutine()
+    {
+        if (carriedSuitcase == null)
+            yield break;
+
+        if (isDroppingSuitcase)
+            yield break;
+
+        isDroppingSuitcase = true;
+
+        isResponding = false;
+
+        // reserveer slot
+        slotOccupied[currentDropSlot] = true;
+
+        Transform slot = suitcaseDropSlots[currentDropSlot];
+        NetworkObject suitcaseNet =
+            carriedSuitcase.GetComponent<NetworkObject>();
+
+        // NPC laat suitcase los
+        carriedSuitcase.ReleaseFromNPC();
+
+        // physics uit zodat de lerp niet verstoord wordt
+        Rigidbody rb = carriedSuitcase.GetComponent<Rigidbody>();
+
+        if (rb != null)
+        {
+            rb.isKinematic = true;
+            rb.useGravity = false;
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+
+        carriedSuitcase.ForceDisableCollider();
+
+        Vector3 startPos = carriedSuitcase.transform.position;
+        Quaternion startRot = carriedSuitcase.transform.rotation;
+
+        float t = 0f;
+        float duration = 0.35f;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+
+            float n = Mathf.SmoothStep(0f, 1f, t / duration);
+
+            carriedSuitcase.transform.position =
+                Vector3.Lerp(startPos, slot.position, n);
+
+            carriedSuitcase.transform.rotation =
+                Quaternion.Slerp(startRot, slot.rotation, n);
+
+            yield return null;
+        }
+
+        // SNAP EXACT CENTER
+        carriedSuitcase.transform.SetParent(slot, true);
+
+        // force LOCAL ZERO (dit is jouw fix)
+        carriedSuitcase.transform.localPosition = Vector3.zero;
+        carriedSuitcase.transform.localRotation = Quaternion.identity;
+
+        // nu parenten zodat hij netjes blijft liggen
+        if (suitcaseNet != null)
+            suitcaseNet.TrySetParent(slot, false);
+
+        // reset NPC state
+        carriedSuitcase = null;
+        currentDropTarget = null;
+        currentDropSlot = -1;
+
+        isResponding = false;
+
+        hasDropTask = false;
+        isDroppingSuitcase = false;
     }
 
     // =========================
@@ -133,12 +268,22 @@ public class LobbyNPC : NetworkBehaviour
     {
         if (!IsServer) return;
 
+        // NPC draagt een suitcase -> negeer de bel volledig
+        if (carriedSuitcase != null || isDroppingSuitcase || hasDropTask)
+        {
+            currentTargetPlayer = null;
+            isResponding = false;
+            SetNpcCollider(false);
+            return;
+        }
+
         currentTargetPlayer = player;
         isResponding = true;
 
-        PlayBellResponseSoundClientRpc(); // 👈 HIER TOEVOEGEN
+        SetNpcCollider(true);
 
-        // restart timer als hij al bezig is
+        PlayBellResponseSoundClientRpc();
+
         if (returnRoutine != null)
             StopCoroutine(returnRoutine);
 
@@ -151,6 +296,8 @@ public class LobbyNPC : NetworkBehaviour
 
         currentTargetPlayer = null;
         isResponding = false;
+
+        SetNpcCollider(false); // 🔥 UIT zodra hij stopt met targeten
 
         returnRoutine = null;
     }
@@ -237,9 +384,79 @@ public class LobbyNPC : NetworkBehaviour
         if (suitCase == null)
             return;
 
-        // set NPC follow target
+        // 🔥 stop direct met naar speler lopen
+        currentTargetPlayer = null;
+        isResponding = false;
+
+        if (returnRoutine != null)
+        {
+            StopCoroutine(returnRoutine);
+            returnRoutine = null;
+        }
+
+        SetNpcCollider(false);
+
+        // suitcase oppakken
         suitCase.SetNPCHold(suitcaseHand);
 
         netObj.TrySetParent(suitcaseHand, false);
+
+        carriedSuitcase = suitCase;
+
+        // BELANGRIJK: eerst rondlopen
+        PlanDropTask(suitCase);
+    }
+
+    private void PlanDropTask(SuitCase suitcase)
+    {
+        if (!IsServer) return;
+
+        hasDropTask = true;
+
+        float delay = Random.Range(minDropDelay, maxDropDelay);
+        dropTime = Time.time + delay;
+
+        StartCoroutine(DropPlannerRoutine());
+    }
+
+    private IEnumerator DropPlannerRoutine()
+    {
+        while (hasDropTask)
+        {
+            // nog niet tijd om te droppen → NPC blijft gewoon patrouilleren
+            if (Time.time < dropTime)
+            {
+                yield return null;
+                continue;
+            }
+
+            // kies drop slot pas op het moment zelf
+            int slotIndex = GetFreeSlotIndex();
+
+            if (slotIndex != -1 && carriedSuitcase != null)
+            {
+                currentDropSlot = slotIndex;
+                currentDropTarget = suitcaseDropSlots[slotIndex];
+
+                isResponding = true; // mag naar drop gaan
+            }
+
+            hasDropTask = false;
+            yield break;
+        }
+    }
+
+    public void TryDropSuitcase(SuitCase suitcase)
+    {
+        if (!IsServer) return;
+
+        int slotIndex = GetFreeSlotIndex();
+        if (slotIndex == -1) return;
+
+        carriedSuitcase = suitcase;
+        currentDropSlot = slotIndex;
+        currentDropTarget = suitcaseDropSlots[slotIndex];
+
+        isResponding = true;
     }
 }
