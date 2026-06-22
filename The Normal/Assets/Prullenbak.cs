@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
+using Unity.Netcode;
 
-public class Prullenbak : MonoBehaviour
+public class Prullenbak : NetworkBehaviour
 {
     [Header("Trash Target (bin inside)")]
     public Transform trashTarget;
@@ -12,6 +13,10 @@ public class Prullenbak : MonoBehaviour
     [Header("Highlight Settings")]
     public Color highlightColor = Color.yellow;
     [Range(0f, 2f)] public float intensity = 0.05f;
+
+    [Header("Audio")]
+    public AudioSource audioSource;
+    public AudioClip trashSound;
 
     public Vector3 openRotation = new Vector3(-110f, 0f, 0f);
     public float lidSpeed = 6f;
@@ -98,5 +103,36 @@ public class Prullenbak : MonoBehaviour
         }
 
         lid.localRotation = end;
+    }
+
+    public void PlayTrashSound()
+    {
+        if (NetworkManager.Singleton == null)
+            return;
+
+        // Host/server stuurt geluid naar iedereen
+        if (IsServer)
+        {
+            PlayTrashSoundClientRpc();
+        }
+        else
+        {
+            RequestPlayTrashSoundServerRpc();
+        }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void RequestPlayTrashSoundServerRpc()
+    {
+        PlayTrashSoundClientRpc();
+    }
+
+    [ClientRpc]
+    private void PlayTrashSoundClientRpc()
+    {
+        if (audioSource != null && trashSound != null)
+        {
+            audioSource.PlayOneShot(trashSound);
+        }
     }
 }

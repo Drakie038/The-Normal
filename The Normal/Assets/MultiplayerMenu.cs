@@ -1097,6 +1097,11 @@ public class MultiplayerMenu : MonoBehaviour
         searching = false;
         forceCancelled = true;
 
+        if (state)
+        {
+            StopMenuMusic(); // ✅ HIER centraal
+        }
+
         // MENU UI
         startButton?.gameObject.SetActive(!state);
         multiplayerButton?.gameObject.SetActive(!state);

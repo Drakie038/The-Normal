@@ -7,7 +7,7 @@ public class CameraFade : MonoBehaviour
     public static CameraFade Instance;
 
     [SerializeField] private Image blackImage;
-    [SerializeField] private float fadeDuration = 2f;
+    [SerializeField] private float fadeDuration = 0.01f;
 
     private Coroutine hideRoutine;
 
@@ -19,7 +19,7 @@ public class CameraFade : MonoBehaviour
             blackImage.enabled = false;
     }
 
-    public void ShowFade(float autoHideTime = 1f)
+    public void ShowFade(float autoHideTime = 0.01f)
     {
         if (blackImage == null)
             return;

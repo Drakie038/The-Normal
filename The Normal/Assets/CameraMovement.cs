@@ -743,7 +743,10 @@ public class CameraMovement : MonoBehaviour
                 {
                     if (Input.GetKeyDown(KeyCode.E))
                     {
+                        trash.PlayTrashSound();
+
                         StartCoroutine(heldDienBlad.FlyIntoTrash(trash));
+
                         heldDienBlad = null;
                         currentDienBlad = null;
                     }

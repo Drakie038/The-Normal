@@ -686,24 +686,35 @@ public class ElevatorPlayers : NetworkBehaviour
     public void ForceStartElevatorServerRpc()
     {
         if (elevatorBusy) return;
-        if (timerRunning) return;
+
+        List<ulong> passengers = playersInside.ToList(); // 🔥 SNAPSHOT HIER
 
         elevatorForceStarted = true;
-        elevatorLocked = true; // 🔥 BELANGRIJK
+        elevatorLocked = true;
 
-        lockCollider.enabled = true; // 🔒 direct dicht
+        lockCollider.enabled = true;
 
-        HideAllElevatorUIClientRpc(); // 👈 UI direct weg
+        HideAllElevatorUIClientRpc();
 
-        if (!timerRunning)
+        StopLobbyMusicClientRpc(BuildRpcParams(passengers));
+
+        timerRunning = true;
+
+        StartFullTimerClientRpc(
+            fullTimerDuration,
+            BuildRpcParams(passengers)
+        );
+    }
+
+    private ClientRpcParams BuildRpcParams(List<ulong> ids)
+    {
+        return new ClientRpcParams
         {
-            timerRunning = true;
-
-            StartFullTimerClientRpc(
-                fullTimerDuration,
-                GetPassengersRpcParams()
-            );
-        }
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = ids.ToArray()
+            }
+        };
     }
 
     [ClientRpc]
@@ -769,5 +780,11 @@ public class ElevatorPlayers : NetworkBehaviour
             return;
 
         elevatorMoveAudioSource.Stop();
+    }
+
+    [ClientRpc]
+    private void StopLobbyMusicClientRpc(ClientRpcParams rpcParams = default)
+    {
+        LobbyMusicManager.Instance?.FadeOutLobbyMusicLocal();
     }
 }
