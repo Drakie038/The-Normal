@@ -142,6 +142,8 @@ public class CameraMovement : MonoBehaviour
     private LuggageCart currentLuggage;
 
     private SuitCase currentSuitCase;
+
+    private Exit currentExit;
     public void SetDoorLeanTarget(float value)
     {
         doorLeanTarget = value;
@@ -754,6 +756,29 @@ public class CameraMovement : MonoBehaviour
 
                 return;
             }
+
+            // ================= EXIT =================
+            Exit exit = hit.collider.GetComponentInParent<Exit>();
+
+            if (exit != null)
+            {
+                if (currentExit != exit)
+                {
+                    if (currentExit != null)
+                        currentExit.SetHighlight(false);
+
+                    currentExit = exit;
+                }
+
+                currentExit.SetHighlight(true);
+
+                if (Input.GetKeyDown(KeyCode.E))
+                {
+                    currentExit.TryExit();
+                }
+
+                return;
+            }
         }
             ClearInteractions();
     }
@@ -896,6 +921,12 @@ public class CameraMovement : MonoBehaviour
         foreach (var t in trashBins)
         {
             t.SetHighlight(false);
+        }
+
+        if (currentExit != null)
+        {
+            currentExit.SetHighlight(false);
+            currentExit = null;
         }
     }
 
