@@ -55,8 +55,14 @@ public class LobbyNPC : NetworkBehaviour
 
     private bool hasDropTask;
     private float dropTime;
-    private float minDropDelay = 5f;
-    private float maxDropDelay = 12f;
+    private float minDropDelay = 3f;
+    private float maxDropDelay = 7.5f;
+
+    public NetworkVariable<bool> colliderEnabled = new NetworkVariable<bool>(
+    false,
+    NetworkVariableReadPermission.Everyone,
+    NetworkVariableWritePermission.Server
+);
 
     private void Awake()
     {
@@ -69,8 +75,9 @@ public class LobbyNPC : NetworkBehaviour
 
     private void SetNpcCollider(bool value)
     {
-        if (npcCollider != null)
-            npcCollider.enabled = value;
+        if (!IsServer) return;
+
+        colliderEnabled.Value = value;
     }
 
     public override void OnNetworkSpawn()
@@ -78,10 +85,18 @@ public class LobbyNPC : NetworkBehaviour
         if (IsServer)
         {
             slotOccupied = new bool[suitcaseDropSlots.Length];
-
             lastPosition = transform.position;
             StartCoroutine(PatrolRoutine());
         }
+
+        colliderEnabled.OnValueChanged += OnColliderChanged;
+        OnColliderChanged(false, colliderEnabled.Value);
+    }
+
+    private void OnColliderChanged(bool oldValue, bool newValue)
+    {
+        if (npcCollider != null)
+            npcCollider.enabled = newValue;
     }
 
     private int GetFreeSlotIndex()
@@ -98,7 +113,19 @@ public class LobbyNPC : NetworkBehaviour
     {
         if (!IsServer) return;
 
-        // 1. DROPPING PRIORITY
+        // =========================
+        // 0. BEL PRIORITY (FIX)
+        // =========================
+        if (currentTargetPlayer != null)
+        {
+            MoveTo(currentTargetPlayer.position);
+            HandleFootsteps();
+            return;
+        }
+
+        // =========================
+        // 1. DROP PRIORITY
+        // =========================
         if (carriedSuitcase != null && currentDropTarget != null)
         {
             MoveTo(currentDropTarget.position);
@@ -110,20 +137,14 @@ public class LobbyNPC : NetworkBehaviour
                 StartCoroutine(DropSuitcaseRoutine());
             }
 
-            return;
-        }
-
-        // 2. PLAYER PRIORITY (BEL)
-        if (currentTargetPlayer != null)
-        {
-            MoveTo(currentTargetPlayer.position);
             HandleFootsteps();
             return;
         }
 
-        // 3. PATROL
+        // =========================
+        // 2. PATROL
+        // =========================
         MoveTo(patrolTarget);
-
         HandleFootsteps();
     }
 
@@ -199,10 +220,21 @@ public class LobbyNPC : NetworkBehaviour
         currentDropTarget = null;
         currentDropSlot = -1;
 
-        isResponding = false;
-
-        hasDropTask = false;
+        // 🔥 BELANGRIJK: drop moet BEL state niet blokkeren
         isDroppingSuitcase = false;
+        hasDropTask = false;
+
+        // reset respond state veilig
+        isResponding = false;
+    }
+
+    private void ResetDropState()
+    {
+        carriedSuitcase = null;
+        currentDropTarget = null;
+        currentDropSlot = -1;
+        isDroppingSuitcase = false;
+        hasDropTask = false;
     }
 
     // =========================
@@ -268,7 +300,7 @@ public class LobbyNPC : NetworkBehaviour
     {
         if (!IsServer) return;
 
-        // NPC draagt een suitcase -> negeer de bel volledig
+        // ❌ NIET reageren als NPC in drop state zit
         if (carriedSuitcase != null || isDroppingSuitcase || hasDropTask)
         {
             currentTargetPlayer = null;
@@ -277,6 +309,21 @@ public class LobbyNPC : NetworkBehaviour
             return;
         }
 
+        // =========================
+        // 🔥 HARD INTERRUPT ALL STATES
+        // =========================
+        carriedSuitcase = null;
+        currentDropTarget = null;
+        currentDropSlot = -1;
+        hasDropTask = false;
+        isDroppingSuitcase = false;
+
+        StopAllCoroutines(); // BELANGRIJK: voorkomt race met drop planner
+        StartCoroutine(PatrolRoutine()); // optioneel: reset flow stabiel
+
+        // =========================
+        // BEL STATE
+        // =========================
         currentTargetPlayer = player;
         isResponding = true;
 
@@ -288,6 +335,8 @@ public class LobbyNPC : NetworkBehaviour
             StopCoroutine(returnRoutine);
 
         returnRoutine = StartCoroutine(ReturnAfterDelay());
+
+        ResetDropState();
     }
 
     private IEnumerator ReturnAfterDelay()

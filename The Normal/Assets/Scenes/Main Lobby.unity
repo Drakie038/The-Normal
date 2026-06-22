@@ -6662,7 +6662,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5719864177197062347, guid: 255bb3c2a401b3943824e306b69777a0, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.069
+      value: 0.006
       objectReference: {fileID: 0}
     - target: {fileID: 5719864177197062347, guid: 255bb3c2a401b3943824e306b69777a0, type: 3}
       propertyPath: m_LocalPosition.z
@@ -6790,7 +6790,7 @@ CharacterController:
   m_StepOffset: 0.3
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 1, z: -0.1}
+  m_Center: {x: 0, y: 1.2, z: -0.1}
 --- !u!82 &1328824600
 AudioSource:
   m_ObjectHideFlags: 0
@@ -7009,7 +7009,7 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 1.67
+  m_Radius: 1.75
   m_Height: 2.1499999
   m_Direction: 1
   m_Center: {x: -0.000000029802322, y: 1.0742453, z: -0.13334456}
