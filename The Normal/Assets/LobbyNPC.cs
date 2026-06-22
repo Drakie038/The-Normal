@@ -58,6 +58,15 @@ public class LobbyNPC : NetworkBehaviour
     private float minDropDelay = 3f;
     private float maxDropDelay = 7.5f;
 
+    [Header("Counter")]
+    public Transform counterTarget;
+    private bool isDeliveringToCounter;
+
+    private bool isFetchingFromSlot;
+    private Transform fetchSlot;
+
+    private bool isOnCounter;
+
     public NetworkVariable<bool> colliderEnabled = new NetworkVariable<bool>(
     false,
     NetworkVariableReadPermission.Everyone,
@@ -119,6 +128,36 @@ public class LobbyNPC : NetworkBehaviour
         if (currentTargetPlayer != null)
         {
             MoveTo(currentTargetPlayer.position);
+
+            float dist = Vector3.Distance(transform.position, currentTargetPlayer.position);
+
+            // =========================
+            // FETCH FROM DROPTARGET
+            // =========================
+            if (isFetchingFromSlot && dist < 0.4f)
+            {
+                SuitCase sc = fetchSlot != null ? fetchSlot.GetComponentInChildren<SuitCase>() : null;
+
+                if (sc != null)
+                {
+                    sc.SetNPCHold(suitcaseHand);
+
+                    NetworkObject netObj = sc.GetComponent<NetworkObject>();
+                    if (netObj != null)
+                        netObj.TrySetParent(suitcaseHand, false);
+
+                    carriedSuitcase = sc;
+
+                    isFetchingFromSlot = false;
+                    fetchSlot = null;
+
+                    // 🔥 NIEUW: direct naar counter sturen
+                    isDeliveringToCounter = true;
+                    currentTargetPlayer = counterTarget;
+                    isResponding = true;
+                }
+            }
+
             HandleFootsteps();
             return;
         }
@@ -142,7 +181,25 @@ public class LobbyNPC : NetworkBehaviour
         }
 
         // =========================
-        // 2. PATROL
+        // 2. COUNTER DROP PRIORITY
+        // =========================
+        if (isDeliveringToCounter && carriedSuitcase != null)
+        {
+            MoveTo(counterTarget.position);
+
+            float dist = Vector3.Distance(transform.position, counterTarget.position);
+
+            if (dist < 2f && !isDroppingSuitcase)
+            {
+                StartCoroutine(DropAtCounterRoutine());
+            }
+
+            HandleFootsteps();
+            return;
+        }
+
+        // =========================
+        // 3. PATROL
         // =========================
         MoveTo(patrolTarget);
         HandleFootsteps();
@@ -317,6 +374,8 @@ public class LobbyNPC : NetworkBehaviour
         currentDropSlot = -1;
         hasDropTask = false;
         isDroppingSuitcase = false;
+
+        isOnCounter = true; // 🔥 ADD THIS
 
         StopAllCoroutines(); // BELANGRIJK: voorkomt race met drop planner
         StartCoroutine(PatrolRoutine()); // optioneel: reset flow stabiel
@@ -507,5 +566,83 @@ public class LobbyNPC : NetworkBehaviour
         currentDropTarget = suitcaseDropSlots[slotIndex];
 
         isResponding = true;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void RequestScanDropTargetsServerRpc(ServerRpcParams rpcParams = default)
+    {
+        if (!IsServer) return;
+
+        if (carriedSuitcase != null) return; // NPC mag niet dubbel iets doen
+
+        // alleen als NPC niet al bezig is
+        if (isDroppingSuitcase || isFetchingFromSlot) return;
+
+        ScanDropTargetsForPlayer();
+    }
+
+    private void ScanDropTargetsForPlayer()
+    {
+        for (int i = 0; i < suitcaseDropSlots.Length; i++)
+        {
+            Transform slot = suitcaseDropSlots[i];
+
+            if (slot.childCount > 0 && slot != counterTarget)
+            {
+                SuitCase sc = slot.GetComponentInChildren<SuitCase>();
+
+                if (sc != null && sc.transform.parent != counterTarget)
+                {
+                    isFetchingFromSlot = true;
+                    fetchSlot = slot;
+
+                    currentTargetPlayer = slot; // 👈 NPC loopt naar drop slot
+                    isResponding = true;
+
+                    return;
+                }
+            }
+        }
+    }
+
+    private IEnumerator DropAtCounterRoutine()
+    {
+        if (carriedSuitcase == null)
+            yield break;
+
+        isDroppingSuitcase = true;
+
+        Vector3 startPos = carriedSuitcase.transform.position;
+        Quaternion startRot = carriedSuitcase.transform.rotation;
+
+        float t = 0f;
+        float duration = 0.4f;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+
+            float n = Mathf.SmoothStep(0f, 1f, t / duration);
+
+            carriedSuitcase.transform.position =
+                Vector3.Lerp(startPos, counterTarget.position, n);
+
+            carriedSuitcase.transform.rotation =
+                Quaternion.Slerp(startRot, counterTarget.rotation, n);
+
+            yield return null;
+        }
+
+        carriedSuitcase.transform.SetParent(counterTarget, true);
+        carriedSuitcase.transform.localPosition = Vector3.zero;
+        carriedSuitcase.transform.localRotation = Quaternion.identity;
+
+        NetworkObject netObj = carriedSuitcase.GetComponent<NetworkObject>();
+        if (netObj != null)
+            netObj.TrySetParent(counterTarget, false);
+
+        carriedSuitcase = null;
+        isDeliveringToCounter = false;
+        isDroppingSuitcase = false;
     }
 }

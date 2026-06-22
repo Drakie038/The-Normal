@@ -802,6 +802,7 @@ public class CameraMovement : MonoBehaviour
 
             LobbyNPC npc = hit.collider.GetComponentInParent<LobbyNPC>();
 
+
             if (npc != null)
             {
                 if (heldSuitCase != null)
@@ -815,6 +816,11 @@ public class CameraMovement : MonoBehaviour
                     npc.TakeSuitcaseServerRpc(netObj);
 
                     return;
+                }
+
+                if (heldSuitCase == null)
+                {
+                    npc.RequestScanDropTargetsServerRpc();
                 }
             }
         }

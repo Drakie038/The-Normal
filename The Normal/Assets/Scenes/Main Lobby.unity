@@ -595,6 +595,59 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: -2138796739762357153, guid: f0455047ff0873c498621f2a3d33f24f, type: 3}
+--- !u!1 &153841481
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 153841482}
+  - component: {fileID: 153841483}
+  m_Layer: 0
+  m_Name: ToonBank
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &153841482
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 153841481}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.453, y: 1.25, z: 0}
+  m_LocalScale: {x: 1, y: 0.2, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1793850202}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &153841483
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 153841481}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1.25}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &158415076 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6344262985070650767, guid: 91a96d9c4198a5043a8169781e16428b, type: 3}
@@ -1918,6 +1971,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7245093707703593806, guid: 91a96d9c4198a5043a8169781e16428b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1498139414}
+    - targetCorrespondingSourceObject: {fileID: 7245093707703593806, guid: 91a96d9c4198a5043a8169781e16428b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 153841482}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 3075077405346602150, guid: 91a96d9c4198a5043a8169781e16428b, type: 3}
       insertIndex: -1
@@ -6751,8 +6807,8 @@ MonoBehaviour:
   moveSpeed: 1
   rotationSpeed: 3
   areaCenter: {fileID: 668607399}
-  areaSizeX: 2.5
-  areaSizeZ: 1.7
+  areaSizeX: 2
+  areaSizeZ: 1.3
   audioSource: {fileID: 1328824600}
   bellResponseClip: {fileID: 8300000, guid: f8442db400306ac4899164c4ff80774d, type: 3}
   footstepSource: {fileID: 1328824606}
@@ -6766,6 +6822,12 @@ MonoBehaviour:
   - {fileID: 1065335174}
   - {fileID: 111815665}
   - {fileID: 1498139414}
+  counterTarget: {fileID: 153841482}
+  colliderEnabled:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 0
 --- !u!143 &1328824599
 CharacterController:
   m_ObjectHideFlags: 0
@@ -7009,7 +7071,7 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 1.75
+  m_Radius: 1.5
   m_Height: 2.1499999
   m_Direction: 1
   m_Center: {x: -0.000000029802322, y: 1.0742453, z: -0.13334456}

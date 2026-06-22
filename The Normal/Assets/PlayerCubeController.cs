@@ -641,12 +641,6 @@ public NetworkVariable<bool> inPushMode = new NetworkVariable<bool>(false);
 
         currentLuggage.transform.position += move;
 
-        if (Physics.SphereCast(oldPos, 0.3f, dir, out RaycastHit hit, move.magnitude))
-        {
-            currentLuggage.transform.position = oldPos;
-            return;
-        }
-
         Vector3 delta = currentLuggage.transform.position - oldPos;
         controller.Move(delta);
 
