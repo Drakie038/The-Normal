@@ -65,6 +65,13 @@ public class SuitCase : NetworkBehaviour
 
     public bool isDienblad;
 
+    public bool IsOnCounter { get; private set; }
+
+    public void SetOnCounter(bool value)
+    {
+        IsOnCounter = value;
+    }
+
     public NetworkVariable<bool> colliderEnabled = new NetworkVariable<bool>(
     true,
     NetworkVariableReadPermission.Everyone,
@@ -125,6 +132,8 @@ public class SuitCase : NetworkBehaviour
 
         flyStartPos = transform.position;
         flyStartRot = transform.rotation;
+
+        SetOnCounter(false);
 
         // 🔥 IMPORTANT: detach from luggage properly
         if (currentCart != null)

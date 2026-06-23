@@ -146,12 +146,21 @@ public class LobbyNPC : NetworkBehaviour
                     if (netObj != null)
                         netObj.TrySetParent(suitcaseHand, false);
 
+                    // slot vrijmaken
+                    for (int i = 0; i < suitcaseDropSlots.Length; i++)
+                    {
+                        if (suitcaseDropSlots[i] == fetchSlot)
+                        {
+                            slotOccupied[i] = false;
+                            break;
+                        }
+                    }
+
                     carriedSuitcase = sc;
 
                     isFetchingFromSlot = false;
                     fetchSlot = null;
 
-                    // 🔥 NIEUW: direct naar counter sturen
                     isDeliveringToCounter = true;
                     currentTargetPlayer = counterTarget;
                     isResponding = true;
@@ -587,16 +596,16 @@ public class LobbyNPC : NetworkBehaviour
         {
             Transform slot = suitcaseDropSlots[i];
 
-            if (slot.childCount > 0 && slot != counterTarget)
+            if (slot.childCount > 0)
             {
                 SuitCase sc = slot.GetComponentInChildren<SuitCase>();
 
-                if (sc != null && sc.transform.parent != counterTarget)
+                if (sc != null && !sc.IsOnCounter)
                 {
                     isFetchingFromSlot = true;
                     fetchSlot = slot;
 
-                    currentTargetPlayer = slot; // 👈 NPC loopt naar drop slot
+                    currentTargetPlayer = slot;
                     isResponding = true;
 
                     return;
@@ -609,6 +618,8 @@ public class LobbyNPC : NetworkBehaviour
     {
         if (carriedSuitcase == null)
             yield break;
+
+        carriedSuitcase.ReleaseFromNPC();
 
         isDroppingSuitcase = true;
 
@@ -633,13 +644,16 @@ public class LobbyNPC : NetworkBehaviour
             yield return null;
         }
 
-        carriedSuitcase.transform.SetParent(counterTarget, true);
-        carriedSuitcase.transform.localPosition = Vector3.zero;
-        carriedSuitcase.transform.localRotation = Quaternion.identity;
+        // alleen exact op de toonbank zetten
+        carriedSuitcase.transform.position = counterTarget.position;
+        carriedSuitcase.transform.rotation = counterTarget.rotation;
 
+        // geen parent zetten!
         NetworkObject netObj = carriedSuitcase.GetComponent<NetworkObject>();
         if (netObj != null)
-            netObj.TrySetParent(counterTarget, false);
+            netObj.TryRemoveParent();   
+
+        carriedSuitcase.SetOnCounter(true);
 
         carriedSuitcase = null;
         isDeliveringToCounter = false;
