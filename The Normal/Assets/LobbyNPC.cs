@@ -366,12 +366,14 @@ public class LobbyNPC : NetworkBehaviour
     {
         if (!IsServer) return;
 
-        // ❌ NIET reageren als NPC in drop state zit
-        if (carriedSuitcase != null || isDroppingSuitcase || hasDropTask)
+        // ❌ NIET reageren als NPC bezig is met koffers
+        if (carriedSuitcase != null ||
+            isDroppingSuitcase ||
+            hasDropTask ||
+            isFetchingFromSlot ||
+            isDeliveringToCounter ||
+            currentDropTarget != null)
         {
-            currentTargetPlayer = null;
-            isResponding = false;
-            SetNpcCollider(false);
             return;
         }
 

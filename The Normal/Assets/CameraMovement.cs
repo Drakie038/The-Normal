@@ -745,7 +745,7 @@ public class CameraMovement : MonoBehaviour
 
                 if (Input.GetKeyDown(KeyCode.E))
                 {
-                    currentDienBlad.PickUp(transform);
+                    currentDienBlad.GetComponent<DienBlad>().PickUp(Camera.main.transform);
                     heldDienBlad = currentDienBlad;
                 }
 

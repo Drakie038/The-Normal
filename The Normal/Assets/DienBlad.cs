@@ -52,17 +52,41 @@ public class DienBlad : NetworkBehaviour
 
     public void PickUp(Transform cam)
     {
+        if (!IsOwner)
+        {
+            PickUpServerRpc(NetworkManager.Singleton.LocalClientId);
+            return;
+        }
+
+        DoPickUp(cam);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void PickUpServerRpc(ulong clientId)
+    {
+        PickUpClientRpc(clientId);
+    }
+
+    [ClientRpc]
+    private void PickUpClientRpc(ulong clientId)
+    {
+        if (NetworkManager.Singleton.LocalClientId != clientId)
+            return;
+
+        DoPickUp(Camera.main.transform);
+    }
+
+    private void DoPickUp(Transform cam)
+    {
         if (isHeld || cam == null)
             return;
 
-        // Alleen het bovenste bord mag worden opgepakt
         if (houder != null && houder.GetTopPlate() != this)
             return;
 
         isHeld = true;
         camTarget = cam;
 
-        // Verwijder dit bord uit de stapel
         if (houder != null)
             houder.RemovePlate(this);
 
@@ -136,7 +160,23 @@ public class DienBlad : NetworkBehaviour
         if (!isHeld || slot == null)
             return;
 
-        StartCoroutine(FlyToSlot(slot));
+        PlaceToSlotServerRpc(slot.position, slot.rotation);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void PlaceToSlotServerRpc(Vector3 pos, Quaternion rot)
+    {
+        PlaceToSlotClientRpc(pos, rot);
+    }
+
+    [ClientRpc]
+    private void PlaceToSlotClientRpc(Vector3 pos, Quaternion rot)
+    {
+        GameObject temp = new GameObject("TempSlot");
+        temp.transform.position = pos;
+        temp.transform.rotation = rot;
+
+        StartCoroutine(FlyToSlot(temp.transform));
     }
 
     private IEnumerator FlyToSlot(Transform slot)
@@ -241,6 +281,19 @@ public class DienBlad : NetworkBehaviour
 
         trash.CloseLid();
 
-        Destroy(gameObject);
+        if (IsServer)
+        {
+            GetComponent<NetworkObject>().Despawn(true);
+        }
+        else
+        {
+            TrashServerRpc();
+        }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void TrashServerRpc()
+    {
+        GetComponent<NetworkObject>().Despawn(true);
     }
 }
