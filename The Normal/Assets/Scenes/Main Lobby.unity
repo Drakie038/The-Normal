@@ -1118,7 +1118,7 @@ MonoBehaviour:
   serverNameInput: {fileID: 900064565}
   statusText: {fileID: 1856940996}
   debugText: {fileID: 1702787542}
-  playerPrefab: {fileID: 4184002186830431144, guid: 0320d7684524c57488cca3dc56f73558, type: 3}
+  playerPrefab: {fileID: 4191171319641374825, guid: 773a8dc1c98081243bb5f4b59de0a768, type: 3}
   networkManager: {fileID: 656929186}
   startButton: {fileID: 1479033513}
   multiplayerButton: {fileID: 1211790515}
@@ -3746,7 +3746,7 @@ MonoBehaviour:
   NetworkConfig:
     ProtocolVersion: 0
     NetworkTransport: {fileID: 656929185}
-    PlayerPrefab: {fileID: 4184002186830431144, guid: 0320d7684524c57488cca3dc56f73558, type: 3}
+    PlayerPrefab: {fileID: 4191171319641374825, guid: 773a8dc1c98081243bb5f4b59de0a768, type: 3}
     Prefabs:
       NetworkPrefabsLists:
       - {fileID: 11400000, guid: 5d3769ac0c2ba22408dc1ecf6b317d35, type: 2}
@@ -3809,7 +3809,7 @@ MonoBehaviour:
   doorRight: {fileID: 339754353}
   elevatorDoorLeft: {fileID: 474445360}
   elevatorDoorRight: {fileID: 1903541125}
-  moveDistance: 1
+  moveDistance: 1.05
   moveSpeed: 0.5
   delayBeforeOpen: 0
   elevatorDoorDelay: 0.15
@@ -7522,7 +7522,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e72909685dac2ff4d83fafcf042a87f9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraMovement
-  firstPersonOffset: {x: 0, y: 0.75, z: 0}
+  firstPersonOffset: {x: 0, y: 1.5, z: 0}
   mouseSensitivity: 200
   maxLookAngle: 85
   cinematicDuration: 3
