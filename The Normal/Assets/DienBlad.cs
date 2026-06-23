@@ -162,21 +162,28 @@ public class DienBlad : NetworkBehaviour
         if (col != null)
             col.enabled = false;
 
+        // 🎯 bepaal target rotatie
+        Quaternion targetRot = slot.rotation;
+
+        if (type == DienBladType.DienBlad)
+        {
+            targetRot *= Quaternion.Euler(90f, 0f, 0f);
+        }
+
         while (t < duration)
         {
             t += Time.deltaTime;
             float n = Mathf.SmoothStep(0, 1, t / duration);
 
             transform.position = Vector3.Lerp(startPos, slot.position, n);
-            transform.rotation = Quaternion.Slerp(startRot, slot.rotation, n);
+            transform.rotation = Quaternion.Slerp(startRot, targetRot, n);
 
             yield return null;
         }
 
         transform.position = slot.position;
-        transform.rotation = slot.rotation;
+        transform.rotation = targetRot;
 
-        // vastzetten
         transform.SetParent(slot);
     }
 

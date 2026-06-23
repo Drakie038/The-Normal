@@ -8,17 +8,15 @@ public class CreepySounds : MonoBehaviour
     public AudioSource oneShotSound;
     private bool hasPlayedTriggerSound = false;
 
-    [Header("Random ambient sounds")]
-    public List<AudioSource> randomSounds = new List<AudioSource>();
+    [Header("Random ambient sound objects (GameObjects with AudioSources)")]
+    public List<GameObject> randomSoundObjects = new List<GameObject>();
 
     public float minInterval = 5f;
     public float maxInterval = 15f;
 
-    private Coroutine randomSoundRoutine;
-
     void Start()
     {
-        randomSoundRoutine = StartCoroutine(RandomSoundLoop());
+        StartCoroutine(RandomSoundLoop());
     }
 
     private void OnTriggerEnter(Collider other)
@@ -36,18 +34,23 @@ public class CreepySounds : MonoBehaviour
     {
         while (true)
         {
-            float waitTime = Random.Range(minInterval, maxInterval);
-            yield return new WaitForSeconds(waitTime);
+            yield return new WaitForSeconds(Random.Range(minInterval, maxInterval));
 
-            if (randomSounds.Count > 0)
+            if (randomSoundObjects.Count == 0) continue;
+
+            GameObject chosenObject = randomSoundObjects[Random.Range(0, randomSoundObjects.Count)];
+
+            if (chosenObject == null) continue;
+
+            AudioSource[] sources = chosenObject.GetComponents<AudioSource>();
+
+            if (sources.Length == 0) continue;
+
+            AudioSource chosenSource = sources[Random.Range(0, sources.Length)];
+
+            if (chosenSource != null)
             {
-                int index = Random.Range(0, randomSounds.Count);
-                AudioSource chosen = randomSounds[index];
-
-                if (chosen != null)
-                {
-                    chosen.Play();
-                }
+                chosenSource.Play();
             }
         }
     }
