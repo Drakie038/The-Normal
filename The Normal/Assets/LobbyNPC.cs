@@ -134,7 +134,7 @@ public class LobbyNPC : NetworkBehaviour
             // =========================
             // FETCH FROM DROPTARGET
             // =========================
-            if (isFetchingFromSlot && dist < 0.4f)
+            if (isFetchingFromSlot && dist < 1f)
             {
                 SuitCase sc = fetchSlot != null ? fetchSlot.GetComponentInChildren<SuitCase>() : null;
 
@@ -180,7 +180,7 @@ public class LobbyNPC : NetworkBehaviour
 
             float dist = Vector3.Distance(transform.position, currentDropTarget.position);
 
-            if (dist < 0.3f && !isDroppingSuitcase)
+            if (dist < 1.25f && !isDroppingSuitcase)
             {
                 StartCoroutine(DropSuitcaseRoutine());
             }
@@ -198,7 +198,7 @@ public class LobbyNPC : NetworkBehaviour
 
             float dist = Vector3.Distance(transform.position, counterTarget.position);
 
-            if (dist < 2f && !isDroppingSuitcase)
+            if (dist < 3f && !isDroppingSuitcase)
             {
                 StartCoroutine(DropAtCounterRoutine());
             }
