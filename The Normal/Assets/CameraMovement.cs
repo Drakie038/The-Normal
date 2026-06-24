@@ -703,9 +703,14 @@ public class CameraMovement : MonoBehaviour
                 }
 
                 // ================= SLOT HIGHLIGHT =================
-                if (slotIndex != -1)
+                DienBlad placedPlate = (slotIndex != -1) ? houder.GetPlaced(slotIndex) : null;
+
+                // 👉 alleen highlight als:
+                // - speler kijkt naar slot
+                // - EN er iets ligt
+                // - EN speler heeft NIETS vast
+                if (interactingWithSlot && heldDienBlad == null)
                 {
-                    var placedPlate = houder.GetPlaced(slotIndex);
                     SetSlotPlateHighlight(placedPlate);
                 }
                 else
