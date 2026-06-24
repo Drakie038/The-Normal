@@ -64,6 +64,8 @@ public class PlayerCubeController : NetworkBehaviour
 
     private Quaternion luggageRotationOffset;
 
+    private float currentTurnInput;
+
     [Header("Walk Audio")]
     [SerializeField] private AudioSource walkAudioSource;
     [SerializeField] private AudioClip walkClip;
@@ -262,38 +264,9 @@ public class PlayerCubeController : NetworkBehaviour
                 rotationInput *= -1f;
             }
 
-            if (rotationInput != 0f)
-                SendLookInputServerRpc(rotationInput * PushRotationSpeed);
+            currentTurnInput = rotationInput;
 
             moveInput = new Vector2(0f, forward);
-
-            // =====================================================
-            // LUGGAGE FOLLOW (blijft vóór speler + roteert mee)
-            // =====================================================
-            if (currentLuggage != null && hasLuggageOffset)
-            {
-                Vector3 targetPos =
-                    transform.position +
-                    transform.forward * Vector3.Distance(
-                        currentLuggage.transform.position,
-                        transform.position
-                    );
-
-                currentLuggage.transform.position = Vector3.SmoothDamp(
-                    currentLuggage.transform.position,
-                    targetPos, ref velocity,
-                    20f * Time.deltaTime
-                );
-
-                Quaternion targetRot =
-                    transform.rotation * luggageRotationOffset;
-
-                currentLuggage.transform.rotation = Quaternion.Slerp(
-                    currentLuggage.transform.rotation,
-                    targetRot,
-                    8f * Time.deltaTime
-                );
-            }
 
             return;
         }
@@ -325,7 +298,7 @@ public class PlayerCubeController : NetworkBehaviour
             HandlePushMode();
 
             float input = moveInput.y;
-            PushMoveServerRpc(pushTarget.forward, input);
+            PushMoveServerRpc(pushTarget.forward, input, currentTurnInput);
             return;
         }
 
@@ -389,20 +362,15 @@ public class PlayerCubeController : NetworkBehaviour
             return;
 
         controller.enabled = false;
-        transform.position = Vector3.Lerp(transform.position, pushTarget.position, 0.5f);
+        transform.position = Vector3.Lerp(
+            transform.position,
+            pushTarget.position,
+            0.5f
+        );
         controller.enabled = true;
 
-        Vector3 dir = pushTarget.forward;
-        dir.y = 0f;
-
-        if (dir.sqrMagnitude > 0.001f)
-        {
-            transform.rotation = Quaternion.Slerp(
-                transform.rotation,
-                Quaternion.LookRotation(dir),
-                Time.fixedDeltaTime * 10f
-            );
-        }
+        // GEEN rotatie meer hier!
+        // De speler is al uitgelijnd tijdens HandlePushApproach().
     }
 
     [ServerRpc]
@@ -619,7 +587,7 @@ public class PlayerCubeController : NetworkBehaviour
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void PushMoveServerRpc(Vector3 forwardDir, float input)
+    private void PushMoveServerRpc(Vector3 forwardDir, float input, float turnInput)
     {
         if (currentLuggage == null || pushTarget == null)
             return;
@@ -628,35 +596,50 @@ public class PlayerCubeController : NetworkBehaviour
         dir.y = 0f;
         dir.Normalize();
 
-        // =========================
-        // bepaal correcte richting per kant
-        // =========================
         bool isFront = (pushTarget == currentLuggage.pushFor);
 
         if (isFront)
             dir = -dir;
-        else
-            dir = dir;
-
-        // input blijft normaal:
-        // W = +1, S = -1
-        float moveInput = input;
 
         Vector3 move =
             dir *
-            moveInput *
+            input *
             pushSpeed *
             Time.fixedDeltaTime;
 
         Vector3 oldPos = currentLuggage.transform.position;
 
+        // trolley bewegen
         currentLuggage.transform.position += move;
 
+        // speler exact dezelfde beweging geven
         Vector3 delta = currentLuggage.transform.position - oldPos;
         controller.Move(delta);
 
-        currentLuggage.transform.rotation =
-            transform.rotation * luggageRotationOffset;
+        // trolley sturen met A/D
+        if (Mathf.Abs(turnInput) > 0.01f)
+        {
+            float turnAmount =
+                turnInput * 100f * Time.fixedDeltaTime;
+
+            currentLuggage.transform.Rotate(
+                Vector3.up,
+                turnAmount
+            );
+        }
+
+        // speler altijd exact naar de push target laten kijken
+        // speler volgt altijd exact de richting van zijn push target
+        if (pushTarget != null)
+        {
+            Vector3 lookDir = pushTarget.forward;
+            lookDir.y = 0f;
+
+            if (lookDir.sqrMagnitude > 0.001f)
+            {
+                transform.rotation = Quaternion.LookRotation(lookDir);
+            }
+        }
     }
 
     private bool IsCorrectPushSide()

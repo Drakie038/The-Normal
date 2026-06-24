@@ -232,7 +232,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   moveSpeed: 2
   pushSpeed: 1
-  PushRotationSpeed: 0.25
+  PushRotationSpeed: 0.2
   gravity: -9.81
   frozen: 0
   inElevator:
