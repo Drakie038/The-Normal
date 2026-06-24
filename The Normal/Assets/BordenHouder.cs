@@ -32,6 +32,8 @@ public class BordenHouder : MonoBehaviour
             return false;
 
         placed[index] = board;
+        board.currentSlotIndex = index;
+
         return true;
     }
 
@@ -85,5 +87,50 @@ public class BordenHouder : MonoBehaviour
             if (slot.ghostDienblad != null)
                 slot.ghostDienblad.SetActive(true);
         }
+    }
+
+    public DienBlad RemoveFromSlot(int index)
+    {
+        if (index < 0 || index >= placementSlots.Length)
+            return null;
+
+        if (placed[index] == null)
+            return null;
+
+        DienBlad board = placed[index];
+        placed[index] = null;
+
+        board.currentSlotIndex = -1;
+        board.transform.SetParent(null);
+        board.houder = null;
+
+        return board;
+    }
+
+    public void SetSlotHighlight(int index, bool active)
+    {
+        if (index < 0 || index >= placed.Length)
+            return;
+
+        if (placed[index] == null)
+            return;
+
+        placed[index].SetHighlight(active);
+    }
+
+    public DienBlad GetPlaced(int index)
+    {
+        if (index < 0 || index >= placed.Length)
+            return null;
+
+        return placed[index];
+    }
+
+    public DienBlad GetPlateAt(int index)
+    {
+        if (index < 0 || index >= placed.Length)
+            return null;
+
+        return placed[index];
     }
 }

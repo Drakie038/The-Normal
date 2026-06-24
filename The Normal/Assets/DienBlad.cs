@@ -28,7 +28,9 @@ public class DienBlad : NetworkBehaviour
     private Quaternion flyStartRot;
     private float flyT;
 
-    private BordenHouder houder;
+    public BordenHouder houder;
+
+    public int currentSlotIndex = -1;
 
     public enum DienBladType
     {
@@ -52,19 +54,24 @@ public class DienBlad : NetworkBehaviour
 
     public void PickUp(Transform cam)
     {
-        if (isHeld || cam == null)
+        if (cam == null)
             return;
 
-        // Alleen het bovenste bord mag worden opgepakt
-        if (houder != null && houder.GetTopPlate() != this)
+        // als al held → niks doen
+        if (isHeld)
             return;
 
         isHeld = true;
         camTarget = cam;
 
-        // Verwijder dit bord uit de stapel
+        // unlink van slot/houder
+        transform.SetParent(null);
+
         if (houder != null)
+        {
             houder.RemovePlate(this);
+            houder = null;
+        }
 
         if (rb != null)
         {
@@ -242,5 +249,25 @@ public class DienBlad : NetworkBehaviour
         trash.CloseLid();
 
         Destroy(gameObject);
+    }
+
+    public void PickUpFromSlot()
+    {
+        if (houder == null)
+            return;
+
+        int index = currentSlotIndex;
+        if (index == -1)
+            return;
+
+        // slot vrijmaken
+        var removed = houder.RemoveFromSlot(index);
+        if (removed == null)
+            return;
+
+        currentSlotIndex = -1;
+
+        // daarna normale pickup flow starten
+        PickUp(Camera.main.transform);
     }
 }

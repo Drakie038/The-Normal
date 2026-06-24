@@ -62,6 +62,7 @@ public class CameraMovement : MonoBehaviour
 
     private Coroutine settingsRoutine;
 
+    private DienBlad lastHighlightedSlotPlate;
 
     public void SmoothLookForwardForSettings(float duration = 0.25f)
     {
@@ -144,6 +145,7 @@ public class CameraMovement : MonoBehaviour
     private SuitCase currentSuitCase;
 
     private Exit currentExit;
+
     public void SetDoorLeanTarget(float value)
     {
         doorLeanTarget = value;
@@ -675,78 +677,121 @@ public class CameraMovement : MonoBehaviour
                 return;
             }
 
-            // ================= BORDENHOUDER =================
             BordenHouder houder = hit.collider.GetComponentInParent<BordenHouder>();
-
 
             if (houder != null)
             {
-                // 1. eerst highlight logica blijft zoals je had
                 DienBlad topPlate = houder.GetTopPlate();
 
                 if (topPlate == null)
+                    return;
+
+                // ================= SLOT DETECTION =================
+                int slotIndex = -1;
+                bool interactingWithSlot = false;
+
+                for (int i = 0; i < houder.placementSlots.Length; i++)
                 {
-                    if (currentDienBlad != null)
+                    Transform slot = houder.placementSlots[i].slot;
+
+                    if (hit.collider.transform == slot || hit.collider.transform.IsChildOf(slot))
                     {
-                        currentDienBlad.SetHighlight(false);
-                        currentDienBlad = null;
+                        slotIndex = i;
+                        interactingWithSlot = true;
+                        break;
+                    }
+                }
+
+                // ================= SLOT HIGHLIGHT =================
+                if (slotIndex != -1)
+                {
+                    var placedPlate = houder.GetPlaced(slotIndex);
+                    SetSlotPlateHighlight(placedPlate);
+                }
+                else
+                {
+                    SetSlotPlateHighlight(null);
+                }
+
+                // ================= GHOST (ALWAYS) =================
+                if (heldDienBlad != null && interactingWithSlot)
+                    houder.ShowGhost(slotIndex, heldDienBlad.type);
+                else
+                    houder.HideAllGhosts();
+
+                // ================= SLOT PICKUP =================
+                if (heldDienBlad == null && interactingWithSlot)
+                {
+                    if (Input.GetKeyDown(KeyCode.E))
+                    {
+                        DienBlad slotPlate = houder.RemoveFromSlot(slotIndex);
+
+                        if (slotPlate != null)
+                        {
+                            slotPlate.currentSlotIndex = -1;
+                            slotPlate.transform.SetParent(null);
+
+                            Rigidbody rb = slotPlate.GetComponent<Rigidbody>();
+                            if (rb != null)
+                            {
+                                rb.isKinematic = true;
+                                rb.linearVelocity = Vector3.zero;
+                                rb.angularVelocity = Vector3.zero;
+                            }
+
+                            slotPlate.SetHighlight(true);
+
+                            heldDienBlad = slotPlate;
+                            slotPlate.PickUp(transform);
+                        }
                     }
 
                     return;
                 }
 
-                if (heldDienBlad != null)
+                // ================= PLACE INTO SLOT =================
+                if (heldDienBlad != null && interactingWithSlot)
                 {
-                    for (int i = 0; i < houder.placementSlots.Length; i++)
+                    if (Input.GetKeyDown(KeyCode.E))
                     {
-                        if (hit.collider.transform == houder.placementSlots[i].slot)
+                        bool placed = houder.TryPlace(heldDienBlad, slotIndex);
+
+                        if (placed)
                         {
-                            houder.ShowGhost(i, heldDienBlad.type);
-                            break;
+                            heldDienBlad.PlaceToSlot(houder.placementSlots[slotIndex].slot);
+                            heldDienBlad.SetHighlight(false);
+
+                            heldDienBlad = null;
+                            currentDienBlad = null;
+
+                            houder.HideAllGhosts();
                         }
                     }
+
+                    return;
+                }
+
+                // ================= STACK PICKUP =================
+                if (heldDienBlad == null)
+                {
+                    if (currentDienBlad != topPlate)
+                    {
+                        if (currentDienBlad != null)
+                            currentDienBlad.SetHighlight(false);
+
+                        currentDienBlad = topPlate;
+                    }
+
+                    currentDienBlad.SetHighlight(true);
 
                     if (Input.GetKeyDown(KeyCode.E))
                     {
-                        for (int i = 0; i < houder.placementSlots.Length; i++)
-                        {
-                            if (hit.collider.transform == houder.placementSlots[i].slot)
-                            {
-                                bool placed = houder.TryPlace(heldDienBlad, i);
-
-                                if (!placed)
-                                    return;
-                                heldDienBlad.PlaceToSlot(houder.placementSlots[i].slot);
-                                heldDienBlad.SetHighlight(false);
-                                houder.HideAllGhosts();
-
-                                heldDienBlad = null;
-                                currentDienBlad = null;
-
-                                return;
-                            }
-                        }
+                        currentDienBlad.PickUp(transform);
+                        heldDienBlad = currentDienBlad;
                     }
 
+                    SetSlotPlateHighlight(null);
                     return;
-                }
-
-                // ================= PICKUP =================
-
-                if (currentDienBlad != topPlate)
-                {
-                    if (currentDienBlad != null)
-                        currentDienBlad.SetHighlight(false);
-
-                    currentDienBlad = topPlate;
-                }
-
-                currentDienBlad.SetHighlight(true);
-
-                if (Input.GetKeyDown(KeyCode.E))
-                {
-                    currentDienBlad.PickUp(transform);
-                    heldDienBlad = currentDienBlad;
                 }
 
                 return;
@@ -967,6 +1012,8 @@ public class CameraMovement : MonoBehaviour
             currentDienBlad = null;
         }
 
+        SetSlotPlateHighlight(null);
+
         BordenHouder[] houders = FindObjectsOfType<BordenHouder>();
 
         foreach (BordenHouder h in houders)
@@ -1017,5 +1064,19 @@ public class CameraMovement : MonoBehaviour
     public bool HasDienBlad()
     {
         return heldDienBlad != null;
+    }
+
+    private void SetSlotPlateHighlight(DienBlad plate)
+    {
+        if (lastHighlightedSlotPlate == plate)
+            return;
+
+        if (lastHighlightedSlotPlate != null)
+            lastHighlightedSlotPlate.SetHighlight(false);
+
+        lastHighlightedSlotPlate = plate;
+
+        if (lastHighlightedSlotPlate != null)
+            lastHighlightedSlotPlate.SetHighlight(true);
     }
 }
