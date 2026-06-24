@@ -513,7 +513,7 @@ public class CameraMovement : MonoBehaviour
     {
         Ray ray = new Ray(transform.position, transform.forward);
 
-        Physics.Raycast(ray, out RaycastHit hit, doorDetectDistance);
+        if (Physics.Raycast(ray, out RaycastHit hit, doorDetectDistance))
         {
             Collider col = hit.collider;
 
