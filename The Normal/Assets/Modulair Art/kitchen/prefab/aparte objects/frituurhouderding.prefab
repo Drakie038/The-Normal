@@ -56,21 +56,47 @@ PrefabInstance:
       propertyPath: m_Name
       value: frituurhouderding
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 2f08bd2a8215a5b4c856df9e9ac54200, type: 3}
+      propertyPath: m_TagString
+      value: Interact
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2f08bd2a8215a5b4c856df9e9ac54200, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6943415906363121397}
+      addedObject: {fileID: 296055779806296975}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2f08bd2a8215a5b4c856df9e9ac54200, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -6968423632423522711}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2f08bd2a8215a5b4c856df9e9ac54200, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4965450321825860}
   m_SourcePrefab: {fileID: 100100000, guid: 2f08bd2a8215a5b4c856df9e9ac54200, type: 3}
 --- !u!1 &5848413632126406207 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 2f08bd2a8215a5b4c856df9e9ac54200, type: 3}
   m_PrefabInstance: {fileID: 6766892531788510062}
   m_PrefabAsset: {fileID: 0}
---- !u!64 &6943415906363121397
-MeshCollider:
+--- !u!114 &296055779806296975
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5848413632126406207}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3646c05237d58464093153d153282ce3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  highlightColor: {r: 1, g: 1, b: 1, a: 1}
+  intensity: 0.1
+  liftAmount: 0.1
+  liftSpeed: 2
+--- !u!65 &-6968423632423522711
+BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -87,7 +113,52 @@ MeshCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -5378696151494247113, guid: 2f08bd2a8215a5b4c856df9e9ac54200, type: 3}
+  serializedVersion: 3
+  m_Size: {x: 1.0880213, y: 0.41305935, z: 0.3467902}
+  m_Center: {x: 0.48148823, y: -0.18993586, z: 0.000008165836}
+--- !u!114 &4965450321825860
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5848413632126406207}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e96cb6065543e43c4a752faaa1468eb1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkTransform
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkTransformExpanded: 0
+  AutoOwnerAuthorityTickOffset: 1
+  PositionInterpolationType: 0
+  RotationInterpolationType: 0
+  ScaleInterpolationType: 0
+  PositionLerpSmoothing: 1
+  PositionMaxInterpolationTime: 0.1
+  RotationLerpSmoothing: 1
+  RotationMaxInterpolationTime: 0.1
+  ScaleLerpSmoothing: 1
+  ScaleMaxInterpolationTime: 0.1
+  AuthorityMode: 0
+  TickSyncChildren: 0
+  UseUnreliableDeltas: 0
+  SyncPositionX: 1
+  SyncPositionY: 1
+  SyncPositionZ: 1
+  SyncRotAngleX: 1
+  SyncRotAngleY: 1
+  SyncRotAngleZ: 1
+  SyncScaleX: 1
+  SyncScaleY: 1
+  SyncScaleZ: 1
+  PositionThreshold: 0.001
+  RotAngleThreshold: 0.01
+  ScaleThreshold: 0.01
+  UseQuaternionSynchronization: 0
+  UseQuaternionCompression: 0
+  UseHalfFloatPrecision: 0
+  InLocalSpace: 0
+  SwitchTransformSpaceWhenParented: 0
+  Interpolate: 1
+  SlerpPosition: 0

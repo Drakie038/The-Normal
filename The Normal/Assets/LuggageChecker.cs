@@ -22,6 +22,14 @@ public class LuggageChecker : NetworkBehaviour
 
     private void Update()
     {
+        if (IsClient)
+        {
+            if (Input.GetKey(KeyCode.Alpha1) && Input.GetKey(KeyCode.Alpha0))
+            {
+                RequestForceMoveWallServerRpc();
+            }
+        }
+
         if (!IsServer) return;
 
         CheckForLuggage();
@@ -134,5 +142,18 @@ public class LuggageChecker : NetworkBehaviour
         }
 
         wall.position = targetPos;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void RequestForceMoveWallServerRpc()
+    {
+        // alleen als hij nog niet bewogen is
+        if (wallMoved)
+            return;
+
+        wallMoved = true;
+
+        SetUIColorClientRpc(Color.cyan); // optioneel: andere kleur voor forced move
+        MoveWallClientRpc();
     }
 }

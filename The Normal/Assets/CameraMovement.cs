@@ -823,6 +823,20 @@ public class CameraMovement : MonoBehaviour
                     npc.RequestScanDropTargetsServerRpc();
                 }
             }
+
+            FrituurBasket basket = hit.collider.GetComponent<FrituurBasket>();
+
+            if (basket != null)
+            {
+                basket.SetHighlight(true);
+
+                if (Input.GetKeyDown(KeyCode.E))
+                {
+                    basket.Toggle();
+                }
+
+                return;
+            }
         }
             ClearInteractions();
     }
@@ -971,6 +985,12 @@ public class CameraMovement : MonoBehaviour
         {
             currentExit.SetHighlight(false);
             currentExit = null;
+        }
+
+        FrituurBasket[] baskets = FindObjectsOfType<FrituurBasket>();
+        foreach (var b in baskets)
+        {
+            b.SetHighlight(false);
         }
     }
 
