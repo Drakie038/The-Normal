@@ -13,6 +13,8 @@ GameObject:
   - component: {fileID: 16994186468234229}
   - component: {fileID: 5349358561560385042}
   - component: {fileID: 7581174635035743707}
+  - component: {fileID: 4112625077235912836}
+  - component: {fileID: 4049465822786232679}
   m_Layer: 0
   m_Name: Fries (45)
   m_TagString: Untagged
@@ -30,8 +32,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.8851803, z: -0, w: 0.46524814}
   m_LocalPosition: {x: 0.3732872, y: -0.28910005, z: 0.01376152}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: 124.547, z: 0}
@@ -159,6 +161,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &4112625077235912836
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 123503603300748801}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &4049465822786232679
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 123503603300748801}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &139778015366346244
 GameObject:
   m_ObjectHideFlags: 0
@@ -172,6 +218,8 @@ GameObject:
   - component: {fileID: 4408970706546424668}
   - component: {fileID: 4720719602430564050}
   - component: {fileID: 915539475001986895}
+  - component: {fileID: 5781032403776575399}
+  - component: {fileID: 8848730268185283488}
   m_Layer: 0
   m_Name: Fries (35)
   m_TagString: Untagged
@@ -189,8 +237,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.7793467, z: -0, w: 0.62659305}
   m_LocalPosition: {x: 0.48811722, y: -0.28910005, z: -0.009941101}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -102.402, z: 0}
@@ -318,6 +366,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &5781032403776575399
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 139778015366346244}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &8848730268185283488
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 139778015366346244}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &688373304302998089
 GameObject:
   m_ObjectHideFlags: 0
@@ -331,6 +423,8 @@ GameObject:
   - component: {fileID: 7247054420319089481}
   - component: {fileID: 3681857573481209563}
   - component: {fileID: 3777925805468088528}
+  - component: {fileID: 4989167539433547307}
+  - component: {fileID: 6445015474210705527}
   m_Layer: 0
   m_Name: Fries (39)
   m_TagString: Untagged
@@ -348,8 +442,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.57356584, z: -0, w: 0.8191595}
   m_LocalPosition: {x: 0.46956444, y: -0.3540001, z: 0.012098312}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -69.999, z: 0}
@@ -477,6 +571,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &4989167539433547307
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 688373304302998089}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &6445015474210705527
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 688373304302998089}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &757117439660294963
 GameObject:
   m_ObjectHideFlags: 0
@@ -490,6 +628,8 @@ GameObject:
   - component: {fileID: 3347472619006556258}
   - component: {fileID: 1666336810977929271}
   - component: {fileID: 552332095265175887}
+  - component: {fileID: 1038636028276099764}
+  - component: {fileID: 7404386714115672565}
   m_Layer: 0
   m_Name: Fries (19)
   m_TagString: Untagged
@@ -507,8 +647,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.71550685, z: -0, w: -0.6986058}
   m_LocalPosition: {x: 0.82331944, y: -0.2141, z: 0.06022644}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -268.63, z: 0}
@@ -636,6 +776,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &1038636028276099764
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 757117439660294963}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &7404386714115672565
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 757117439660294963}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &902044289216816504
 GameObject:
   m_ObjectHideFlags: 0
@@ -649,6 +833,8 @@ GameObject:
   - component: {fileID: 714736914213622808}
   - component: {fileID: 7819439330510640537}
   - component: {fileID: 8284268121123979500}
+  - component: {fileID: 8349668025708396663}
+  - component: {fileID: 8859991819164606135}
   m_Layer: 0
   m_Name: Fries (17)
   m_TagString: Untagged
@@ -666,8 +852,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.9448905, z: -0, w: -0.32738668}
   m_LocalPosition: {x: 0.6405239, y: -0.2141, z: 0.051448822}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -218.22, z: 0}
@@ -795,6 +981,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &8349668025708396663
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 902044289216816504}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &8859991819164606135
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 902044289216816504}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &946705090060309066
 GameObject:
   m_ObjectHideFlags: 0
@@ -808,6 +1038,8 @@ GameObject:
   - component: {fileID: 8615359774207099601}
   - component: {fileID: 1505039394588309631}
   - component: {fileID: 7874320189726148704}
+  - component: {fileID: 6594211246922990316}
+  - component: {fileID: 8622072453071000001}
   m_Layer: 0
   m_Name: Fries
   m_TagString: Untagged
@@ -825,8 +1057,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0, z: -0, w: 1}
   m_LocalPosition: {x: 0.703, y: -0.138, z: 0}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -954,6 +1186,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &6594211246922990316
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 946705090060309066}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &8622072453071000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 946705090060309066}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &1098178753059761188
 GameObject:
   m_ObjectHideFlags: 0
@@ -967,6 +1243,8 @@ GameObject:
   - component: {fileID: 4625599023393311176}
   - component: {fileID: 2783330702253299008}
   - component: {fileID: 7261769717768221144}
+  - component: {fileID: 3490404276948611250}
+  - component: {fileID: 8876903921888996331}
   m_Layer: 0
   m_Name: Fries (2)
   m_TagString: Untagged
@@ -984,8 +1262,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0.983885, z: 0, w: 0.1788024}
   m_LocalPosition: {x: 0.51999944, y: -0.13800004, z: 0}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -159.4, z: 0}
@@ -1113,6 +1391,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &3490404276948611250
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1098178753059761188}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &8876903921888996331
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1098178753059761188}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &1209080786618630405
 GameObject:
   m_ObjectHideFlags: 0
@@ -1126,6 +1448,8 @@ GameObject:
   - component: {fileID: 6124262807487979352}
   - component: {fileID: 544028372737851725}
   - component: {fileID: 2064889144599593740}
+  - component: {fileID: 6222294296292010549}
+  - component: {fileID: 6559689329277052574}
   m_Layer: 0
   m_Name: Fries (18)
   m_TagString: Untagged
@@ -1143,8 +1467,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.15513708, z: -0, w: -0.98789304}
   m_LocalPosition: {x: 0.92520523, y: -0.2141, z: 0.06510925}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -342.151, z: 0}
@@ -1272,6 +1596,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &6222294296292010549
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1209080786618630405}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &6559689329277052574
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1209080786618630405}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &1265687259087383317
 GameObject:
   m_ObjectHideFlags: 0
@@ -1285,6 +1653,8 @@ GameObject:
   - component: {fileID: 5870597929769195607}
   - component: {fileID: 2107099436178565749}
   - component: {fileID: 4996406339474332938}
+  - component: {fileID: 2958133961852842097}
+  - component: {fileID: 5081093974426218501}
   m_Layer: 0
   m_Name: Fries (26)
   m_TagString: Untagged
@@ -1302,8 +1672,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.91778404, z: -0, w: 0.39708}
   m_LocalPosition: {x: 0.64278316, y: -0.27900004, z: 0.060943604}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -133.208, z: 0}
@@ -1431,6 +1801,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &2958133961852842097
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1265687259087383317}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &5081093974426218501
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1265687259087383317}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &1302377394083912130
 GameObject:
   m_ObjectHideFlags: 0
@@ -1444,6 +1858,8 @@ GameObject:
   - component: {fileID: 5952026680054123501}
   - component: {fileID: 4275594641192323037}
   - component: {fileID: 125624676984707839}
+  - component: {fileID: 4558201349409186763}
+  - component: {fileID: 7371558832660810173}
   m_Layer: 0
   m_Name: Fries (46)
   m_TagString: Untagged
@@ -1461,8 +1877,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.0053886124, z: -0, w: 0.9999855}
   m_LocalPosition: {x: 0.64112663, y: -0.28910005, z: 0.1111393}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: 0.617, z: 0}
@@ -1590,6 +2006,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &4558201349409186763
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1302377394083912130}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &7371558832660810173
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1302377394083912130}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &1421504607495104379
 GameObject:
   m_ObjectHideFlags: 0
@@ -1603,6 +2063,8 @@ GameObject:
   - component: {fileID: 7987141901567240055}
   - component: {fileID: 6265451058189238734}
   - component: {fileID: 4786640228419112735}
+  - component: {fileID: 287520935966638659}
+  - component: {fileID: 7561262141882361449}
   m_Layer: 0
   m_Name: Fries (44)
   m_TagString: Untagged
@@ -1620,8 +2082,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.9848342, z: -0, w: 0.17349842}
   m_LocalPosition: {x: 0.46916294, y: -0.28910005, z: 0.048606873}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: 160.017, z: 0}
@@ -1749,6 +2211,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &287520935966638659
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1421504607495104379}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &7561262141882361449
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1421504607495104379}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &1476260945696150146
 GameObject:
   m_ObjectHideFlags: 0
@@ -1762,6 +2268,8 @@ GameObject:
   - component: {fileID: 1670154638446295926}
   - component: {fileID: 7980384138131068687}
   - component: {fileID: 7985961838889642369}
+  - component: {fileID: 5721782221394420113}
+  - component: {fileID: 870883684854507521}
   m_Layer: 0
   m_Name: Fries (24)
   m_TagString: Untagged
@@ -1779,8 +2287,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.22657873, z: -0, w: 0.9739929}
   m_LocalPosition: {x: 0.807, y: -0.27900004, z: -0.01981926}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: 26.191, z: 0}
@@ -1908,6 +2416,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &5721782221394420113
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1476260945696150146}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &870883684854507521
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1476260945696150146}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &2183003785560131770
 GameObject:
   m_ObjectHideFlags: 0
@@ -1921,6 +2473,8 @@ GameObject:
   - component: {fileID: 4647890587589847158}
   - component: {fileID: 5876135475012706459}
   - component: {fileID: 7875823722345881144}
+  - component: {fileID: 7081752816641713212}
+  - component: {fileID: 1442310441147303912}
   m_Layer: 0
   m_Name: Fries (42)
   m_TagString: Untagged
@@ -1938,8 +2492,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.2841868, z: -0, w: 0.95876896}
   m_LocalPosition: {x: 0.6636429, y: -0.3540001, z: 0.03234291}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: 33.021, z: 0}
@@ -2067,6 +2621,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &7081752816641713212
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2183003785560131770}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &1442310441147303912
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2183003785560131770}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &2339818819653515285
 GameObject:
   m_ObjectHideFlags: 0
@@ -2080,6 +2678,8 @@ GameObject:
   - component: {fileID: 3538738611294323004}
   - component: {fileID: 810763673391858961}
   - component: {fileID: 6947617913033395263}
+  - component: {fileID: 4191519916124705913}
+  - component: {fileID: 5119379657177292930}
   m_Layer: 0
   m_Name: Fries (9)
   m_TagString: Untagged
@@ -2097,8 +2697,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.026761102, z: -0, w: 0.9996419}
   m_LocalPosition: {x: 0.76498127, y: -0.20290005, z: -0.07164574}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -3.067, z: 0}
@@ -2226,6 +2826,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &4191519916124705913
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2339818819653515285}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &5119379657177292930
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2339818819653515285}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &2820320641672842267
 GameObject:
   m_ObjectHideFlags: 0
@@ -2239,6 +2883,8 @@ GameObject:
   - component: {fileID: 788428935759461337}
   - component: {fileID: 5581050698948471890}
   - component: {fileID: 7030753824257279814}
+  - component: {fileID: 1863130317877803375}
+  - component: {fileID: 6197002139340231984}
   m_Layer: 0
   m_Name: Fries (12)
   m_TagString: Untagged
@@ -2256,8 +2902,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.9682743, z: -0, w: -0.24988969}
   m_LocalPosition: {x: 0.6421356, y: -0.20290005, z: 0.07916832}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: 208.942, z: 0}
@@ -2385,6 +3031,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &1863130317877803375
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2820320641672842267}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &6197002139340231984
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2820320641672842267}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &2866980631532529441
 GameObject:
   m_ObjectHideFlags: 0
@@ -2398,6 +3088,8 @@ GameObject:
   - component: {fileID: 6074112303286204479}
   - component: {fileID: 4765454530067524666}
   - component: {fileID: 4854764641720447061}
+  - component: {fileID: 175140236204241185}
+  - component: {fileID: 1715770238854620944}
   m_Layer: 0
   m_Name: Fries (3)
   m_TagString: Untagged
@@ -2415,8 +3107,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0.68123204, z: 0, w: 0.7320675}
   m_LocalPosition: {x: 0.622, y: -0.13800004, z: 0}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -85.88, z: 0}
@@ -2544,6 +3236,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &175140236204241185
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2866980631532529441}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &1715770238854620944
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2866980631532529441}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &2913215134480208874
 GameObject:
   m_ObjectHideFlags: 0
@@ -2557,6 +3293,8 @@ GameObject:
   - component: {fileID: 4105106611076254476}
   - component: {fileID: 5319143536382487421}
   - component: {fileID: 833256889575358453}
+  - component: {fileID: 4094938617272669655}
+  - component: {fileID: 1227141303186681053}
   m_Layer: 0
   m_Name: Fries (47)
   m_TagString: Untagged
@@ -2574,8 +3312,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.6027722, z: -0, w: 0.7979134}
   m_LocalPosition: {x: 0.54528713, y: -0.28910005, z: 0.076286316}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: 74.137, z: 0}
@@ -2703,6 +3441,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &4094938617272669655
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2913215134480208874}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &1227141303186681053
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2913215134480208874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &2969542972220668102
 GameObject:
   m_ObjectHideFlags: 0
@@ -2716,6 +3498,8 @@ GameObject:
   - component: {fileID: 3805601099356945601}
   - component: {fileID: 5308634533782469173}
   - component: {fileID: 702834934402339769}
+  - component: {fileID: 8355487574383796412}
+  - component: {fileID: 1505822827456226359}
   m_Layer: 0
   m_Name: Fries (30)
   m_TagString: Untagged
@@ -2733,8 +3517,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.9921273, z: -0, w: 0.1252332}
   m_LocalPosition: {x: 0.64587784, y: -0.2141, z: -0.020944595}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -165.612, z: 0}
@@ -2862,6 +3646,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &8355487574383796412
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2969542972220668102}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &1505822827456226359
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2969542972220668102}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &3045648097347534128
 GameObject:
   m_ObjectHideFlags: 0
@@ -2875,6 +3703,8 @@ GameObject:
   - component: {fileID: 1229207757362251411}
   - component: {fileID: 5654577210840790956}
   - component: {fileID: 8527690942803913355}
+  - component: {fileID: 76388708128714837}
+  - component: {fileID: 1012461736085467862}
   m_Layer: 0
   m_Name: Fries (29)
   m_TagString: Untagged
@@ -2892,8 +3722,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.35577217, z: -0, w: 0.93457276}
   m_LocalPosition: {x: 0.9292059, y: -0.2141, z: 0.009887695}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -41.682, z: 0}
@@ -3021,6 +3851,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &76388708128714837
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3045648097347534128}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &1012461736085467862
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3045648097347534128}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &3174723378716411122
 GameObject:
   m_ObjectHideFlags: 0
@@ -3034,6 +3908,8 @@ GameObject:
   - component: {fileID: 1161069371359738456}
   - component: {fileID: 7012668679057347360}
   - component: {fileID: 1301800335680162931}
+  - component: {fileID: 1685536428613337402}
+  - component: {fileID: 7470278775141670761}
   m_Layer: 0
   m_Name: Fries (38)
   m_TagString: Untagged
@@ -3051,8 +3927,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.9497494, z: -0, w: 0.31301138}
   m_LocalPosition: {x: 0.37143612, y: -0.3540001, z: 0.040035248}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -143.518, z: 0}
@@ -3180,6 +4056,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &1685536428613337402
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3174723378716411122}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &7470278775141670761
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3174723378716411122}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &3244258272860317987
 GameObject:
   m_ObjectHideFlags: 0
@@ -3193,6 +4113,8 @@ GameObject:
   - component: {fileID: 2736078579139342986}
   - component: {fileID: 8597993138133340241}
   - component: {fileID: 7533340828314723657}
+  - component: {fileID: 4462157242271716365}
+  - component: {fileID: 8018141919696088341}
   m_Layer: 0
   m_Name: Fries (14)
   m_TagString: Untagged
@@ -3210,8 +4132,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.41899267, z: -0, w: 0.9079897}
   m_LocalPosition: {x: 0.8022833, y: -0.20290005, z: -0.009386063}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: 49.542, z: 0}
@@ -3339,6 +4261,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &4462157242271716365
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3244258272860317987}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &8018141919696088341
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3244258272860317987}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &3284542186156442407
 GameObject:
   m_ObjectHideFlags: 0
@@ -3352,6 +4318,8 @@ GameObject:
   - component: {fileID: 1306324066690155537}
   - component: {fileID: 9001261377884951888}
   - component: {fileID: 6296640509464398471}
+  - component: {fileID: 448752981221268671}
+  - component: {fileID: 5490552394812873986}
   m_Layer: 0
   m_Name: Fries (31)
   m_TagString: Untagged
@@ -3369,8 +4337,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.71989435, z: -0, w: 0.69408375}
   m_LocalPosition: {x: 0.7472744, y: -0.2141, z: -0.009906769}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -92.092, z: 0}
@@ -3498,6 +4466,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &448752981221268671
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3284542186156442407}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &5490552394812873986
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3284542186156442407}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &3325977032811998847
 GameObject:
   m_ObjectHideFlags: 0
@@ -3511,6 +4523,8 @@ GameObject:
   - component: {fileID: 7585529489129521222}
   - component: {fileID: 2785801306373961585}
   - component: {fileID: 20625052108550055}
+  - component: {fileID: 7832780452706278657}
+  - component: {fileID: 4325696334061468131}
   m_Layer: 0
   m_Name: Fries (27)
   m_TagString: Untagged
@@ -3528,8 +4542,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.49764383, z: -0, w: 0.8673815}
   m_LocalPosition: {x: 0.7343159, y: -0.27900004, z: 0.01593399}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -59.688, z: 0}
@@ -3657,6 +4671,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &7832780452706278657
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3325977032811998847}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &4325696334061468131
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3325977032811998847}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &3396922325842404761
 GameObject:
   m_ObjectHideFlags: 0
@@ -3670,6 +4728,8 @@ GameObject:
   - component: {fileID: 733930886988186704}
   - component: {fileID: 8656734828864846187}
   - component: {fileID: 1842334095664696737}
+  - component: {fileID: 1704449591029961490}
+  - component: {fileID: 1115877209223180356}
   m_Layer: 0
   m_Name: Fries (43)
   m_TagString: Untagged
@@ -3687,8 +4747,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.8014651, z: -0, w: 0.5980415}
   m_LocalPosition: {x: 0.5640106, y: -0.3540001, z: 0.054279327}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: 106.54, z: 0}
@@ -3816,6 +4876,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &1704449591029961490
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3396922325842404761}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &1115877209223180356
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3396922325842404761}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &3712392474280533313
 GameObject:
   m_ObjectHideFlags: 0
@@ -3829,6 +4933,8 @@ GameObject:
   - component: {fileID: 1235330932188923870}
   - component: {fileID: 2926658823148404679}
   - component: {fileID: 881637118146021838}
+  - component: {fileID: 2639499333330146182}
+  - component: {fileID: 4099488217180104190}
   m_Layer: 0
   m_Name: Fries (36)
   m_TagString: Untagged
@@ -3846,8 +4952,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.13815089, z: -0, w: 0.99041116}
   m_LocalPosition: {x: 0.547472, y: -0.3540001, z: -0.010053635}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: 15.882, z: 0}
@@ -3975,6 +5081,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &2639499333330146182
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3712392474280533313}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &4099488217180104190
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3712392474280533313}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &4091899226936910076
 GameObject:
   m_ObjectHideFlags: 0
@@ -3988,6 +5138,8 @@ GameObject:
   - component: {fileID: 5105755123893991312}
   - component: {fileID: 4919619803319974668}
   - component: {fileID: 5510801571547454220}
+  - component: {fileID: 6649117547154241728}
+  - component: {fileID: 4945342558750385287}
   m_Layer: 0
   m_Name: Fries (5)
   m_TagString: Untagged
@@ -4005,8 +5157,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.94284207, z: -0, w: 0.33323988}
   m_LocalPosition: {x: 0.5186453, y: -0.13800001, z: 0.05534935}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: 141.069, z: 0}
@@ -4134,6 +5286,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &6649117547154241728
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4091899226936910076}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &4945342558750385287
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4091899226936910076}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &4330435654400448764
 GameObject:
   m_ObjectHideFlags: 0
@@ -4147,6 +5343,8 @@ GameObject:
   - component: {fileID: 2477657043855518054}
   - component: {fileID: 6912294656794961026}
   - component: {fileID: 6295863834870772880}
+  - component: {fileID: 3921526640101800950}
+  - component: {fileID: 5998499836933144925}
   m_Layer: 0
   m_Name: Fries (37)
   m_TagString: Untagged
@@ -4164,8 +5362,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.17011099, z: -0, w: 0.985425}
   m_LocalPosition: {x: 0.6455841, y: -0.3540001, z: -0.03794861}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -19.589, z: 0}
@@ -4293,6 +5491,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &3921526640101800950
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4330435654400448764}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &5998499836933144925
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4330435654400448764}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &4406886841127021679
 GameObject:
   m_ObjectHideFlags: 0
@@ -4306,6 +5548,8 @@ GameObject:
   - component: {fileID: 9209471417467713398}
   - component: {fileID: 4540287331039006820}
   - component: {fileID: 7813028701935059884}
+  - component: {fileID: 3161824639123568062}
+  - component: {fileID: 3510328311283447438}
   m_Layer: 0
   m_Name: Fries (23)
   m_TagString: Untagged
@@ -4323,8 +5567,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.8820139, z: -0, w: -0.47122344}
   m_LocalPosition: {x: 0.83609295, y: -0.27900004, z: 0.034397125}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -236.22699, z: 0}
@@ -4452,6 +5696,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &3161824639123568062
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4406886841127021679}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &3510328311283447438
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4406886841127021679}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &4964048812403794963
 GameObject:
   m_ObjectHideFlags: 0
@@ -4465,6 +5753,8 @@ GameObject:
   - component: {fileID: 7792595578666385364}
   - component: {fileID: 9171039528852139595}
   - component: {fileID: 3191850151483209593}
+  - component: {fileID: 8566933270220240109}
+  - component: {fileID: 4439545667078504472}
   m_Layer: 0
   m_Name: Fries (1)
   m_TagString: Untagged
@@ -4482,8 +5772,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0.304615, z: 0, w: 0.95247555}
   m_LocalPosition: {x: 0.805, y: -0.13800004, z: 0}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -35.47, z: 0}
@@ -4611,6 +5901,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &8566933270220240109
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4964048812403794963}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &4439545667078504472
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4964048812403794963}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &4993667650685219845
 GameObject:
   m_ObjectHideFlags: 0
@@ -4624,6 +5958,8 @@ GameObject:
   - component: {fileID: 8409154734992564075}
   - component: {fileID: 5634624139982309868}
   - component: {fileID: 5703496196089389171}
+  - component: {fileID: 2524360428706251634}
+  - component: {fileID: 2534934082719432464}
   m_Layer: 0
   m_Name: Fries (8)
   m_TagString: Untagged
@@ -4641,8 +5977,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.27901655, z: -0, w: 0.9602863}
   m_LocalPosition: {x: 0.6788635, y: -0.20290005, z: -0.016998291}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: 32.403, z: 0}
@@ -4770,6 +6106,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &2524360428706251634
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4993667650685219845}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &2534934082719432464
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4993667650685219845}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &5159023787763604411
 GameObject:
   m_ObjectHideFlags: 0
@@ -4783,6 +6163,8 @@ GameObject:
   - component: {fileID: 8529517358292973769}
   - component: {fileID: 2054110055918440946}
   - component: {fileID: 6312630434646651119}
+  - component: {fileID: 3878706505429848680}
+  - component: {fileID: 1166036539191397112}
   m_Layer: 0
   m_Name: Fries (34)
   m_TagString: Untagged
@@ -4800,8 +6182,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.9993667, z: -0, w: 0.03558483}
   m_LocalPosition: {x: 0.3903246, y: -0.28910005, z: -0.03891945}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -175.921, z: 0}
@@ -4929,6 +6311,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &3878706505429848680
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5159023787763604411}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &1166036539191397112
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5159023787763604411}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &5416351052056545060
 GameObject:
   m_ObjectHideFlags: 0
@@ -4942,6 +6368,8 @@ GameObject:
   - component: {fileID: 2098454649193833633}
   - component: {fileID: 418318537381415630}
   - component: {fileID: 4674781199716653203}
+  - component: {fileID: 6689677785347821263}
+  - component: {fileID: 259549780560353546}
   m_Layer: 0
   m_Name: Fries (41)
   m_TagString: Untagged
@@ -4959,8 +6387,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.97983843, z: -0, w: 0.19979136}
   m_LocalPosition: {x: 0.3852806, y: -0.3540001, z: 0.093639374}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: 156.95, z: 0}
@@ -5088,6 +6516,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &6689677785347821263
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5416351052056545060}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &259549780560353546
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5416351052056545060}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &5418922069034795844
 GameObject:
   m_ObjectHideFlags: 0
@@ -5101,6 +6573,8 @@ GameObject:
   - component: {fileID: 3967681815736815317}
   - component: {fileID: 7463464983077766661}
   - component: {fileID: 8783312738384196529}
+  - component: {fileID: 1467062457666715938}
+  - component: {fileID: 8980431112810113855}
   m_Layer: 0
   m_Name: Fries (10)
   m_TagString: Untagged
@@ -5118,8 +6592,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.8949225, z: -0, w: 0.4462217}
   m_LocalPosition: {x: 0.52435684, y: -0.20290005, z: 0.081077576}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -126.997, z: 0}
@@ -5247,6 +6721,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &1467062457666715938
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5418922069034795844}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &8980431112810113855
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5418922069034795844}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &5433895626740543493
 GameObject:
   m_ObjectHideFlags: 0
@@ -5260,6 +6778,8 @@ GameObject:
   - component: {fileID: 4049231787510901999}
   - component: {fileID: 4532151309106383135}
   - component: {fileID: 6501474808710650317}
+  - component: {fileID: 5458291781293010483}
+  - component: {fileID: 8586238907570218098}
   m_Layer: 0
   m_Name: Fries (25)
   m_TagString: Untagged
@@ -5277,8 +6797,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.08088204, z: -0, w: 0.9967237}
   m_LocalPosition: {x: 0.8985367, y: -0.27900004, z: -0.0648365}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -9.279, z: 0}
@@ -5406,6 +6926,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &5458291781293010483
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5433895626740543493}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &8586238907570218098
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5433895626740543493}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &5511460070189150364
 GameObject:
   m_ObjectHideFlags: 0
@@ -5419,6 +6983,8 @@ GameObject:
   - component: {fileID: 8592826096942028549}
   - component: {fileID: 2169763040441607819}
   - component: {fileID: 3699054923002657093}
+  - component: {fileID: 3916341541788817217}
+  - component: {fileID: 125065040232646772}
   m_Layer: 0
   m_Name: Fries (40)
   m_TagString: Untagged
@@ -5436,8 +7002,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.9941316, z: -0, w: -0.108177476}
   m_LocalPosition: {x: 0.48490715, y: -0.3540001, z: 0.071697235}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: 192.421, z: 0}
@@ -5565,6 +7131,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &3916341541788817217
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5511460070189150364}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &125065040232646772
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5511460070189150364}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &5714833440116068386
 GameObject:
   m_ObjectHideFlags: 0
@@ -5578,6 +7188,8 @@ GameObject:
   - component: {fileID: 1730525017099350049}
   - component: {fileID: 5206369631165135502}
   - component: {fileID: 2447762591323378528}
+  - component: {fileID: 2898856158200035254}
+  - component: {fileID: 4451060130348340666}
   m_Layer: 0
   m_Name: Fries (6)
   m_TagString: Untagged
@@ -5595,8 +7207,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.1490086, z: -0, w: 0.98883593}
   m_LocalPosition: {x: 0.80312634, y: -0.13800001, z: 0.07255936}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: 17.139, z: 0}
@@ -5724,6 +7336,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &2898856158200035254
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5714833440116068386}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &4451060130348340666
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5714833440116068386}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &6177822744763829111
 GameObject:
   m_ObjectHideFlags: 0
@@ -5737,6 +7393,8 @@ GameObject:
   - component: {fileID: 5143312191863316844}
   - component: {fileID: 9140689192580391621}
   - component: {fileID: 8909702819869167033}
+  - component: {fileID: 8804578072044635498}
+  - component: {fileID: 2053419571352710527}
   m_Layer: 0
   m_Name: Fries (20)
   m_TagString: Untagged
@@ -5754,8 +7412,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.9667061, z: -0, w: 0.2558892}
   m_LocalPosition: {x: 0.7657051, y: -0.27900004, z: 0.07447243}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -150.347, z: 0}
@@ -5883,6 +7541,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &8804578072044635498
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6177822744763829111}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &2053419571352710527
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6177822744763829111}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &6855821042096783743
 GameObject:
   m_ObjectHideFlags: 0
@@ -5896,6 +7598,8 @@ GameObject:
   - component: {fileID: 3023689745302842290}
   - component: {fileID: 321311881706799341}
   - component: {fileID: 3529597786410508518}
+  - component: {fileID: 7673237744628157151}
+  - component: {fileID: 7968939309727586006}
   m_Layer: 0
   m_Name: Fries (13)
   m_TagString: Untagged
@@ -5913,8 +7617,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.9983778, z: -0, w: 0.05693718}
   m_LocalPosition: {x: 0.55287266, y: -0.20290005, z: 0.12852287}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: 173.472, z: 0}
@@ -6042,6 +7746,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &7673237744628157151
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6855821042096783743}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &7968939309727586006
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6855821042096783743}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &6891979076673870346
 GameObject:
   m_ObjectHideFlags: 0
@@ -6055,6 +7803,8 @@ GameObject:
   - component: {fileID: 5652113461913047561}
   - component: {fileID: 4587482047780350564}
   - component: {fileID: 2722221270790419908}
+  - component: {fileID: 3236742232901901137}
+  - component: {fileID: 5944184566774197091}
   m_Layer: 0
   m_Name: Fries (11)
   m_TagString: Untagged
@@ -6072,8 +7822,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.44991887, z: -0, w: 0.8930694}
   m_LocalPosition: {x: 0.61047363, y: -0.20290005, z: 0.026407242}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -53.477, z: 0}
@@ -6201,6 +7951,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &3236742232901901137
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6891979076673870346}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &5944184566774197091
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6891979076673870346}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &7133212610210354226
 GameObject:
   m_ObjectHideFlags: 0
@@ -6214,6 +8008,8 @@ GameObject:
   - component: {fileID: 6580064612110132733}
   - component: {fileID: 8799265286656763276}
   - component: {fileID: 8947979517433313210}
+  - component: {fileID: 6298493936404547019}
+  - component: {fileID: 7915563141346266638}
   m_Layer: 0
   m_Name: Fries (32)
   m_TagString: Untagged
@@ -6231,8 +8027,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.14367843, z: -0, w: 0.9896245}
   m_LocalPosition: {x: 0.56578636, y: -0.28910005, z: 0.01309967}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -16.522, z: 0}
@@ -6360,6 +8156,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &6298493936404547019
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7133212610210354226}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &7915563141346266638
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7133212610210354226}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &7211927802637603396
 GameObject:
   m_ObjectHideFlags: 0
@@ -6373,6 +8213,8 @@ GameObject:
   - component: {fileID: 7618212923815877788}
   - component: {fileID: 6853069561004243390}
   - component: {fileID: 7709604416428289654}
+  - component: {fileID: 6905748248028945689}
+  - component: {fileID: 6960222888336030301}
   m_Layer: 0
   m_Name: Fries (16)
   m_TagString: Untagged
@@ -6390,8 +8232,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.99971193, z: -0, w: -0.024000436}
   m_LocalPosition: {x: 0.74240303, y: -0.2141, z: 0.05634117}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -182.75, z: 0}
@@ -6519,6 +8361,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &6905748248028945689
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7211927802637603396}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &6960222888336030301
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7211927802637603396}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &7466605968259980062
 GameObject:
   m_ObjectHideFlags: 0
@@ -6532,6 +8418,8 @@ GameObject:
   - component: {fileID: 6382162159319649903}
   - component: {fileID: 781493705995418829}
   - component: {fileID: 9221191636862542550}
+  - component: {fileID: 6669260919932685367}
+  - component: {fileID: 1597083399778794226}
   m_Layer: 0
   m_Name: Fries (21)
   m_TagString: Untagged
@@ -6549,8 +8437,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.99871165, z: -0, w: -0.050745655}
   m_LocalPosition: {x: 0.6770601, y: -0.27900004, z: 0.12492561}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -185.818, z: 0}
@@ -6678,6 +8566,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &6669260919932685367
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7466605968259980062}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &1597083399778794226
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7466605968259980062}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &7612652401478624502
 GameObject:
   m_ObjectHideFlags: 0
@@ -6691,6 +8623,8 @@ GameObject:
   - component: {fileID: 4292041722585535229}
   - component: {fileID: 4214665332220822683}
   - component: {fileID: 5368748301727722549}
+  - component: {fileID: 6167816089659273858}
+  - component: {fileID: 1537939913290297395}
   m_Layer: 0
   m_Name: Fries (22)
   m_TagString: Untagged
@@ -6708,8 +8642,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.42461467, z: -0, w: -0.90537417}
   m_LocalPosition: {x: 0.92473984, y: -0.27900004, z: -0.016078949}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -309.747, z: 0}
@@ -6837,6 +8771,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &6167816089659273858
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7612652401478624502}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &1537939913290297395
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7612652401478624502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &7848711587476946356
 GameObject:
   m_ObjectHideFlags: 0
@@ -6850,6 +8828,8 @@ GameObject:
   - component: {fileID: 2129779635678542691}
   - component: {fileID: 9107337784871242002}
   - component: {fileID: 6854559789507702240}
+  - component: {fileID: 4870471539609613125}
+  - component: {fileID: 6388666347713649087}
   m_Layer: 0
   m_Name: Fries (7)
   m_TagString: Untagged
@@ -6867,8 +8847,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.7111612, z: -0, w: 0.70302904}
   m_LocalPosition: {x: 0.70131016, y: -0.13800001, z: 0.06639671}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: 90.659, z: 0}
@@ -6996,6 +8976,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &4870471539609613125
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7848711587476946356}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &6388666347713649087
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7848711587476946356}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &7885920225877113591
 GameObject:
   m_ObjectHideFlags: 0
@@ -7009,6 +9033,8 @@ GameObject:
   - component: {fileID: 7010594816775377731}
   - component: {fileID: 6292743096071543423}
   - component: {fileID: 418512556819290391}
+  - component: {fileID: 2690992008646880347}
+  - component: {fileID: 7982982859921528857}
   m_Layer: 0
   m_Name: Fries (28)
   m_TagString: Untagged
@@ -7026,8 +9052,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.05417978, z: -0, w: 0.9985312}
   m_LocalPosition: {x: 0.827796, y: -0.2141, z: -0.0011348724}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -6.212, z: 0}
@@ -7155,6 +9181,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &2690992008646880347
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7885920225877113591}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &7982982859921528857
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7885920225877113591}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &8091965310468189831
 GameObject:
   m_ObjectHideFlags: 0
@@ -7168,6 +9238,8 @@ GameObject:
   - component: {fileID: 5483833498250678000}
   - component: {fileID: 4724834990733173285}
   - component: {fileID: 4549310016559387920}
+  - component: {fileID: 3610422416756384628}
+  - component: {fileID: 2969097515863036146}
   m_Layer: 0
   m_Name: Fries (33)
   m_TagString: Untagged
@@ -7185,8 +9257,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.43830404, z: -0, w: 0.8988268}
   m_LocalPosition: {x: 0.66356564, y: -0.28910005, z: 0.04209709}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: -51.991, z: 0}
@@ -7314,6 +9386,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &3610422416756384628
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8091965310468189831}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &2969097515863036146
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8091965310468189831}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &8097401400487085777
 GameObject:
   m_ObjectHideFlags: 0
@@ -7327,6 +9443,8 @@ GameObject:
   - component: {fileID: 2688234249245195172}
   - component: {fileID: 5959717880548267873}
   - component: {fileID: 6728304275846864194}
+  - component: {fileID: 1517951694462344469}
+  - component: {fileID: 902796570714569714}
   m_Layer: 0
   m_Name: Fries (4)
   m_TagString: Untagged
@@ -7344,8 +9462,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.9995439, z: -0, w: 0.030199025}
   m_LocalPosition: {x: 0.6204624, y: -0.13800001, z: 0.061504364}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: 176.539, z: 0}
@@ -7473,6 +9591,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &1517951694462344469
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8097401400487085777}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &902796570714569714
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8097401400487085777}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1 &8172919527812872011
 GameObject:
   m_ObjectHideFlags: 0
@@ -7486,6 +9648,8 @@ GameObject:
   - component: {fileID: 5603998993695165873}
   - component: {fileID: 8501392845760229784}
   - component: {fileID: 723485968065593167}
+  - component: {fileID: 4751993528186649276}
+  - component: {fileID: 5081437766337927577}
   m_Layer: 0
   m_Name: Fries (15)
   m_TagString: Untagged
@@ -7503,8 +9667,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.87907517, z: -0, w: 0.47668323}
   m_LocalPosition: {x: 0.7130146, y: -0.20290005, z: 0.03997612}
-  m_LocalScale: {x: 0.05, y: 0.0125, z: 0.0125}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.1, y: 0.025, z: 0.025}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6512888522691712133}
   m_LocalEulerAnglesHint: {x: 0, y: 123.062, z: 0}
@@ -7632,6 +9796,50 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &4751993528186649276
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8172919527812872011}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &5081437766337927577
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8172919527812872011}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c0be61502bb534f922ebb746851216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkRigidbody
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1
 --- !u!1001 &6766892531788510062
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7849,6 +10057,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2f08bd2a8215a5b4c856df9e9ac54200, type: 3}
       insertIndex: -1
       addedObject: {fileID: -6880790887918111671}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2f08bd2a8215a5b4c856df9e9ac54200, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 404308522660038117}
   m_SourcePrefab: {fileID: 100100000, guid: 2f08bd2a8215a5b4c856df9e9ac54200, type: 3}
 --- !u!1 &5848413632126406207 stripped
 GameObject:
@@ -7872,6 +10083,55 @@ MonoBehaviour:
   intensity: 0.1
   liftAmount: 0.25
   liftSpeed: 2
+  fries:
+  - {fileID: 6594211246922990316}
+  - {fileID: 8566933270220240109}
+  - {fileID: 3490404276948611250}
+  - {fileID: 175140236204241185}
+  - {fileID: 6905748248028945689}
+  - {fileID: 8349668025708396663}
+  - {fileID: 6222294296292010549}
+  - {fileID: 1038636028276099764}
+  - {fileID: 8804578072044635498}
+  - {fileID: 6669260919932685367}
+  - {fileID: 6167816089659273858}
+  - {fileID: 3161824639123568062}
+  - {fileID: 5721782221394420113}
+  - {fileID: 6298493936404547019}
+  - {fileID: 3610422416756384628}
+  - {fileID: 3878706505429848680}
+  - {fileID: 5781032403776575399}
+  - {fileID: 2639499333330146182}
+  - {fileID: 3921526640101800950}
+  - {fileID: 1685536428613337402}
+  - {fileID: 4989167539433547307}
+  - {fileID: 3916341541788817217}
+  - {fileID: 6689677785347821263}
+  - {fileID: 7081752816641713212}
+  - {fileID: 1704449591029961490}
+  - {fileID: 287520935966638659}
+  - {fileID: 4112625077235912836}
+  - {fileID: 4558201349409186763}
+  - {fileID: 4094938617272669655}
+  - {fileID: 5458291781293010483}
+  - {fileID: 2958133961852842097}
+  - {fileID: 7832780452706278657}
+  - {fileID: 2690992008646880347}
+  - {fileID: 76388708128714837}
+  - {fileID: 8355487574383796412}
+  - {fileID: 448752981221268671}
+  - {fileID: 2524360428706251634}
+  - {fileID: 4191519916124705913}
+  - {fileID: 1467062457666715938}
+  - {fileID: 3236742232901901137}
+  - {fileID: 1863130317877803375}
+  - {fileID: 7673237744628157151}
+  - {fileID: 4462157242271716365}
+  - {fileID: 4751993528186649276}
+  - {fileID: 1517951694462344469}
+  - {fileID: 6649117547154241728}
+  - {fileID: 2898856158200035254}
+  - {fileID: 4870471539609613125}
   up:
     UpdateTraits:
       MinSecondsBetweenUpdates: 0
@@ -7944,6 +10204,28 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.0880213, y: 0.41305935, z: 0.3467902}
   m_Center: {x: 0.48148823, y: -0.18993586, z: 0.000008165836}
+--- !u!64 &404308522660038117
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5848413632126406207}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: -5378696151494247113, guid: 2f08bd2a8215a5b4c856df9e9ac54200, type: 3}
 --- !u!4 &6512888522691712133 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 2f08bd2a8215a5b4c856df9e9ac54200, type: 3}

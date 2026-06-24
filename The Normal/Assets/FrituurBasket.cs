@@ -11,11 +11,15 @@ public class FrituurBasket : NetworkBehaviour
     public float liftAmount = 1.2f;
     public float liftSpeed = 5f;
 
+    [Header("Fries Physics Objects")]
+    public Rigidbody[] fries;   // 👈 HIER sleep je alle frietjes in
+
     public NetworkVariable<bool> up = new NetworkVariable<bool>(
         false,
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server
     );
+
     private Vector3 startPos;
     private Vector3 targetPos;
 
@@ -37,6 +41,22 @@ public class FrituurBasket : NetworkBehaviour
     {
         startPos = transform.position;
         targetPos = startPos + Vector3.up * liftAmount;
+
+        EnableFriesPhysics(); // 👈 BELANGRIJK
+    }
+
+    private void EnableFriesPhysics()
+    {
+        if (fries == null) return;
+
+        foreach (Rigidbody rb in fries)
+        {
+            if (rb == null) continue;
+
+            rb.isKinematic = false;   // laten vallen
+            rb.useGravity = true;     // gravity aan
+            rb.WakeUp();              // direct activeren
+        }
     }
 
     private void Update()
