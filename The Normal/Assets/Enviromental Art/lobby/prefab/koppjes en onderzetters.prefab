@@ -48,9 +48,21 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -5742727244949571691, guid: ec74c0702ea6321449160e38e44023dc, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
+    - target: {fileID: -2430070446172518212, guid: ec74c0702ea6321449160e38e44023dc, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: ec74c0702ea6321449160e38e44023dc, type: 3}
       propertyPath: m_Name
       value: koppjes en onderzetters
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: ec74c0702ea6321449160e38e44023dc, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
       objectReference: {fileID: 0}
     - target: {fileID: 3559924791015933816, guid: ec74c0702ea6321449160e38e44023dc, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'

@@ -72,6 +72,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Book X1
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: de66f4680e2f27d4d82ab57a62d1e5dc, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
