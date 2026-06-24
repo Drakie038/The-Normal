@@ -119,6 +119,12 @@ public class PlayerCubeController : NetworkBehaviour
 
             if (cam != null)
                 cam.SetTarget(cameraPivot != null ? cameraPivot : transform, this);
+
+            if (cachedMenu == null)
+                cachedMenu = FindObjectOfType<MultiplayerMenu>();
+
+            if (cachedMenu != null)
+                SetNameServerRpc(cachedMenu.GetPlayerName());
         }
 
         cachedCamera = Camera.main;
@@ -521,11 +527,13 @@ public class PlayerCubeController : NetworkBehaviour
 
     private void LateUpdate()
     {
-        // elke client draait ALLE nametags naar zijn eigen camera
         if (nameCanvas == null)
             return;
 
-        if (!IsOwner || nameCanvas == null || cachedCamera == null)
+        if (cachedCamera == null)
+            cachedCamera = Camera.main;
+
+        if (cachedCamera == null)
             return;
 
         nameCanvas.LookAt(
