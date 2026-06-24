@@ -20,6 +20,19 @@ public class LuggageChecker : NetworkBehaviour
     private bool wallMoved;
     private bool hasLuggage;
 
+    [Header("Audio")]
+    public AudioSource audioSource;
+    public AudioClip wallMoveSound;
+
+    [ClientRpc]
+    private void PlayWallMoveSoundClientRpc()
+    {
+        if (audioSource != null && wallMoveSound != null)
+        {
+            audioSource.PlayOneShot(wallMoveSound);
+        }
+    }
+
     private void Update()
     {
         if (IsClient)
@@ -120,10 +133,11 @@ public class LuggageChecker : NetworkBehaviour
             progressText.color = color;
     }
 
-    // 🔥 Wordt maar één keer aangeroepen omdat wallMoved = true
     [ClientRpc]
     private void MoveWallClientRpc()
     {
+        PlayWallMoveSoundClientRpc(); // 🔊 geluid voor iedereen
+
         Vector3 targetPos = wall.position + moveAmount;
         StartCoroutine(MoveWall(targetPos));
     }

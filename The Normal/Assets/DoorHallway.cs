@@ -49,6 +49,11 @@ public class DoorHallway : NetworkBehaviour
 
     private bool isTransitioning;
 
+    [Header("Audio")]
+    public AudioClip openSound;
+    public AudioClip closeSound;
+    public AudioSource audioSource;
+
     private NetworkVariable<ulong> peekOwnerClientId =
     new NetworkVariable<ulong>(
         ulong.MaxValue,
@@ -314,10 +319,15 @@ public class DoorHallway : NetworkBehaviour
 
         isTransitioning = true;
 
+        bool willOpen = netState.Value == DoorState.Closed;
+
         netState.Value =
             (netState.Value == DoorState.Open)
                 ? DoorState.Closed
                 : DoorState.Open;
+
+        // 🔊 GLOBAL SOUND TRIGGER
+        PlayDoorSoundClientRpc(willOpen);
 
         StartCoroutine(UnlockAfterDelay());
     }
@@ -435,5 +445,19 @@ public class DoorHallway : NetworkBehaviour
     public bool IsPeeking()
     {
         return netState.Value == DoorState.Peek;
+    }
+
+    [ClientRpc]
+    private void PlayDoorSoundClientRpc(bool opened)
+    {
+        if (audioSource == null)
+            return;
+
+        AudioClip clip = opened ? openSound : closeSound;
+
+        if (clip != null)
+        {
+            audioSource.PlayOneShot(clip);
+        }
     }
 }
