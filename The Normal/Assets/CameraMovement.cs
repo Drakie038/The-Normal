@@ -320,7 +320,10 @@ public class CameraMovement : MonoBehaviour
         HandleFPSCamera(inElevator);
         HandleCursor(inElevator);
 
-        DetectDoor(); // ✅ ADD (dit was weg)
+        if (!lockCamera)
+        {
+            DetectDoor();
+        }
     }
 
     private void HandleLockedCamera(bool inElevator)
@@ -510,7 +513,7 @@ public class CameraMovement : MonoBehaviour
     {
         Ray ray = new Ray(transform.position, transform.forward);
 
-        if (Physics.Raycast(ray, out RaycastHit hit, doorDetectDistance))
+        Physics.Raycast(ray, out RaycastHit hit, doorDetectDistance);
         {
             Collider col = hit.collider;
 
@@ -987,18 +990,6 @@ public class CameraMovement : MonoBehaviour
             currentDoor = null;
         }
 
-        Lever oldLever = FindObjectOfType<Lever>();
-        if (oldLever != null)
-        {
-            oldLever.SetHighlight(false);
-        }
-
-        LuggageCart oldLuggage = FindObjectOfType<LuggageCart>();
-        if (oldLuggage != null)
-        {
-            oldLuggage.SetHighlight(false);
-        }
-
         if (currentSuitCase != null)
         {
             currentSuitCase.SetHighlight(false);
@@ -1019,31 +1010,11 @@ public class CameraMovement : MonoBehaviour
 
         SetSlotPlateHighlight(null);
 
-        BordenHouder[] houders = FindObjectsOfType<BordenHouder>();
+        // ❌ REMOVED: FindObjectsOfType loops (FPS KILLER)
+        // Alleen nog “current state cleanup” doen
 
-        foreach (BordenHouder h in houders)
-        {
-            h.HideAllGhosts();
-        }
-
-        Prullenbak[] trashBins = FindObjectsOfType<Prullenbak>();
-
-        foreach (var t in trashBins)
-        {
-            t.SetHighlight(false);
-        }
-
-        if (currentExit != null)
-        {
-            currentExit.SetHighlight(false);
-            currentExit = null;
-        }
-
-        FrituurBasket[] baskets = FindObjectsOfType<FrituurBasket>();
-        foreach (var b in baskets)
-        {
-            b.SetHighlight(false);
-        }
+        currentLuggage = null;
+        currentExit = null;
     }
 
     public void BeginPeek()

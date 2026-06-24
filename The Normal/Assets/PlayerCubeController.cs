@@ -43,7 +43,7 @@ public class PlayerCubeController : NetworkBehaviour
 
     private NetworkObjectReference currentElevator;
 
-public NetworkVariable<bool> inPushMode = new NetworkVariable<bool>(false);
+    public NetworkVariable<bool> inPushMode = new NetworkVariable<bool>(false);
     private Transform pushTarget;
 
     private Quaternion pushRotationVelocity;
@@ -73,6 +73,10 @@ public NetworkVariable<bool> inPushMode = new NetworkVariable<bool>(false);
 
     private float footstepTimer;
     private bool wasMoving;
+
+    private MultiplayerMenu cachedMenu;
+
+    private Camera cachedCamera;
 
     private void Start()
     {
@@ -115,11 +119,11 @@ public NetworkVariable<bool> inPushMode = new NetworkVariable<bool>(false);
 
             if (cam != null)
                 cam.SetTarget(cameraPivot != null ? cameraPivot : transform, this);
-
-            var menu = FindObjectOfType<MultiplayerMenu>();
-            if (menu != null)
-                SetNameServerRpc(menu.GetPlayerName());
         }
+
+        cachedCamera = Camera.main;
+
+        cachedMenu = FindObjectOfType<MultiplayerMenu>();
     }
 
     public override void OnNetworkDespawn()
@@ -183,7 +187,6 @@ public NetworkVariable<bool> inPushMode = new NetworkVariable<bool>(false);
         {
             moveInput = Vector2.zero;
             velocity = Vector3.zero;
-            Input.ResetInputAxes();
         }
     }
 
@@ -194,11 +197,13 @@ public NetworkVariable<bool> inPushMode = new NetworkVariable<bool>(false);
 
     private void Update()
     {
-        if (!IsOwner || !canMove || frozen)
+        if (!IsOwner)
             return;
 
-        var menu = FindObjectOfType<MultiplayerMenu>();
-        if (menu != null && menu.IsSettingsOpen())
+        if (frozen || !canMove)
+            return;
+
+        if (cachedMenu != null && cachedMenu.IsSettingsOpen())
             return;
 
         if (inElevator.Value)
@@ -331,7 +336,7 @@ public NetworkVariable<bool> inPushMode = new NetworkVariable<bool>(false);
         // ================= POSITION ALIGN =================
         Vector3 targetPos = pushTarget.position;
 
-        Vector3 newPos = Vector3.Lerp(
+        Vector3 newPos = Vector3.MoveTowards(
             transform.position,
             targetPos,
             approachSpeed * dt
@@ -355,10 +360,10 @@ public NetworkVariable<bool> inPushMode = new NetworkVariable<bool>(false);
         }
 
         // ================= FINISH CONDITION =================
-        float dist = Vector3.Distance(transform.position, targetPos);
+        float dist = (transform.position - targetPos).sqrMagnitude;
         float angle = Vector3.Angle(transform.forward, dir);
 
-        if (dist < 0.05f && angle < 5f)
+        if (dist < 0.0025f && angle < 5f)
         {
             luggageRotationOffset =
     Quaternion.Inverse(transform.rotation) *
@@ -446,7 +451,6 @@ public NetworkVariable<bool> inPushMode = new NetworkVariable<bool>(false);
         {
             moveInput = Vector2.zero;
             velocity = Vector3.zero;
-            Input.ResetInputAxes();
         }
     }
 
@@ -521,13 +525,12 @@ public NetworkVariable<bool> inPushMode = new NetworkVariable<bool>(false);
         if (nameCanvas == null)
             return;
 
-        Camera cam = Camera.main;
-        if (cam == null)
+        if (!IsOwner || nameCanvas == null || cachedCamera == null)
             return;
 
         nameCanvas.LookAt(
-            nameCanvas.position + cam.transform.rotation * Vector3.forward,
-            cam.transform.rotation * Vector3.up
+            nameCanvas.position + cachedCamera.transform.rotation * Vector3.forward,
+            cachedCamera.transform.rotation * Vector3.up
         );
     }
 
@@ -828,7 +831,9 @@ public NetworkVariable<bool> inPushMode = new NetworkVariable<bool>(false);
         if (!IsOwner || walkAudioSource == null || walkClip == null)
             return;
 
-        bool isMoving = moveInput.sqrMagnitude > minMoveThreshold;
+        bool isMoving =
+            Mathf.Abs(moveInput.x) > 0.01f ||
+            Mathf.Abs(moveInput.y) > 0.01f;
 
         float speedFactor = inPushMode.Value ? 1.4f : 1f;
 
