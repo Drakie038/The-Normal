@@ -64,6 +64,9 @@ public class CameraMovement : MonoBehaviour
 
     private DienBlad lastHighlightedSlotPlate;
 
+    private float lastSuitCaseSeenTime;
+    private const float suitCaseGraceTime = 0.5f;
+
     public void SmoothLookForwardForSettings(float duration = 0.25f)
     {
         if (settingsRoutine != null)
@@ -586,11 +589,12 @@ public class CameraMovement : MonoBehaviour
                 return;
             }
 
-            //SuitCase
             SuitCase suitCase = hit.collider.GetComponentInParent<SuitCase>();
 
             if (suitCase != null)
             {
+                lastSuitCaseSeenTime = Time.time;
+
                 if (currentSuitCase != suitCase)
                 {
                     if (currentSuitCase != null)
@@ -605,7 +609,6 @@ public class CameraMovement : MonoBehaviour
                 {
                     if (Time.time >= suitCase.GetPickupCooldown())
                     {
-                        // werkt zowel op grond als op luggage
                         suitCase.PickupServerRpc(NetworkManager.Singleton.LocalClientId);
                         heldSuitCase = suitCase;
                     }
@@ -992,8 +995,11 @@ public class CameraMovement : MonoBehaviour
 
         if (currentSuitCase != null)
         {
-            currentSuitCase.SetHighlight(false);
-            currentSuitCase = null;
+            if (Time.time - lastSuitCaseSeenTime > suitCaseGraceTime)
+            {
+                currentSuitCase.SetHighlight(false);
+                currentSuitCase = null;
+            }
         }
 
         if (currentBell != null)
