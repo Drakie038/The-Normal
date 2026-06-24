@@ -67,6 +67,10 @@ public class LobbyNPC : NetworkBehaviour
 
     private bool isOnCounter;
 
+    public Animator animator;
+
+    private bool isPlayingPickupAnimation;
+
     public NetworkVariable<bool> colliderEnabled = new NetworkVariable<bool>(
     false,
     NetworkVariableReadPermission.Everyone,
@@ -77,9 +81,10 @@ public class LobbyNPC : NetworkBehaviour
     {
         controller = GetComponent<CharacterController>();
         npcCollider = GetComponent<CapsuleCollider>();
+        animator = GetComponent<Animator>();
 
         if (npcCollider != null)
-            npcCollider.enabled = false; // 🔥 default uit
+            npcCollider.enabled = false;
     }
 
     private void SetNpcCollider(bool value)
@@ -140,23 +145,8 @@ public class LobbyNPC : NetworkBehaviour
 
                 if (sc != null)
                 {
-                    sc.SetNPCHold(suitcaseHand);
-
                     NetworkObject netObj = sc.GetComponent<NetworkObject>();
-                    if (netObj != null)
-                        netObj.TrySetParent(suitcaseHand, false);
-
-                    // slot vrijmaken
-                    for (int i = 0; i < suitcaseDropSlots.Length; i++)
-                    {
-                        if (suitcaseDropSlots[i] == fetchSlot)
-                        {
-                            slotOccupied[i] = false;
-                            break;
-                        }
-                    }
-
-                    carriedSuitcase = sc;
+                    StartCoroutine(PickupSuitcaseRoutine(sc, netObj));
 
                     isFetchingFromSlot = false;
                     fetchSlot = null;
@@ -343,11 +333,30 @@ public class LobbyNPC : NetworkBehaviour
 
         float distance = dir.magnitude;
 
-        if (distance < 0.2f) return;
+        // Tijdens pickup niet lopen
+        if (isPlayingPickupAnimation)
+        {
+            if (animator != null)
+                animator.SetBool("walk", false);
+
+            return;
+        }
+
+        // Dichtbij genoeg -> stop walk animatie
+        if (distance < 0.2f)
+        {
+            if (animator != null)
+                animator.SetBool("walk", false);
+
+            return;
+        }
+
+        // Normaal lopen -> walk animatie aan
+        if (animator != null)
+            animator.SetBool("walk", true);
 
         dir.Normalize();
 
-        // rotate
         Quaternion look = Quaternion.LookRotation(dir);
         transform.rotation = Quaternion.Slerp(
             transform.rotation,
@@ -355,7 +364,6 @@ public class LobbyNPC : NetworkBehaviour
             rotationSpeed * Time.deltaTime
         );
 
-        // move
         controller.Move(dir * moveSpeed * Time.deltaTime);
     }
 
@@ -515,12 +523,7 @@ public class LobbyNPC : NetworkBehaviour
 
         SetNpcCollider(false);
 
-        // suitcase oppakken
-        suitCase.SetNPCHold(suitcaseHand);
-
-        netObj.TrySetParent(suitcaseHand, false);
-
-        carriedSuitcase = suitCase;
+        StartCoroutine(PickupSuitcaseRoutine(suitCase, netObj));
 
         // BELANGRIJK: eerst rondlopen
         PlanDropTask(suitCase);
@@ -653,12 +656,52 @@ public class LobbyNPC : NetworkBehaviour
         // geen parent zetten!
         NetworkObject netObj = carriedSuitcase.GetComponent<NetworkObject>();
         if (netObj != null)
-            netObj.TryRemoveParent();   
+            netObj.TryRemoveParent();
 
         carriedSuitcase.SetOnCounter(true);
 
         carriedSuitcase = null;
         isDeliveringToCounter = false;
         isDroppingSuitcase = false;
+    }
+
+    private IEnumerator PlayPickupAnimation()
+    {
+        if (animator == null)
+            yield break;
+
+        isPlayingPickupAnimation = true;
+
+        animator.SetBool("walk", false);
+        animator.SetBool("pickup", true);
+
+        yield return new WaitForSeconds(1f);
+
+        animator.SetBool("pickup", false);
+
+        isPlayingPickupAnimation = false;
+    }
+
+    private IEnumerator PickupSuitcaseRoutine(SuitCase suitCase, NetworkObject netObj)
+    {
+        isPlayingPickupAnimation = true;
+
+        animator.SetBool("walk", false);
+        animator.SetBool("pickup", true);
+
+        // Wacht tot het moment waarop de hand de koffer raakt
+        yield return new WaitForSeconds(0.5f); // pas dit aan
+
+        suitCase.SetNPCHold(suitcaseHand);
+
+        if (netObj != null)
+            netObj.TrySetParent(suitcaseHand, false);
+
+        carriedSuitcase = suitCase;
+
+        yield return new WaitForSeconds(0.5f);
+
+        animator.SetBool("pickup", false);
+        isPlayingPickupAnimation = false;
     }
 }

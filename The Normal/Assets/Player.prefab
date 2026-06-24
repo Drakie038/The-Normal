@@ -533,6 +533,10 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 564749147011444198, guid: 8329c94109c7c9b4b915f881728ed06a, type: 3}
+      propertyPath: m_TagString
+      value: Player
+      objectReference: {fileID: 0}
     - target: {fileID: 890500619957578628, guid: 8329c94109c7c9b4b915f881728ed06a, type: 3}
       propertyPath: m_Layer
       value: 2
@@ -547,7 +551,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 8329c94109c7c9b4b915f881728ed06a, type: 3}
       propertyPath: m_TagString
-      value: Untagged
+      value: Player
       objectReference: {fileID: 0}
     - target: {fileID: 936772378755063434, guid: 8329c94109c7c9b4b915f881728ed06a, type: 3}
       propertyPath: m_Layer
